@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2023-11-20T14:58:22.060Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.1 Chrome/112.0.5615.87 Electron/24.1.2 Safari/537.36" etag="xa6I16u_ge07rDdBvBzO" version="21.2.1" type="device">
+<mxfile host="Electron" modified="2023-11-20T11:50:49.391Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.1 Chrome/112.0.5615.87 Electron/24.1.2 Safari/537.36" etag="jBSwhE5ha8ZOE_8Iq3FQ" version="21.2.1" type="device">
   <diagram name="Strona-1" id="jQVSxmD1ai50yAvZqFfG">
     <mxGraphModel dx="2058" dy="1180" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
@@ -140,8 +140,14 @@
             </Array>
           </mxGeometry>
         </mxCell>
+        <mxCell id="OP7j1k-5egRmfv-Ufrpp-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="k4PEMNSWHaucwCbMSD-h-18" target="k4PEMNSWHaucwCbMSD-h-19" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="k4PEMNSWHaucwCbMSD-h-18" value="Widok główny" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
           <mxGeometry x="300" y="71.5" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="k4PEMNSWHaucwCbMSD-h-19" value="Klasyczne przesuwanie&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="390" y="351.5" width="130" height="30" as="geometry" />
         </mxCell>
         <mxCell id="OP7j1k-5egRmfv-Ufrpp-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="k4PEMNSWHaucwCbMSD-h-20" target="k4PEMNSWHaucwCbMSD-h-30" edge="1">
           <mxGeometry relative="1" as="geometry">
