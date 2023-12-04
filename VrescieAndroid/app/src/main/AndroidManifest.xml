@@ -29,8 +29,7 @@
         </activity>
 
         <activity
-            android:name=".FirstLaunchActivity"
-            android:theme="@style/Theme.AppCompat">
+            android:name=".FirstLaunchActivity">
         </activity>
 
     </application>
