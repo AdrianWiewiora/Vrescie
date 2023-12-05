@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -16,7 +18,7 @@ class FirstLaunchActivity : AppCompatActivity() {
     private var currentStep = 0
 
     private val textArray = arrayOf("Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi")
-    private val timerDuration = 1000L
+    private val timerDuration = 2000L
     private val totalDuration = timerDuration * textArray.size
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,11 +35,43 @@ class FirstLaunchActivity : AppCompatActivity() {
     private fun startAnimation() {
         object : CountDownTimer(totalDuration, timerDuration) {
             override fun onTick(millisUntilFinished: Long) {
-                // Zmiana tekstu co sekundę
-                textView.text = textArray[currentStep]
+                // Efekt zanikania tekstu
+                val fadeOut = AlphaAnimation(1f, 0f)
+                fadeOut.duration = timerDuration / 2
+                fadeOut.fillAfter = true
 
-                // Przesunięcie do następnego kroku
-                currentStep++
+                fadeOut.setAnimationListener(object : Animation.AnimationListener {
+                    override fun onAnimationStart(animation: Animation?) {}
+
+                    override fun onAnimationEnd(animation: Animation?) {
+                        // Zmiana tekstu po zakończeniu animacji
+                        textView.text = textArray[currentStep]
+                        currentStep++
+
+                        // Efekt pojawiania się tekstu
+                        val fadeIn = AlphaAnimation(0f, 1f)
+                        fadeIn.duration = timerDuration / 2
+                        fadeIn.fillAfter = true
+
+                        fadeIn.setAnimationListener(object : Animation.AnimationListener {
+                            override fun onAnimationStart(animation: Animation?) {}
+
+                            override fun onAnimationEnd(animation: Animation?) {
+                                // Animacja zakończona
+                            }
+
+                            override fun onAnimationRepeat(animation: Animation?) {}
+                        })
+
+                        // Rozpoczęcie animacji pojawiania się tekstu
+                        textView.startAnimation(fadeIn)
+                    }
+
+                    override fun onAnimationRepeat(animation: Animation?) {}
+                })
+
+                // Rozpoczęcie animacji zanikania tekstu
+                textView.startAnimation(fadeOut)
             }
 
             override fun onFinish() {

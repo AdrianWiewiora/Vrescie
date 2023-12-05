@@ -46,4 +46,5 @@
     <string name="iconvrescie">IconVrescie</string>
     <string name="nowi_znajomi">Nowi znajomi</string>
     <string name="logotype">Logotype</string>
+    <string name="emptyString" />
 </resources>
