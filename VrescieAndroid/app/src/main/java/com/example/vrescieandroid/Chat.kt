@@ -53,6 +53,13 @@ class Chat : AppCompatActivity() {
             }
         })
 
+        // Dodaj obsługę kliknięcia na użytkownika
+        usersAdapter.setOnItemClickListener(object : UsersAdapter.OnItemClickListener {
+            override fun onItemClick(user: User) {
+                startConversation(user.userId)
+            }
+        })
+
         // Obsługa gestów cofania
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -81,6 +88,15 @@ class Chat : AppCompatActivity() {
                     Toast.makeText(this@Chat, "Nie usuinieto", Toast.LENGTH_SHORT).show()
                 }
         }
+    }
+
+    private fun startConversation(otherUserId: String) {
+        // Tutaj możesz uruchomić nową aktywność konwersacji
+        // Przekazujesz identyfikator innej osoby, z którą chcesz rozpocząć konwersację
+        val intent = Intent(this@Chat, ConversationActivity::class.java)
+        intent.putExtra("userId1", auth.currentUser?.uid)
+        intent.putExtra("userId2", otherUserId)
+        startActivity(intent)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

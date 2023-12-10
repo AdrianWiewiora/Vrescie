@@ -1,32 +1,67 @@
 package com.example.vrescieandroid
 
+// MessagesAdapter.kt
+
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vrescieandroid.data.Message
+import com.google.firebase.auth.FirebaseAuth
 
-class MessageAdapter(private val messages: List<Message>) : RecyclerView.Adapter<MessageAdapter.MessageViewHolder>() {
+class MessagesAdapter(private val messagesList: List<Message>) :
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val messageContent: TextView = itemView.findViewById(R.id.messageContent)
-        val messageSender: TextView = itemView.findViewById(R.id.messageSender)
+    private val VIEW_TYPE_SENT = 1
+    private val VIEW_TYPE_RECEIVED = 2
+
+    private val auth = FirebaseAuth.getInstance()
+
+    inner class SentMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val messageText: TextView = itemView.findViewById(R.id.textViewSentMessage)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.message_item, parent, false)
-        return MessageViewHolder(view)
+    inner class ReceivedMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val messageText: TextView = itemView.findViewById(R.id.textViewReceivedMessage)
     }
 
-    override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
-        val message = messages[position]
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return if (viewType == VIEW_TYPE_SENT) {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_sent_message, parent, false)
+            SentMessageViewHolder(view)
+        } else {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_received_message, parent, false)
+            ReceivedMessageViewHolder(view)
+        }
+    }
 
-        holder.messageContent.text = message.content
-        holder.messageSender.text = message.senderId
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val message = messagesList[position]
+
+        if (holder.itemViewType == VIEW_TYPE_SENT) {
+            val sentHolder = holder as SentMessageViewHolder
+            sentHolder.messageText.text = message.text
+        } else {
+            val receivedHolder = holder as ReceivedMessageViewHolder
+            receivedHolder.messageText.text = message.text
+        }
     }
 
     override fun getItemCount(): Int {
-        return messages.size
+        return messagesList.size
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        // Decyduj, czy wiadomość została wysłana czy odebrana
+        return if (messagesList[position].senderId == auth.currentUser?.uid) {
+            VIEW_TYPE_SENT
+        } else {
+            VIEW_TYPE_RECEIVED
+        }
     }
 }
+
+

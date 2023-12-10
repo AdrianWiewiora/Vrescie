@@ -57,9 +57,6 @@ class MainActivity : AppCompatActivity() {
 
             // Dodaj obsługę przycisków
             val btnRandom = findViewById<Button>(R.id.btnRandom)
-            val btnDisconnect = findViewById<Button>(R.id.btnDisconnect)
-            val editTextMessage = findViewById<EditText>(R.id.editTextMessage)
-            val btnSendMessage = findViewById<Button>(R.id.btnSendMessage)
 
             // Inicjalizuj stan widoczności elementów interfejsu użytkownika
             updateUI()
@@ -95,45 +92,18 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // Obsługa przycisku rozłączania
-            btnDisconnect.setOnClickListener {
-                // Tutaj dodaj kod do obsługi rozłączania
-                // Po rozłączeniu ustaw isConnected na false
-                isConnected = false
-                updateUI()
-            }
-
-            // Obsługa przycisku wysyłania wiadomości
-            btnSendMessage.setOnClickListener {
-                // Tutaj dodaj kod do wysyłania wiadomości
-                // Jeśli isConnected jest true, to można wysłać wiadomość
-                if (isConnected) {
-                    val message = editTextMessage.text.toString()
-                    // Tutaj dodaj kod do obsługi wysyłania wiadomości
-                    Toast.makeText(this@MainActivity, "Wysłano wiadomość: $message", Toast.LENGTH_SHORT).show()
-                }
-            }
         }
     }
 
     // Metoda do aktualizacji widoczności elementów interfejsu użytkownika w zależności od stanu połączenia
     private fun updateUI() {
         val btnRandom = findViewById<Button>(R.id.btnRandom)
-        val btnDisconnect = findViewById<Button>(R.id.btnDisconnect)
-        val editTextMessage = findViewById<EditText>(R.id.editTextMessage)
-        val btnSendMessage = findViewById<Button>(R.id.btnSendMessage)
 
         // Aktualizuj widoczność przycisków w zależności od isConnected
         if (isConnected) {
-            editTextMessage.visibility = View.VISIBLE
-            btnSendMessage.visibility = View.VISIBLE
             btnRandom.visibility = View.GONE
-            btnDisconnect.visibility = View.VISIBLE
         } else {
-            editTextMessage.visibility = View.GONE
-            btnSendMessage.visibility = View.GONE
             btnRandom.visibility = View.VISIBLE
-            btnDisconnect.visibility = View.GONE
         }
     }
 }
