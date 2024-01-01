@@ -1,109 +1,25 @@
 package com.example.vrescieandroid
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.vrescieandroid.data.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
+import com.example.vrescieandroid.fragments.SplashFragment
 
 class MainActivity : AppCompatActivity() {
 
-    // Dodaj zmienne flagowe do śledzenia stanu połączenia
-    private var isConnected = false
-    private val usersRef: DatabaseReference = FirebaseDatabase.getInstance().reference
-        .child("users")
-    private val auth = FirebaseAuth.getInstance()
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
-
-        // Sprawdź, czy to pierwsze uruchomienie
-        val isFirstRun = getSharedPreferences("PREFS_NAME", MODE_PRIVATE)
-            .getBoolean("isFirstRun", true)
-
-        if (isFirstRun) {
-            // Jeśli to pierwsze uruchomienie, przejdź do FirstLaunchActivity
-            getSharedPreferences("PREFS_NAME", MODE_PRIVATE)
-                .edit()
-                .putBoolean("isFirstRun", false)
-                .apply()
-
-            val intent = Intent(this@MainActivity, FirstLaunchActivity::class.java)
-            startActivity(intent)
-            finish()
-
-        } else {
-            // Sprawdzanie, czy użytkownik jest już zalogowany
-            val currentUser = FirebaseAuth.getInstance().currentUser
-            if (currentUser != null) {
-                Log.d("currentUser", "currentUser: $currentUser")
-                setContentView(R.layout.activity_main)
-            } else {
-                val intentB = Intent(this@MainActivity, LoginActivity::class.java)
-                startActivity(intentB)
-                finish()
-
-            }
-
-
-            // Dodaj obsługę przycisków
-            val btnRandom = findViewById<Button>(R.id.btnRandom)
-
-            // Inicjalizuj stan widoczności elementów interfejsu użytkownika
-            updateUI()
-
-            // Obsługa przycisku losowania
-            btnRandom.setOnClickListener {
-                val user = auth.currentUser
-                val uid = user?.uid
-                val email = user?.email
-                Log.d("Firebase", "userId: $uid")
-                Log.d("Firebase", "usersRef: $usersRef")
-
-                // Tworzenie obiektu User
-                val currentUser = uid?.let { it1 -> User(it1, email ?: "") }
-
-                if (uid != null) {
-                    val usersRef: DatabaseReference = FirebaseDatabase.getInstance().reference.child("users")
-                    usersRef.child(uid).setValue(currentUser)
-                        .addOnSuccessListener {
-                            Log.d("Firebase", "Pomyślnie dodano do bazy danych")
-                            Toast.makeText(this@MainActivity, "Dodano do bazy danych", Toast.LENGTH_SHORT).show()
-
-
-                            val intentC = Intent(this@MainActivity, Chat::class.java)
-                            startActivity(intentC)
-                            finish()
-
-                        }
-                        .addOnFailureListener {
-                            Log.e("Firebase", "Błąd: ${it.message}")
-                            Toast.makeText(this@MainActivity, "Błąd: ${it.message}", Toast.LENGTH_SHORT).show()
-                        }
-                }
-            }
-
-        }
-    }
-
-    // Metoda do aktualizacji widoczności elementów interfejsu użytkownika w zależności od stanu połączenia
-    private fun updateUI() {
-        val btnRandom = findViewById<Button>(R.id.btnRandom)
-
-        // Aktualizuj widoczność przycisków w zależności od isConnected
-        if (isConnected) {
-            btnRandom.visibility = View.GONE
-        } else {
-            btnRandom.visibility = View.VISIBLE
+        if (savedInstanceState == null) {
+            Log.i("Start", "MainActivity")
+            val navHostFragment =
+                supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+            val navController = navHostFragment.navController
+            navController.navigate(R.id.splashFragment)
         }
     }
 }
+

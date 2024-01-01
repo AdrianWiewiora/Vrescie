@@ -3,7 +3,43 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/splash">
+    app:startDestination="@id/splashFragment">
 
 
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.example.vrescieandroid.fragments.SplashFragment"
+        android:label="fragment_splash"
+        tools:layout="@layout/fragment_splash" >
+        <action
+            android:id="@+id/action_splashFragment_to_firstLaunchSplashFragment"
+            app:destination="@id/firstLaunchSplashFragment" />
+        <action
+            android:id="@+id/action_splashFragment_to_anonymousChatFragment"
+            app:destination="@id/anonymousChatFragment" />
+        <action
+            android:id="@+id/action_splashFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/firstLaunchSplashFragment"
+        android:name="com.example.vrescieandroid.fragments.FirstLaunchSplashFragment"
+        android:label="fragment_first_launch_splash"
+        tools:layout="@layout/fragment_first_launch_splash" >
+        <action
+            android:id="@+id/action_firstLaunchSplashFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/anonymousChatFragment"
+        android:name="com.example.vrescieandroid.fragments.AnonymousChatFragment"
+        android:label="fragment_anonymous_chat"
+        tools:layout="@layout/fragment_anonymous_chat" />
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.vrescieandroid.fragments.LoginFragment"
+        android:label="fragment_login"
+        tools:layout="@layout/fragment_login" />
 </navigation>
