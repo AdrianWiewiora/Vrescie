@@ -16,7 +16,7 @@
             app:destination="@id/firstLaunchSplashFragment" />
         <action
             android:id="@+id/action_splashFragment_to_anonymousChatFragment"
-            app:destination="@id/anonymousChatFragment" />
+            app:destination="@id/mainMenu" />
         <action
             android:id="@+id/action_splashFragment_to_startFragment"
             app:destination="@id/startFragment" />
@@ -33,10 +33,10 @@
     </fragment>
 
     <fragment
-        android:id="@+id/anonymousChatFragment"
-        android:name="com.example.vrescieandroid.fragments.AnonymousChatFragment"
+        android:id="@+id/mainMenu"
+        android:name="com.example.vrescieandroid.fragments.MainMenuFragment"
         android:label="fragment_anonymous_chat"
-        tools:layout="@layout/fragment_anonymous_chat" />
+        tools:layout="@layout/fragment_main_menu" />
 
     <fragment
         android:id="@+id/loginFragment"
@@ -45,7 +45,7 @@
         tools:layout="@layout/fragment_login" >
         <action
             android:id="@+id/action_loginFragment_to_anonymousChatFragment"
-            app:destination="@id/anonymousChatFragment" />
+            app:destination="@id/mainMenu" />
     </fragment>
 
     <fragment
@@ -67,6 +67,21 @@
         tools:layout="@layout/fragment_register" >
         <action
             android:id="@+id/action_registerFragment_to_anonymousChatFragment"
-            app:destination="@id/anonymousChatFragment" />
+            app:destination="@id/mainMenu" />
     </fragment>
+    <fragment
+        android:id="@+id/anonymousChatFragment"
+        android:name="com.example.vrescieandroid.fragments.AnonymousChatFragment"
+        android:label="fragment_anonymous_chat"
+        tools:layout="@layout/fragment_anonymous_chat" />
+    <fragment
+        android:id="@+id/implicitChatsFragment"
+        android:name="com.example.vrescieandroid.fragments.ImplicitChatsFragment"
+        android:label="fragment_implicit_chats"
+        tools:layout="@layout/fragment_implicit_chats" />
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.vrescieandroid.fragments.ProfileFragment"
+        android:label="fragment_profile"
+        tools:layout="@layout/fragment_profile" />
 </navigation>

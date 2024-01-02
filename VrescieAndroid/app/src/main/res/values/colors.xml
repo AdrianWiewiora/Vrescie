@@ -5,4 +5,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="yellow">#FDD835</color>
     <color name="green">#7CB342</color>
+    <color name="button_clicked_menu">#2E00E7</color>
 </resources>

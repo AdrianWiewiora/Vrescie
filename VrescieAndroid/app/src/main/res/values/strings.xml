@@ -44,4 +44,7 @@
     <string name="log_in_with_google_pl">Zaloguj się za pomocą konta google</string>
     <string name="password_2">Powtórz hasło</string>
     <string name="type_your_email_and_password_pl">Podaj swój email i hasło</string>
+    <string name="anonymous_chat_pl">Anonimowy czat</string>
+    <string name="implicity_chat_pl">Potwierdzone czaty</string>
+    <string name="profile_pl">Profil</string>
 </resources>
