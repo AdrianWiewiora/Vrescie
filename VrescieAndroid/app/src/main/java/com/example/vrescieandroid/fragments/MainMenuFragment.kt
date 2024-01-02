@@ -23,7 +23,6 @@ import com.example.vrescieandroid.R
 
 class MainMenuFragment : Fragment() {
 
-    private lateinit var fragmentContainerView: FragmentContainerView
     private lateinit var imageViewAnonymousChat: ImageView
     private lateinit var imageViewImplicitChat: ImageView
     private lateinit var imageViewUser: ImageView

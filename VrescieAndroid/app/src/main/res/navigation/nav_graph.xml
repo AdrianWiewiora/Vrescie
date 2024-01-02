@@ -36,7 +36,11 @@
         android:id="@+id/mainMenu"
         android:name="com.example.vrescieandroid.fragments.MainMenuFragment"
         android:label="fragment_anonymous_chat"
-        tools:layout="@layout/fragment_main_menu" />
+        tools:layout="@layout/fragment_main_menu" >
+        <action
+            android:id="@+id/action_mainMenu_to_anonymousChatLoadingFragment"
+            app:destination="@id/anonymousChatLoadingFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/loginFragment"
@@ -84,4 +88,27 @@
         android:name="com.example.vrescieandroid.fragments.ProfileFragment"
         android:label="fragment_profile"
         tools:layout="@layout/fragment_profile" />
+    <fragment
+        android:id="@+id/conversationFragment"
+        android:name="com.example.vrescieandroid.fragments.ConversationFragment"
+        android:label="ConversationFragment"
+        tools:layout="@layout/fragment_conversation" >
+    <argument
+        android:name="userId1"
+        app:argType="string" />
+
+    <argument
+        android:name="userId2"
+        app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/anonymousChatLoadingFragment"
+        android:name="com.example.vrescieandroid.fragments.AnonymousChatLoadingFragment"
+        android:label="fragment_anonymous_chat_loading"
+        tools:layout="@layout/fragment_anonymous_chat_loading" >
+        <action
+            android:id="@+id/action_anonymousChatLoadingFragment_to_conversationFragment"
+            app:destination="@id/conversationFragment" />
+    </fragment>
 </navigation>
