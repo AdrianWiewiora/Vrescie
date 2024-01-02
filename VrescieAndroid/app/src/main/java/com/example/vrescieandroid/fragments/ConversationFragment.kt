@@ -101,6 +101,45 @@ class ConversationFragment : Fragment() {
             }
         })
 
+        val conversationId = getConversationId(userId1, userId2)
+        val conversationsRef = FirebaseDatabase.getInstance().reference.child("conversations")
+        val conversationRef = conversationsRef.child(conversationId)
+        val membersRef = conversationRef.child("members")
+
+        // Dodaj nasłuchiwanie zmian w members
+        membersRef.addChildEventListener(object : ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                // Obsługa dodania nowego elementu (opcjonalne)
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                val userId = snapshot.key
+                val isConnected = snapshot.getValue(Boolean::class.java)
+
+                if (userId != null && !isConnected!!) {
+                    // Użytkownik się rozłączył, dodaj wiadomość o rozłączeniu
+                    val disconnectedMessage = Message(
+                        "system",
+                        "Użytkownik się rozłączył",
+                        System.currentTimeMillis()
+                    )
+                    messagesRef.push().setValue(disconnectedMessage)
+                }
+            }
+
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                // Obsługa usunięcia elementu (opcjonalne)
+            }
+
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                // Obsługa przemieszczenia elementu (opcjonalne)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Obsługa błędów
+            }
+        })
+
         return view
     }
 
@@ -129,6 +168,20 @@ class ConversationFragment : Fragment() {
         // Wygeneruj unikalny identyfikator konwersacji na podstawie id użytkowników
         val users = listOf(userId1, userId2).sorted()
         return "${users[0]}_${users[1]}"
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        // Usuń bieżącego użytkownika z members
+        val conversationRef = FirebaseDatabase.getInstance().reference.child("conversations")
+            .child(getConversationId(userId1, userId2))
+
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            val membersRef = conversationRef.child("members")
+            membersRef.child(currentUser.uid).setValue(false)
+        }
     }
 }
 
