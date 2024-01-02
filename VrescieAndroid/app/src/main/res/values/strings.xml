@@ -31,4 +31,17 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="logo">Logo</string>
+    <string name="email">Email</string>
+    <string name="password">Hasło</string>
+    <string name="log_in">Zaloguj się</string>
+    <string name="forgot_password">Nie pamiętam hasła</string>
+    <string name="registration">Zarejestruj się</string>
+    <string name="i_have_account">Mam już konto</string>
+    <string name="log_in_with_google">Zarejestruj się za pomocą konta google</string>
+    <string name="or">lub</string>
+    <string name="no_share">Nigdy nie udostępniamy nic bez twojej zgody</string>
+    <string name="policy_1">Rejestrując się potwierdasz, że akceptujesz nasz Regulamin. Dowiedz się, jak przetwarzamy Twoje dane z Polityki prywatności</string>
+    <string name="log_in_with_google_pl">Zaloguj się za pomocą konta google</string>
+    <string name="password_2">Powtórz hasło</string>
+    <string name="type_your_email_and_password_pl">Podaj swój email i hasło</string>
 </resources>

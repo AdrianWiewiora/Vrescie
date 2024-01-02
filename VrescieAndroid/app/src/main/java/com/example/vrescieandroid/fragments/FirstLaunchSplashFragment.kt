@@ -74,7 +74,7 @@ class FirstLaunchSplashFragment : Fragment() {
 
             override fun onFinish() {
                 val action =
-                    FirstLaunchSplashFragmentDirections.actionFirstLaunchSplashFragmentToLoginFragment()
+                    FirstLaunchSplashFragmentDirections.actionFirstLaunchSplashFragmentToStartFragment()
                 findNavController().navigate(action)
             }
         }.start()

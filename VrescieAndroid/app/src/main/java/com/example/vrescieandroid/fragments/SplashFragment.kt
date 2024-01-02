@@ -40,7 +40,7 @@ class SplashFragment : Fragment() {
                         .apply()
                     findNavController().navigate(R.id.action_splashFragment_to_firstLaunchSplashFragment)
                 } else {
-                    findNavController().navigate(R.id.action_splashFragment_to_loginFragment)
+                    findNavController().navigate(R.id.action_splashFragment_to_startFragment)
                 }
             }
         }, 1000)

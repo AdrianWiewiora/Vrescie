@@ -18,8 +18,8 @@
             android:id="@+id/action_splashFragment_to_anonymousChatFragment"
             app:destination="@id/anonymousChatFragment" />
         <action
-            android:id="@+id/action_splashFragment_to_loginFragment"
-            app:destination="@id/loginFragment" />
+            android:id="@+id/action_splashFragment_to_startFragment"
+            app:destination="@id/startFragment" />
     </fragment>
 
     <fragment
@@ -28,8 +28,8 @@
         android:label="fragment_first_launch_splash"
         tools:layout="@layout/fragment_first_launch_splash" >
         <action
-            android:id="@+id/action_firstLaunchSplashFragment_to_loginFragment"
-            app:destination="@id/loginFragment" />
+            android:id="@+id/action_firstLaunchSplashFragment_to_startFragment"
+            app:destination="@id/startFragment" />
     </fragment>
 
     <fragment
@@ -37,9 +37,36 @@
         android:name="com.example.vrescieandroid.fragments.AnonymousChatFragment"
         android:label="fragment_anonymous_chat"
         tools:layout="@layout/fragment_anonymous_chat" />
+
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.example.vrescieandroid.fragments.LoginFragment"
         android:label="fragment_login"
-        tools:layout="@layout/fragment_login" />
+        tools:layout="@layout/fragment_login" >
+        <action
+            android:id="@+id/action_loginFragment_to_anonymousChatFragment"
+            app:destination="@id/anonymousChatFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/startFragment"
+        android:name="com.example.vrescieandroid.fragments.StartFragment"
+        android:label="StartFragment"
+        tools:layout="@layout/fragment_start">
+        <action
+            android:id="@+id/action_startFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_startFragment_to_registerFragment"
+            app:destination="@id/registerFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.example.vrescieandroid.fragments.RegisterFragment"
+        android:label="fragment_register"
+        tools:layout="@layout/fragment_register" >
+        <action
+            android:id="@+id/action_registerFragment_to_anonymousChatFragment"
+            app:destination="@id/anonymousChatFragment" />
+    </fragment>
 </navigation>
