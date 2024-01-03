@@ -1,7 +1,11 @@
 package com.example.vrescieandroid.fragments
 
+import android.app.Activity
+import android.app.Application
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -9,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,6 +28,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 
 
@@ -33,6 +39,7 @@ class AnonymousChatLoadingFragment : Fragment() {
     private lateinit var usersList: MutableList<User>
 
     private lateinit var buttonConnect: Button
+    private var isUserActive = false
 
     private lateinit var usersRef: DatabaseReference
     private val auth = FirebaseAuth.getInstance()
@@ -123,14 +130,33 @@ class AnonymousChatLoadingFragment : Fragment() {
             }
         })
 
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            val navController = view?.findNavController()
+            navController?.let {
+                it.navigate(R.id.action_anonymousChatLoadingFragment_to_mainMenu)
+            }
+        }
+
         return view
     }
+
+    private val updateHandler = Handler(Looper.myLooper()!!)
+    private val updateRunnable = object : Runnable {
+        override fun run() {
+            if (isUserActive) {
+                updateLastSeenTime()
+            }
+            updateHandler.postDelayed(this, 5000)
+        }
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
 
         val currentUser = auth.currentUser
         if (currentUser != null) {
+            updateHandler.removeCallbacks(updateRunnable)
             usersRef.child(currentUser.uid).removeValue()
                 .addOnSuccessListener {
                     Log.d("AnonymousChatFragment", "Usunięto użytkownika z bazy danych")
@@ -163,6 +189,7 @@ class AnonymousChatLoadingFragment : Fragment() {
                                 if (canConnected == true) {
                                     // Możemy dołączyć do konwersacji, otwieranie...
                                     Log.d("AnonymousChatFragment", "Konwersacja już istnieje i można dołączyć, otwieranie...")
+                                    updateHandler.removeCallbacks(updateRunnable)
                                     startConversation(user.userId)
                                 } else {
                                     // Konwersacja istnieje, ale nie można dołączyć
@@ -196,6 +223,13 @@ class AnonymousChatLoadingFragment : Fragment() {
         navController?.navigate(R.id.action_anonymousChatLoadingFragment_to_conversationFragment, args)
     }
 
+    private fun updateLastSeenTime() {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            usersRef.child(currentUser.uid).child("lastSeen").setValue(ServerValue.TIMESTAMP)
+        }
+    }
+
     private fun connectUserToDatabase() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
@@ -203,6 +237,7 @@ class AnonymousChatLoadingFragment : Fragment() {
             usersRef.child(currentUser.uid).setValue(user)
                 .addOnSuccessListener {
                     Log.d("AnonymousChatFragment", "Dodano użytkownika do bazy danych")
+                    isUserActive = true
                 }
                 .addOnFailureListener {
                     Log.e(
@@ -210,8 +245,13 @@ class AnonymousChatLoadingFragment : Fragment() {
                         "Nie udało się dodać użytkownika do bazy danych: ${it.message}"
                     )
                 }
+            usersRef.child(currentUser.uid).child("lastSeen").setValue(ServerValue.TIMESTAMP)
+
+            updateLastSeenTime()
+            updateHandler.postDelayed(updateRunnable, 5000)
         }
     }
+
 
 }
 

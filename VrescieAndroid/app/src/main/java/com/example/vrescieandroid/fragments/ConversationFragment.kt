@@ -1,5 +1,6 @@
 package com.example.vrescieandroid.fragments
 
+import android.app.AlertDialog
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -7,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import androidx.activity.addCallback
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vrescieandroid.MessagesAdapter
@@ -74,6 +77,11 @@ class ConversationFragment : Fragment() {
             sendMessage()
         }
 
+        view.findViewById<Button>(R.id.buttonCancel).setOnClickListener {
+            showExitConfirmationDialog()
+//            navigateToAnonymousChatLoadingFragment()
+        }
+
         // Inicjalizuj nasłuchiwanie na nowe wiadomości
         messagesRef.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
@@ -137,7 +145,26 @@ class ConversationFragment : Fragment() {
             }
         })
 
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            handleBackPressed()
+        }
+
         return view
+    }
+
+    private fun handleBackPressed() {
+        showExitConfirmationDialog()
+    }
+
+    private fun showExitConfirmationDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Potwierdź rozłączenie")
+            .setMessage("Czy na pewno chcesz się rozłączyć?")
+            .setPositiveButton("Tak") { _, _ ->
+                navigateToAnonymousChatLoadingFragment()
+            }
+            .setNegativeButton("Nie", null)
+            .show()
     }
 
     private fun sendMessage() {
@@ -154,6 +181,13 @@ class ConversationFragment : Fragment() {
                 .addOnFailureListener {
                     // Obsługa błędów
                 }
+        }
+    }
+
+    private fun navigateToAnonymousChatLoadingFragment() {
+        val navController = view?.findNavController()
+        navController?.let {
+            it.navigate(R.id.action_conversationFragment_to_anonymousChatLoadingFragment)
         }
     }
 
