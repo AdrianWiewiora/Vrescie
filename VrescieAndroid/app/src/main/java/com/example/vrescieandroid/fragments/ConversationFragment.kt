@@ -18,6 +18,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 // ConversationFragment.kt
 
@@ -106,17 +107,21 @@ class ConversationFragment : Fragment() {
         val conversationRef = conversationsRef.child(conversationId)
         val membersRef = conversationRef.child("members")
 
-        // Dodaj nasłuchiwanie zmian w members
-        membersRef.addChildEventListener(object : ChildEventListener {
-            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                // Obsługa dodania nowego elementu (opcjonalne)
-            }
+        membersRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val userIds = snapshot.children.mapNotNull { it.key }
+                val isConnectedList = snapshot.children.mapNotNull { it.getValue(Boolean::class.java) }
 
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                val userId = snapshot.key
-                val isConnected = snapshot.getValue(Boolean::class.java)
+                // Sprawdź, czy aktualny użytkownik jest połączony
+                val currentUserIndex = userIds.indexOf(auth.currentUser?.uid)
+                val isConnected = if (currentUserIndex != -1 && currentUserIndex < isConnectedList.size) {
+                    isConnectedList[currentUserIndex]
+                } else {
+                    false
+                }
 
-                if (userId != null && !isConnected!!) {
+                // Sprawdź, czy użytkownik jest rozłączony i czy wiadomość o rozłączeniu już istnieje
+                if (!isConnected && messagesList.none { it.senderId == "system" && it.text == "Użytkownik się rozłączył" }) {
                     // Użytkownik się rozłączył, dodaj wiadomość o rozłączeniu
                     val disconnectedMessage = Message(
                         "system",
@@ -125,14 +130,6 @@ class ConversationFragment : Fragment() {
                     )
                     messagesRef.push().setValue(disconnectedMessage)
                 }
-            }
-
-            override fun onChildRemoved(snapshot: DataSnapshot) {
-                // Obsługa usunięcia elementu (opcjonalne)
-            }
-
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-                // Obsługa przemieszczenia elementu (opcjonalne)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -173,12 +170,14 @@ class ConversationFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
 
-        // Usuń bieżącego użytkownika z members
         val conversationRef = FirebaseDatabase.getInstance().reference.child("conversations")
             .child(getConversationId(userId1, userId2))
 
         val currentUser = auth.currentUser
         if (currentUser != null) {
+            // Ustaw canConnected na false dla konwersacji
+            conversationRef.child("canConnected").setValue(false)
+
             val membersRef = conversationRef.child("members")
             membersRef.child(currentUser.uid).setValue(false)
         }

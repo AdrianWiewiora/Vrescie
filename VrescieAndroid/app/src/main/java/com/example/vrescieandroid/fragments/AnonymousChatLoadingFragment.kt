@@ -147,9 +147,16 @@ class AnonymousChatLoadingFragment : Fragment() {
                     conversationIdRef.addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             if (snapshot.exists()) {
-                                // Konwersacja już istnieje, więc możemy ją otworzyć
-                                Log.d("AnonymousChatFragment", "Konwersacja już istnieje, otwieranie...")
-                                startConversation(user.userId)
+                                // Konwersacja już istnieje, sprawdź czy można dołączyć
+                                val canConnected = snapshot.child("canConnected").getValue(Boolean::class.java)
+                                if (canConnected == true) {
+                                    // Możemy dołączyć do konwersacji, otwieranie...
+                                    Log.d("AnonymousChatFragment", "Konwersacja już istnieje i można dołączyć, otwieranie...")
+                                    startConversation(user.userId)
+                                } else {
+                                    // Konwersacja istnieje, ale nie można dołączyć
+                                    Log.d("AnonymousChatFragment", "Konwersacja już istnieje, ale nie można dołączyć.")
+                                }
                             } else {
                                 // Konwersacja nie istnieje
                                 Log.d("AnonymousChatFragment", "Konwersacja nie istnieje.")
@@ -165,6 +172,7 @@ class AnonymousChatLoadingFragment : Fragment() {
             }
         }
     }
+
 
 
     private fun startConversation(otherUserId: String) {
