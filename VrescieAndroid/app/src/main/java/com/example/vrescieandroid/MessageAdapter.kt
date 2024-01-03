@@ -2,9 +2,11 @@ package com.example.vrescieandroid
 
 // MessagesAdapter.kt
 
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vrescieandroid.data.Message
@@ -44,11 +46,14 @@ class MessagesAdapter(private val messagesList: List<Message>) :
         if (holder.itemViewType == VIEW_TYPE_SENT) {
             val sentHolder = holder as SentMessageViewHolder
             sentHolder.messageText.text = message.text
+            sentHolder.messageText.gravity = Gravity.END
         } else {
             val receivedHolder = holder as ReceivedMessageViewHolder
             receivedHolder.messageText.text = message.text
+            receivedHolder.messageText.gravity = Gravity.START
         }
     }
+
 
     override fun getItemCount(): Int {
         return messagesList.size
