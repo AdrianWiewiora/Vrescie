@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import androidx.activity.OnBackPressedCallback
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
@@ -31,6 +32,8 @@ class AnonymousChatLoadingFragment : Fragment() {
     private lateinit var usersAdapter: UsersAdapter
     private lateinit var usersList: MutableList<User>
 
+    private lateinit var buttonConnect: Button
+
     private lateinit var usersRef: DatabaseReference
     private val auth = FirebaseAuth.getInstance()
 
@@ -39,6 +42,9 @@ class AnonymousChatLoadingFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_anonymous_chat_loading, container, false)
+
+        buttonConnect = view.findViewById(R.id.button_connect)
+        buttonConnect.isEnabled = true
 
         recyclerView = view.findViewById(R.id.recyclerView)
 
@@ -79,11 +85,16 @@ class AnonymousChatLoadingFragment : Fragment() {
 
         usersRef = FirebaseDatabase.getInstance().reference.child("users")
 
+        buttonConnect.setOnClickListener {
+            connectUserToDatabase()
+            buttonConnect.isEnabled = false
+        }
+
         val currentUser = auth.currentUser
-        if (currentUser != null) {
+/*        if (currentUser != null) {
             val user = User(currentUser.uid, currentUser.email.toString())
             usersRef.child(currentUser.uid).setValue(user)
-        }
+        }*/
 
         usersRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -183,6 +194,23 @@ class AnonymousChatLoadingFragment : Fragment() {
         args.putString("userId2", otherUserId)
 
         navController?.navigate(R.id.action_anonymousChatLoadingFragment_to_conversationFragment, args)
+    }
+
+    private fun connectUserToDatabase() {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            val user = User(currentUser.uid, currentUser.email.toString())
+            usersRef.child(currentUser.uid).setValue(user)
+                .addOnSuccessListener {
+                    Log.d("AnonymousChatFragment", "Dodano użytkownika do bazy danych")
+                }
+                .addOnFailureListener {
+                    Log.e(
+                        "AnonymousChatFragment",
+                        "Nie udało się dodać użytkownika do bazy danych: ${it.message}"
+                    )
+                }
+        }
     }
 
 }

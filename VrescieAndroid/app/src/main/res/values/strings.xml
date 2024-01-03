@@ -48,4 +48,5 @@
     <string name="implicity_chat_pl">Potwierdzone czaty</string>
     <string name="profile_pl">Profil</string>
     <string name="random_pl">Losuj</string>
+    <string name="connect_rep">Połącz ponownie</string>
 </resources>
