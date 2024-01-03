@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import androidx.activity.addCallback
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,13 +33,16 @@ class ConversationFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var editTextMessage: EditText
-    private lateinit var buttonSendMessage: Button
+    private lateinit var buttonSendMessage: ImageView
 
     private val messagesList = mutableListOf<Message>()
     private lateinit var messagesAdapter: MessagesAdapter
 
     private lateinit var messagesRef: DatabaseReference
     private val auth = FirebaseAuth.getInstance()
+
+    private var isOtherUserConnected: Boolean = true
+
 
     companion object {
         fun newInstance(userId1: String, userId2: String): ConversationFragment {
@@ -77,7 +81,7 @@ class ConversationFragment : Fragment() {
             sendMessage()
         }
 
-        view.findViewById<Button>(R.id.buttonCancel).setOnClickListener {
+        view.findViewById<ImageView>(R.id.buttonCancel).setOnClickListener {
             showExitConfirmationDialog()
 //            navigateToAnonymousChatLoadingFragment()
         }
@@ -120,6 +124,9 @@ class ConversationFragment : Fragment() {
                 val userIds = snapshot.children.mapNotNull { it.key }
                 val isConnectedList = snapshot.children.mapNotNull { it.getValue(Boolean::class.java) }
 
+
+                isOtherUserConnected = isConnectedList.any { it == false }
+
                 // Sprawdź, czy aktualny użytkownik jest połączony
                 val currentUserIndex = userIds.indexOf(auth.currentUser?.uid)
                 val isConnected = if (currentUserIndex != -1 && currentUserIndex < isConnectedList.size) {
@@ -148,6 +155,8 @@ class ConversationFragment : Fragment() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             handleBackPressed()
         }
+
+        editTextMessage.isEnabled = isOtherUserConnected
 
         return view
     }
