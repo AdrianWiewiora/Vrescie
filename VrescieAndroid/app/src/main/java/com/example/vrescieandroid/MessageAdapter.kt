@@ -17,6 +17,7 @@ class MessagesAdapter(private val messagesList: List<Message>) :
 
     private val VIEW_TYPE_SENT = 1
     private val VIEW_TYPE_RECEIVED = 2
+    private val VIEW_TYPE_SYSTEM = 3
 
     private val auth = FirebaseAuth.getInstance()
 
@@ -28,31 +29,52 @@ class MessagesAdapter(private val messagesList: List<Message>) :
         val messageText: TextView = itemView.findViewById(R.id.textViewReceivedMessage)
     }
 
+    inner class SystemMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val messageText: TextView = itemView.findViewById(R.id.textViewSystemMessage)
+    }
+
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return if (viewType == VIEW_TYPE_SENT) {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_sent_message, parent, false)
-            SentMessageViewHolder(view)
-        } else {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_received_message, parent, false)
-            ReceivedMessageViewHolder(view)
+        return when (viewType) {
+            VIEW_TYPE_SENT -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_sent_message, parent, false)
+                SentMessageViewHolder(view)
+            }
+            VIEW_TYPE_RECEIVED -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_received_message, parent, false)
+                ReceivedMessageViewHolder(view)
+            }
+            VIEW_TYPE_SYSTEM -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_system_message, parent, false)
+                SystemMessageViewHolder(view)
+            }
+            else -> throw IllegalArgumentException("Unknown view type")
         }
     }
+
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = messagesList[position]
 
-        if (holder.itemViewType == VIEW_TYPE_SENT) {
-            val sentHolder = holder as SentMessageViewHolder
-            sentHolder.messageText.text = message.text
-            sentHolder.messageText.gravity = Gravity.END
-        } else {
-            val receivedHolder = holder as ReceivedMessageViewHolder
-            receivedHolder.messageText.text = message.text
-            receivedHolder.messageText.gravity = Gravity.START
+        when (holder.itemViewType) {
+            VIEW_TYPE_SENT -> {
+                val sentHolder = holder as SentMessageViewHolder
+                sentHolder.messageText.text = message.text
+            }
+            VIEW_TYPE_RECEIVED -> {
+                val receivedHolder = holder as ReceivedMessageViewHolder
+                receivedHolder.messageText.text = message.text
+            }
+            VIEW_TYPE_SYSTEM -> {
+                val systemHolder = holder as SystemMessageViewHolder
+                systemHolder.messageText.text = message.text
+            }
         }
     }
+
 
 
     override fun getItemCount(): Int {
@@ -60,13 +82,14 @@ class MessagesAdapter(private val messagesList: List<Message>) :
     }
 
     override fun getItemViewType(position: Int): Int {
-        // Decyduj, czy wiadomość została wysłana czy odebrana
-        return if (messagesList[position].senderId == auth.currentUser?.uid) {
-            VIEW_TYPE_SENT
-        } else {
-            VIEW_TYPE_RECEIVED
+        val message = messagesList[position]
+        return when {
+            message.senderId == auth.currentUser?.uid -> VIEW_TYPE_SENT
+            message.senderId == "system" -> VIEW_TYPE_SYSTEM
+            else -> VIEW_TYPE_RECEIVED
         }
     }
+
 }
 
 
