@@ -70,8 +70,8 @@
         android:label="fragment_register"
         tools:layout="@layout/fragment_register" >
         <action
-            android:id="@+id/action_registerFragment_to_anonymousChatFragment"
-            app:destination="@id/mainMenu" />
+            android:id="@+id/action_registerFragment_to_addNameFragment"
+            app:destination="@id/addNameFragment" />
     </fragment>
     <fragment
         android:id="@+id/anonymousChatFragment"
@@ -118,6 +118,15 @@
             app:destination="@id/conversationFragment" />
         <action
             android:id="@+id/action_anonymousChatLoadingFragment_to_mainMenu"
+            app:destination="@id/mainMenu" />
+    </fragment>
+    <fragment
+        android:id="@+id/addNameFragment"
+        android:name="com.example.vrescieandroid.fragments.AddNameFragment"
+        android:label="fragment_add_name"
+        tools:layout="@layout/fragment_add_name" >
+        <action
+            android:id="@+id/action_addNameFragment_to_mainMenu"
             app:destination="@id/mainMenu" />
     </fragment>
 </navigation>

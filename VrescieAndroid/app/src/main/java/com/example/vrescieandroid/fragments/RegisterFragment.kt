@@ -12,6 +12,9 @@ import androidx.navigation.fragment.findNavController
 import com.example.vrescieandroid.R
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 
 class RegisterFragment : Fragment() {
 
@@ -73,13 +76,33 @@ class RegisterFragment : Fragment() {
             .addOnCompleteListener(requireActivity()) { task ->
                 if (task.isSuccessful) {
                     Log.d("Login", "Logowanie udane")
-                    findNavController().navigate(R.id.action_registerFragment_to_anonymousChatFragment)
+
+                    // Pobierz zalogowanego użytkownika
+                    val user: FirebaseUser? = auth.currentUser
+
+                    // Dodaj rekord do bazy danych
+                    user?.let { addUserToDatabase(it) }
+
+                    findNavController().navigate(R.id.action_registerFragment_to_addNameFragment)
                 } else {
                     val exception = task.exception
                     Log.e("Login", "Błąd logowania", exception)
                     Toast.makeText(requireContext(), "Błąd logowania: ${exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
+    }
+
+    private fun addUserToDatabase(user: FirebaseUser) {
+        val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+        val reference: DatabaseReference = database.reference.child("user")
+
+        // Tworzenie obiektu userMap z danymi do dodania
+        val userMap = HashMap<String, Any>()
+        userMap["id"] = user.uid
+        userMap["e_mail"] = user.email.orEmpty()
+
+        // Dodanie rekordu do bazy danych
+        reference.child(user.uid).setValue(userMap)
     }
 
 

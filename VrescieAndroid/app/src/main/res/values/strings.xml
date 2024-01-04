@@ -53,4 +53,9 @@
     <string name="write_message">Wprowadź wiadomość</string>
     <string name="cancel_button">CancelButton</string>
     <string name="send_message">SendMessage</string>
+    <string name="type_your_name_and_gender_pl">Podaj swoje imię i wybierz płeć</string>
+    <string name="name_pl">Imię</string>
+    <string name="continue_pl">Kontynuuj</string>
+    <string name="female">Kobieta</string>
+    <string name="male">Mężczyzna</string>
 </resources>
