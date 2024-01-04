@@ -34,11 +34,12 @@ import com.google.firebase.database.ValueEventListener
 
 class AnonymousChatLoadingFragment : Fragment() {
 
-    private lateinit var recyclerView: RecyclerView
+/*    private lateinit var recyclerView: RecyclerView
     private lateinit var usersAdapter: UsersAdapter
-    private lateinit var usersList: MutableList<User>
 
-    private lateinit var buttonConnect: Button
+    private lateinit var buttonConnect: Button*/
+
+    private lateinit var usersList: MutableList<User>
     private var isUserActive = false
 
     private lateinit var usersRef: DatabaseReference
@@ -50,7 +51,7 @@ class AnonymousChatLoadingFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_anonymous_chat_loading, container, false)
 
-        buttonConnect = view.findViewById(R.id.button_connect)
+/*        buttonConnect = view.findViewById(R.id.button_connect)
         buttonConnect.isEnabled = true
 
         recyclerView = view.findViewById(R.id.recyclerView)
@@ -62,7 +63,9 @@ class AnonymousChatLoadingFragment : Fragment() {
             val layoutManager = LinearLayoutManager(requireContext())
             recyclerView.layoutManager = layoutManager
             recyclerView.adapter = usersAdapter
-        }
+        }*/
+
+        usersList = mutableListOf()
 
         // Obserwuj zmiany w węźle konwersacji
         val conversationsRef = FirebaseDatabase.getInstance().reference.child("conversations")
@@ -92,13 +95,12 @@ class AnonymousChatLoadingFragment : Fragment() {
 
         usersRef = FirebaseDatabase.getInstance().reference.child("users")
 
-        buttonConnect.setOnClickListener {
+/*        buttonConnect.setOnClickListener {
             connectUserToDatabase()
             buttonConnect.isEnabled = false
         }
 
-        val currentUser = auth.currentUser
-/*        if (currentUser != null) {
+        if (currentUser != null) {
             val user = User(currentUser.uid, currentUser.email.toString())
             usersRef.child(currentUser.uid).setValue(user)
         }*/
@@ -112,7 +114,7 @@ class AnonymousChatLoadingFragment : Fragment() {
                         usersList.add(it)
                     }
                 }
-                usersAdapter.notifyDataSetChanged()
+                //usersAdapter.notifyDataSetChanged()
 
                 // Dodaj logi, aby zobaczyć, czy lista użytkowników jest aktualizowana
                 Log.d("AnonymousChatFragment", "Liczba użytkowników: ${usersList.size}")
@@ -148,6 +150,11 @@ class AnonymousChatLoadingFragment : Fragment() {
             }
             updateHandler.postDelayed(this, 5000)
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        connectUserToDatabase()
     }
 
 
@@ -254,21 +261,3 @@ class AnonymousChatLoadingFragment : Fragment() {
 
 
 }
-
-
-
-/*
-usersAdapter.setOnItemClickListener(object : UsersAdapter.OnItemClickListener {
-    override fun onItemClick(user: User) {
-        startConversation(user.userId)
-    }
-})
-private fun startConversation(otherUserId: String) {
-    val navController = findNavController()
-
-    val args = Bundle()
-    args.putString("userId1", auth.currentUser?.uid)
-    args.putString("userId2", otherUserId)
-
-    navController.navigate(R.id.action_anonymousChatLoadingFragment_to_conversationFragment, args)
-}*/

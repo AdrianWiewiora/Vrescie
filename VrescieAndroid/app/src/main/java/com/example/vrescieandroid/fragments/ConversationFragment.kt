@@ -194,7 +194,7 @@ class ConversationFragment : Fragment() {
     private fun navigateToAnonymousChatLoadingFragment() {
         val navController = view?.findNavController()
         navController?.let {
-            it.navigate(R.id.action_conversationFragment_to_anonymousChatLoadingFragment)
+            it.navigate(R.id.action_conversationFragment_to_mainMenu)
         }
     }
 

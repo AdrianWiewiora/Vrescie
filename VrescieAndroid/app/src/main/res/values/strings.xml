@@ -49,4 +49,8 @@
     <string name="profile_pl">Profil</string>
     <string name="random_pl">Losuj</string>
     <string name="connect_rep">Połącz ponownie</string>
+    <string name="loading_text">Czekaj!!!\n\nTrwa szukanie osoby odpowiedniej dla twoich preferencji</string>
+    <string name="write_message">Wprowadź wiadomość</string>
+    <string name="cancel_button">CancelButton</string>
+    <string name="send_message">SendMessage</string>
 </resources>
