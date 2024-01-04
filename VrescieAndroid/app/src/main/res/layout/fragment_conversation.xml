@@ -35,7 +35,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/iconAddLike"
+        android:id="@+id/buttonAddLike"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_alignParentEnd="true"
@@ -66,7 +66,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewMessages"
             android:layout_width="match_parent"
-            android:layout_height="636dp"
+            android:layout_height="match_parent"
             android:layout_above="@+id/messageInputLayout"
             android:layout_alignParentTop="true"
             android:layout_marginHorizontal="10dp"
@@ -113,8 +113,8 @@
 
         <ImageView
             android:id="@+id/buttonSendMessage"
-            android:layout_width="55dp"
-            android:layout_height="50dp"
+            android:layout_width="50dp"
+            android:layout_height="45dp"
             android:layout_alignParentEnd="true"
             android:src="@drawable/baseline_send_24"
             android:contentDescription="@string/send_message"/>

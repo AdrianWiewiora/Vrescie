@@ -2,6 +2,8 @@ package com.example.vrescieandroid.fragments
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -36,6 +38,8 @@ class ConversationFragment : Fragment() {
     private lateinit var editTextMessage: EditText
     private lateinit var buttonSendMessage: ImageView
 
+    private lateinit var buttonAddLike: ImageView
+
     private val messagesList = mutableListOf<Message>()
     private lateinit var messagesAdapter: MessagesAdapter
 
@@ -66,6 +70,7 @@ class ConversationFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recyclerViewMessages)
         editTextMessage = view.findViewById(R.id.editTextMessage)
         buttonSendMessage = view.findViewById(R.id.buttonSendMessage)
+        buttonAddLike = view.findViewById(R.id.buttonAddLike)
 
         messagesAdapter = MessagesAdapter(messagesList)
         recyclerView.adapter = messagesAdapter
@@ -80,9 +85,14 @@ class ConversationFragment : Fragment() {
             sendMessage()
         }
 
+        buttonAddLike.setOnClickListener {
+            handleAddLikePressed()
+        }
+
+        val isLiked = false
+
         view.findViewById<ImageView>(R.id.buttonCancel).setOnClickListener {
             showExitConfirmationDialog()
-//            navigateToAnonymousChatLoadingFragment()
         }
 
         // Inicjalizuj nasłuchiwanie na nowe wiadomości
@@ -156,7 +166,35 @@ class ConversationFragment : Fragment() {
             handleBackPressed()
         }
 
+        likeCheckHandler.postDelayed(likeCheckRunnable, 30000)
+
         return view
+    }
+
+    private fun handleAddLikePressed() {
+        showAddLikeConfirmationDialog()
+    }
+
+    private fun showAddLikeConfirmationDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Potwierdź polubienie")
+            .setMessage("Czy na pewno chcesz polubić osobę z którą rozmawiasz?")
+            .setPositiveButton("Tak") { _, _ ->
+                addLike()
+            }
+            .setNegativeButton("Nie", null)
+            .show()
+    }
+
+    private fun addLike() {
+        val conversationId = getConversationId(userId1, userId2)
+        val conversationRef = FirebaseDatabase.getInstance().reference.child("conversations").child(conversationId)
+
+        // Dodaj nowy like dla bieżącego użytkownika
+        val currentUser = auth.currentUser
+        currentUser?.uid?.let { userId ->
+            conversationRef.child("likes").child(userId).setValue(true)
+        }
     }
 
     private fun handleBackPressed() {
@@ -222,6 +260,56 @@ class ConversationFragment : Fragment() {
             val membersRef = conversationRef.child("members")
             membersRef.child(currentUser.uid).setValue(false)
         }
+        likeCheckHandler.removeCallbacks(likeCheckRunnable)
+    }
+
+    private val likeCheckHandler = Handler(Looper.myLooper()!!)
+    private val likeCheckRunnable = object : Runnable {
+        override fun run() {
+            checkForLikes()
+            likeCheckHandler.postDelayed(this, 30000) // Sprawdzaj co 30 sekund
+        }
+    }
+
+    private fun checkForLikes() {
+        // Sprawdź, czy są dwa lajki w likes na true
+        val conversationId = getConversationId(userId1, userId2)
+        val conversationRef = FirebaseDatabase.getInstance().reference.child("conversations").child(conversationId).child("likes")
+
+        conversationRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var likesCount = 0
+
+                for (childSnapshot in snapshot.children) {
+                    val liked = childSnapshot.getValue(Boolean::class.java) ?: false
+                    if (liked) {
+                        likesCount++
+                    }
+
+                    // Sprawdź, czy są dwa lajki
+                    if (likesCount >= 2) {
+                        showLikeNotificationDialog()
+                        break
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+        })
+    }
+
+
+    private fun showLikeNotificationDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Brawo!!! Użytkownik cię polubił.")
+            .setMessage("Czy chcesz opuścić konwersację by przejść do jawnej konwersacji?")
+            .setPositiveButton("Tak") { _, _ ->
+                navigateToAnonymousChatLoadingFragment()
+            }
+            .setNegativeButton("Nie", null)
+            .show()
     }
 }
 
