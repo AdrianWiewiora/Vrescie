@@ -81,14 +81,6 @@ class AnonymousChatLoadingFragment : Fragment() {
                         usersList.add(it)
                     }
                 }
-
-                // Dodaj logi, aby zobaczyć, czy lista użytkowników jest aktualizowana
-                Log.d("AnonymousChatFragment", "Liczba użytkowników: ${usersList.size}")
-
-                for (user in usersList) {
-                    Log.d("AnonymousChatFragment", "UserID: ${user.id}, Username: ${user.email}")
-                }
-
                 checkConversationsAndNavigate()
             }
 
