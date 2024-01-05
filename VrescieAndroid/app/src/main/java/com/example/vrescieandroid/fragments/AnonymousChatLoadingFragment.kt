@@ -214,7 +214,8 @@ class AnonymousChatLoadingFragment : Fragment() {
                                 currentUser.uid,
                                 currentUser.email.toString(),
                                 userAge ?: "",
-                                userGender ?: ""
+                                userGender ?: "",
+                                ServerValue.TIMESTAMP
                             )
                             usersRef.child(currentUser.uid).setValue(user2)
                                 .addOnSuccessListener {
@@ -227,9 +228,9 @@ class AnonymousChatLoadingFragment : Fragment() {
                                         "Nie udało się dodać użytkownika do bazy danych: ${it.message}"
                                     )
                                 }
-                            usersRef.child(currentUser.uid).child("lastSeen").setValue(ServerValue.TIMESTAMP)
+                            //usersRef.child(currentUser.uid).child("lastSeen").setValue(ServerValue.TIMESTAMP)
 
-                            updateLastSeenTime()
+                            //updateLastSeenTime()
                             updateHandler.postDelayed(updateRunnable, 5000)
 
                         }

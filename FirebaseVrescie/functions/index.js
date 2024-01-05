@@ -2,10 +2,22 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 admin.initializeApp();
 
+// eslint-disable-next-line max-len
+// Globalna zmienna do przechowywania informacji o ostatnich użytkownikach w ciągu ostatnich 3 sekund
+const recentUsers = {};
+
 exports.assignUsersToConversation = functions.database
     .ref("/users/{userId}")
     .onWrite(async (change, context) => {
       const userId = context.params.userId;
+
+      if (recentUsers[userId]) {
+        // eslint-disable-next-line max-len
+        console.log("Obaj użytkownicy są już w informacjach o ostatnich użytkownikach, nie tworzę nowej konwersacji.");
+        return null;
+      }
+
+      recentUsers[userId] = true;
 
       // Sprawdź, czy użytkownik jest już w jakiejkolwiek konwersacji
       // eslint-disable-next-line max-len
@@ -14,6 +26,7 @@ exports.assignUsersToConversation = functions.database
 
       let isInConversation = false;
       let otherUserId = null;
+
 
       // eslint-disable-next-line max-len
       // Iteruj przez konwersacje, aby sprawdzić, czy użytkownik jest już w jakiejkolwiek konwersacji
@@ -37,6 +50,9 @@ exports.assignUsersToConversation = functions.database
         const conversationData = conversationSnapshot.val();
 
         if (conversationData.canConnected) {
+          recentUsers[userId] = false;
+
+
           // eslint-disable-next-line max-len
           // Możesz zmienić konwersację z tym użytkownikiem, ponieważ canConnected jest true
           // Tutaj możesz dodać odpowiednią logikę lub inne działania
@@ -59,6 +75,18 @@ exports.assignUsersToConversation = functions.database
 
           // Utwórz nową konwersację
           await createConversation(userId, otherUserId);
+
+          // Dodaj informacje o użytkownikach do ostatnich użytkowników
+          recentUsers[userId] = true;
+          recentUsers[otherUserId] = true;
+
+          // Ustaw timer do usunięcia informacji po 3 sekundach
+          setTimeout(() => {
+            delete recentUsers[userId];
+            delete recentUsers[otherUserId];
+          }, 3000);
+
+          return null;
         }
       } else {
         // eslint-disable-next-line max-len
@@ -77,9 +105,19 @@ exports.assignUsersToConversation = functions.database
 
         // Utwórz nową konwersację
         await createConversation(userId, otherUserId);
-      }
 
-      return null;
+        // Dodaj informacje o użytkownikach do ostatnich użytkowników
+        recentUsers[userId] = true;
+        recentUsers[otherUserId] = true;
+
+        // Ustaw timer do usunięcia informacji po 3 sekundach
+        setTimeout(() => {
+          delete recentUsers[userId];
+          delete recentUsers[otherUserId];
+        }, 3000);
+
+        return null;
+      }
     });
 
 // Funkcja do tworzenia unikalnego identyfikatora konwersacji

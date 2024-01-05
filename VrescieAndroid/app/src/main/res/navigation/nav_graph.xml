@@ -112,9 +112,6 @@
         android:name="userId2"
         app:argType="string" />
         <action
-            android:id="@+id/action_conversationFragment_to_anonymousChatLoadingFragment"
-            app:destination="@id/anonymousChatLoadingFragment" />
-        <action
             android:id="@+id/action_conversationFragment_to_mainMenu"
             app:destination="@id/mainMenu" />
     </fragment>
