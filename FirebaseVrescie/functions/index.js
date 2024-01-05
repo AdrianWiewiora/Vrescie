@@ -7,21 +7,76 @@ exports.assignUsersToConversation = functions.database
     .onWrite(async (change, context) => {
       const userId = context.params.userId;
 
-      const usersSnapshot = await admin.database().ref("/users").once("value");
-      const usersList = Object.keys(usersSnapshot.val());
+      // Sprawdź, czy użytkownik jest już w jakiejkolwiek konwersacji
+      // eslint-disable-next-line max-len
+      const conversationsSnapshot = await admin.database().ref(`/conversations`).once("value");
+      const conversationsData = conversationsSnapshot.val();
 
-      // Sprawdź, czy konwersacja już istnieje między dwoma użytkownikami
-      for (const otherUserId of usersList) {
-        if (otherUserId !== userId) {
-          const conversationId = getConversationId(userId, otherUserId);
+      let isInConversation = false;
+      let otherUserId = null;
+
+      // eslint-disable-next-line max-len
+      // Iteruj przez konwersacje, aby sprawdzić, czy użytkownik jest już w jakiejkolwiek konwersacji
+      // eslint-disable-next-line guard-for-in
+      for (const conversationId in conversationsData) {
+        const conversation = conversationsData[conversationId];
+        if (userId in conversation.members) {
+          isInConversation = true;
           // eslint-disable-next-line max-len
-          const conversationSnapshot = await admin.database().ref(`/conversations/${conversationId}`).once("value");
-
-          if (!conversationSnapshot.exists()) {
-          // Jeżeli konwersacja jeszcze nie istnieje, utwórz ją
-            await createConversation(userId, otherUserId);
-          }
+          otherUserId = Object.keys(conversation.members).find((id) => id !== userId);
+          break;
         }
+      }
+
+      if (isInConversation) {
+        // eslint-disable-next-line max-len
+        // Jeżeli użytkownik jest już w konwersacji, sprawdź parametr canConnected
+        // eslint-disable-next-line max-len
+        const conversationRef = admin.database().ref(`/conversations/${getConversationId(userId, otherUserId)}`);
+        const conversationSnapshot = await conversationRef.once("value");
+        const conversationData = conversationSnapshot.val();
+
+        if (conversationData.canConnected) {
+          // eslint-disable-next-line max-len
+          // Możesz zmienić konwersację z tym użytkownikiem, ponieważ canConnected jest true
+          // Tutaj możesz dodać odpowiednią logikę lub inne działania
+          return null;
+        } else {
+          // Nie możesz zmienić konwersacji, ponieważ canConnected jest false
+          // Tutaj możesz dodać odpowiednią logikę lub inne działania
+
+          // eslint-disable-next-line max-len
+          const usersSnapshot = await admin.database().ref("/users").once("value");
+          const usersList = Object.keys(usersSnapshot.val());
+
+          // Wylosuj innego użytkownika
+          let randomIndex = Math.floor(Math.random() * usersList.length);
+          while (usersList[randomIndex] === userId) {
+            randomIndex = Math.floor(Math.random() * usersList.length);
+          }
+
+          const otherUserId = usersList[randomIndex];
+
+          // Utwórz nową konwersację
+          await createConversation(userId, otherUserId);
+        }
+      } else {
+        // eslint-disable-next-line max-len
+        // Użytkownik nie jest w żadnej konwersacji, więc wylosuj drugiego użytkownika
+        // eslint-disable-next-line max-len
+        const usersSnapshot = await admin.database().ref("/users").once("value");
+        const usersList = Object.keys(usersSnapshot.val());
+
+        // Wylosuj innego użytkownika
+        let randomIndex = Math.floor(Math.random() * usersList.length);
+        while (usersList[randomIndex] === userId) {
+          randomIndex = Math.floor(Math.random() * usersList.length);
+        }
+
+        const otherUserId = usersList[randomIndex];
+
+        // Utwórz nową konwersację
+        await createConversation(userId, otherUserId);
       }
 
       return null;

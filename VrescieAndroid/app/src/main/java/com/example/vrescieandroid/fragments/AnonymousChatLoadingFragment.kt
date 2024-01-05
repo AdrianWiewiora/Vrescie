@@ -179,6 +179,10 @@ class AnonymousChatLoadingFragment : Fragment() {
     private fun startConversation(otherUserId: String) {
         val navController = view?.findNavController()
 
+        // Czyść back stack do określonego fragmentu (jeśli istnieje)
+        navController?.popBackStack(R.id.anonymousChatLoadingFragment, false)
+
+        // Nawiguj do nowego fragmentu
         val args = Bundle()
         args.putString("userId1", auth.currentUser?.uid)
         args.putString("userId2", otherUserId)
