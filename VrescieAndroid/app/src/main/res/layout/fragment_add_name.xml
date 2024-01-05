@@ -93,24 +93,52 @@
         android:layout_marginHorizontal="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/card1">
+        app:layout_constraintTop_toBottomOf="@+id/card1"
+        >
 
         <RadioButton
             android:id="@+id/radioButtonFemale"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/female"
-            android:textColor="@color/black"/>
+            android:textColor="@color/black"
+            android:buttonTint="@color/black"
+            android:backgroundTint="@color/black"/>
 
         <RadioButton
             android:id="@+id/radioButtonMale"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/male"
-            android:textColor="@color/black"/>
+            android:textColor="@color/black"
+            android:buttonTint="@color/black"
+            android:backgroundTint="@color/black"/>
 
     </RadioGroup>
 
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="10dp"
+        android:text="@string/type_your_age_pl"
+        android:textColor="@color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/genderRadioGroup" />
+
+    <Spinner
+        android:id="@+id/ageSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginHorizontal="10dp"
+        android:backgroundTint="@color/black"
+        android:textColor="@color/black"
+        app:layout_constraintStart_toEndOf="@+id/textView6"
+        app:layout_constraintTop_toBottomOf="@+id/genderRadioGroup"
+        android:popupBackground="#C1B9B9"
+        android:spinnerMode="dropdown"
+        />
 
     <Button
         android:id="@+id/nextBtn"
@@ -126,7 +154,8 @@
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/genderRadioGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/ageSpinner" />
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
