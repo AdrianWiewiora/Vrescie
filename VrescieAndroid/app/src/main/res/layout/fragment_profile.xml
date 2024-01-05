@@ -44,12 +44,34 @@
         app:layout_constraintStart_toStartOf="parent">
 
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/profileRecyclerView"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginHorizontal="10dp"
-            android:layout_marginVertical="10dp"/>
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/profileRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/edit_profile"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="10dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/edit_profile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:text="@string/edit_profile_pl"
+                android:padding="16dp"
+                android:insetBottom="0dp"
+
+                android:layout_alignParentBottom="true"
+                app:backgroundTint="@android:color/black"
+                app:cornerRadius="0dp"
+                android:textColor="@color/white"
+                />
+
+        </RelativeLayout>
 
 
     </com.google.android.material.card.MaterialCardView>
