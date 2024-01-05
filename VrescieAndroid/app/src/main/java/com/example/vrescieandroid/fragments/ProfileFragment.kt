@@ -6,11 +6,14 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vrescieandroid.ProfileAdapter
 import com.example.vrescieandroid.R
 import com.example.vrescieandroid.data.UserProfile
+import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -23,7 +26,7 @@ class ProfileFragment : Fragment() {
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
     private lateinit var adapter: ProfileAdapter
-
+    private var userProfile: UserProfile? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,7 +54,7 @@ class ProfileFragment : Fragment() {
             userReference.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()) {
-                        val userProfile = snapshot.getValue(UserProfile::class.java)
+                        userProfile = snapshot.getValue(UserProfile::class.java)
                         userProfile?.let {
                             val profiles = listOf(it)
                             adapter.updateData(profiles)
@@ -70,6 +73,19 @@ class ProfileFragment : Fragment() {
         } else {
             Log.d("ProfileFragment", "User not logged in")
         }
+
+        val editProfileButton = view.findViewById<MaterialButton>(R.id.edit_profile)
+//        val bundle = Bundle()
+//        bundle.putString("userName", userProfile?.name)
+
+        editProfileButton.setOnClickListener {
+            findNavController().navigate(
+                R.id.action_mainMenu_to_editProfileFragment,
+                bundleOf("userName" to userProfile?.name)
+            )
+        }
+
+
 
         return view
     }

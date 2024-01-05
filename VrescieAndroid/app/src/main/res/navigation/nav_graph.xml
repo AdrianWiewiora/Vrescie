@@ -46,6 +46,9 @@
         <action
             android:id="@+id/action_mainMenu_to_implicitConversationFragment"
             app:destination="@id/implicitConversationFragment" />
+        <action
+            android:id="@+id/action_mainMenu_to_editProfileFragment"
+            app:destination="@id/editProfileFragment" />
     </fragment>
 
     <fragment
@@ -151,6 +154,19 @@
 
         <action
             android:id="@+id/action_implicitConversationFragment_to_mainMenu"
+            app:destination="@id/mainMenu" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.example.vrescieandroid.fragments.EditProfileFragment"
+        android:label="fragment_edit_profile"
+        tools:layout="@layout/fragment_edit_profile" >
+        <argument
+            android:name="userName"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_editProfileFragment_to_mainMenu"
             app:destination="@id/mainMenu" />
     </fragment>
 

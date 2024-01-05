@@ -1,8 +1,5 @@
 package com.example.vrescieandroid.fragments
 
-import android.app.Activity
-import android.app.Application
-import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -11,16 +8,10 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.vrescieandroid.ConversationActivity
 import com.example.vrescieandroid.R
-import com.example.vrescieandroid.UsersAdapter
 import com.example.vrescieandroid.data.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
@@ -254,26 +245,6 @@ class AnonymousChatLoadingFragment : Fragment() {
                 }
             })
         }
-
-
-/*        if (currentUser != null) {
-            val user = User(currentUser.uid, currentUser.email.toString())
-            usersRef.child(currentUser.uid).setValue(user)
-                .addOnSuccessListener {
-                    Log.d("AnonymousChatFragment", "Dodano użytkownika do bazy danych")
-                    isUserActive = true
-                }
-                .addOnFailureListener {
-                    Log.e(
-                        "AnonymousChatFragment",
-                        "Nie udało się dodać użytkownika do bazy danych: ${it.message}"
-                    )
-                }
-            usersRef.child(currentUser.uid).child("lastSeen").setValue(ServerValue.TIMESTAMP)
-
-            updateLastSeenTime()
-            updateHandler.postDelayed(updateRunnable, 5000)
-        }*/
     }
 
 
