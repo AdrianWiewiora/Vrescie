@@ -5,8 +5,9 @@ data class UserProfile(
     val name: String = "",
     val age: String = "",
     val e_mail: String = "",
-    val gender: String = ""
+    val gender: String = "",
+    val join_time: Long? = 0
 ) {
-    constructor() : this("", "", "", "", "")
+    constructor() : this("", "", "", "", "", 0)
 }
 

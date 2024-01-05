@@ -6,6 +6,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vrescieandroid.data.UserProfile
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class ProfileAdapter(private var profiles: List<UserProfile>) : RecyclerView.Adapter<ProfileAdapter.ProfileViewHolder>() {
 
@@ -15,6 +18,7 @@ class ProfileAdapter(private var profiles: List<UserProfile>) : RecyclerView.Ada
         val ageTextView: TextView = itemView.findViewById(R.id.ageTextView)
         val emailTextView: TextView = itemView.findViewById(R.id.emailTextView)
         val genderTextView: TextView = itemView.findViewById(R.id.genderTextView)
+        val joinTimeTextView: TextView = itemView.findViewById(R.id.joinTimeTextView)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProfileViewHolder {
@@ -29,7 +33,15 @@ class ProfileAdapter(private var profiles: List<UserProfile>) : RecyclerView.Ada
         holder.nameTextView.text = profile.name
         holder.ageTextView.text = profile.age
         holder.emailTextView.text = profile.e_mail
-        holder.genderTextView.text = profile.gender
+        if (profile.gender == "M") {
+            holder.genderTextView.text = "Mężczyzna"
+        } else {
+            holder.genderTextView.text = "Kobieta"
+        }
+
+        val joinTimeFormatted = profile.join_time?.let { formatDate(it) }
+        holder.joinTimeTextView.text = joinTimeFormatted
+
     }
 
     override fun getItemCount(): Int {
@@ -39,5 +51,11 @@ class ProfileAdapter(private var profiles: List<UserProfile>) : RecyclerView.Ada
     fun updateData(newProfiles: List<UserProfile>) {
         profiles = newProfiles
         notifyDataSetChanged()
+    }
+
+    private fun formatDate(timestamp: Long): String {
+        val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
+        val date = Date(timestamp)
+        return sdf.format(date)
     }
 }

@@ -96,10 +96,13 @@ class RegisterFragment : Fragment() {
         val database: FirebaseDatabase = FirebaseDatabase.getInstance()
         val reference: DatabaseReference = database.reference.child("user")
 
+        val currentTimeMillis = System.currentTimeMillis()
+
         // Tworzenie obiektu userMap z danymi do dodania
         val userMap = HashMap<String, Any>()
         userMap["id"] = user.uid
         userMap["e_mail"] = user.email.orEmpty()
+        userMap["join_time"] = currentTimeMillis
 
         // Dodanie rekordu do bazy danych
         reference.child(user.uid).setValue(userMap)
