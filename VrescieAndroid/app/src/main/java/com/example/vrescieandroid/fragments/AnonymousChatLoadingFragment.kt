@@ -29,6 +29,7 @@ class AnonymousChatLoadingFragment : Fragment() {
     private var isUserActive = false
 
     private lateinit var usersRef: DatabaseReference
+    private lateinit var conversationsRef: DatabaseReference
     private val auth = FirebaseAuth.getInstance()
 
     private lateinit var userRef: DatabaseReference
@@ -48,7 +49,37 @@ class AnonymousChatLoadingFragment : Fragment() {
         conversationsRef.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 // Nowy rekord został dodany, sprawdzamy konwersacje
-                checkConversationsAndNavigate()
+
+                // Wydrukuj informacje o dodanym elemencie
+                val addedItemId = snapshot.key
+                val addedItemValue = snapshot.value
+
+                Log.d("AnonymousChatFragment", "Nowy rekord dodany. ID: $addedItemId, Wartość: $addedItemValue")
+                val currentUser = auth.currentUser
+
+                // Sprawdź, czy currentUser.uid jest jednym z uczestników nowej konwersacji
+                val ids = addedItemId?.split("_")
+                if (currentUser != null) {
+                    if (ids != null && ids.size == 2 && (ids[0] == currentUser.uid || ids[1] == currentUser.uid)) {
+                        Log.d("AnonymousChatFragment", "Jesteś jednym z uczestników nowej konwersacji. ID: $addedItemId")
+
+                        // Przypisz drugie ID (otherId) do zmiennej
+                        val otherId = if (ids[0] == currentUser.uid) ids[1] else ids[0]
+
+                        // Sprawdź, czy konwersacja ma parametr canConnected ustawiony na true
+                        val canConnected = snapshot.child("canConnected").getValue(Boolean::class.java)
+
+                        if (canConnected == true) {
+                            Log.d("AnonymousChatFragment", "Jesteś jednym z uczestników nowej konwersacji. ID: $addedItemId")
+
+                            updateHandler.removeCallbacks(updateRunnable)
+                            startConversation(otherId)
+                        } else {
+                            Log.d("AnonymousChatFragment", "Konwersacja istnieje, ale nie można dołączyć (canConnected != true).")
+                        }
+
+                    }
+                }
             }
 
             override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
@@ -81,7 +112,7 @@ class AnonymousChatLoadingFragment : Fragment() {
                         usersList.add(it)
                     }
                 }
-                checkConversationsAndNavigate()
+
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -130,52 +161,6 @@ class AnonymousChatLoadingFragment : Fragment() {
         }
     }
 
-    private fun checkConversationsAndNavigate() {
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            for (user in usersList) {
-                if (user.id != currentUser.uid) {
-                    val conversationId = if (currentUser.uid < user.id) {
-                        "${currentUser.uid}_${user.id}"
-                    } else {
-                        "${user.id}_${currentUser.uid}"
-                    }
-
-                    val conversationsRef = FirebaseDatabase.getInstance().reference.child("conversations")
-                    val conversationIdRef = conversationsRef.child(conversationId)
-
-                    conversationIdRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            if (snapshot.exists()) {
-                                // Konwersacja już istnieje, sprawdź czy można dołączyć
-                                val canConnected = snapshot.child("canConnected").getValue(Boolean::class.java)
-                                if (canConnected == true) {
-                                    // Możemy dołączyć do konwersacji, otwieranie...
-                                    Log.d("AnonymousChatFragment", "Konwersacja już istnieje i można dołączyć, otwieranie...")
-                                    updateHandler.removeCallbacks(updateRunnable)
-                                    startConversation(user.id)
-                                } else {
-                                    // Konwersacja istnieje, ale nie można dołączyć
-                                    Log.d("AnonymousChatFragment", "Konwersacja już istnieje, ale nie można dołączyć.")
-                                }
-                            } else {
-                                // Konwersacja nie istnieje
-                                Log.d("AnonymousChatFragment", "Konwersacja nie istnieje.")
-                            }
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {
-                            // Handle error
-                            Log.e("AnonymousChatFragment", "Wystąpił błąd w czasie pobierania danych: ${error.message}")
-                        }
-                    })
-                }
-            }
-        }
-    }
-
-
-
     private fun startConversation(otherUserId: String) {
         val navController = view?.findNavController()
 
@@ -186,6 +171,8 @@ class AnonymousChatLoadingFragment : Fragment() {
         val args = Bundle()
         args.putString("userId1", auth.currentUser?.uid)
         args.putString("userId2", otherUserId)
+
+        Log.d("AnonymousChatFragment", "startConversation 1: $otherUserId")
 
         navController?.navigate(R.id.action_anonymousChatLoadingFragment_to_conversationFragment, args)
     }

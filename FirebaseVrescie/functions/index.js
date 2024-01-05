@@ -84,7 +84,7 @@ exports.assignUsersToConversation = functions.database
           setTimeout(() => {
             delete recentUsers[userId];
             delete recentUsers[otherUserId];
-          }, 3000);
+          }, 8000);
 
           return null;
         }
