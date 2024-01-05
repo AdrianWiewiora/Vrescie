@@ -1,60 +1,70 @@
 package com.example.vrescieandroid.fragments
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.vrescieandroid.ChatsAdapter
 import com.example.vrescieandroid.R
+import com.example.vrescieandroid.data.Chat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.*
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [ImplicitChatsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class ImplicitChatsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var chatsAdapter: ChatsAdapter
+    private lateinit var currentUserUid: String
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_implicit_chats, container, false)
+        val view = inflater.inflate(R.layout.fragment_implicit_chats, container, false)
+
+        // Pobierz UID bieżącego użytkownika (przykład użycia Firebase Authentication)
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        currentUserUid = firebaseUser?.uid.orEmpty()
+
+        // Pobierz listę chatów z Firebase Realtime Database
+        val databaseReference = FirebaseDatabase.getInstance().getReference("/explicit_conversations")
+        databaseReference.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val chatList = mutableListOf<Chat>()
+
+                for (chatSnapshot in snapshot.children) {
+                    val conversationId = chatSnapshot.key.orEmpty()
+
+                    val members = chatSnapshot.child("members").children.map { memberSnapshot ->
+                        memberSnapshot.key.orEmpty() to memberSnapshot.value.toString()
+                    }
+
+                    val memberNames = members.map { it.second }
+
+                    val chat = Chat(conversationId, members.map { it.first }, memberNames)
+                    chatList.add(chat)
+                }
+
+                // Ustaw adapter z pobraną listą chatów
+                chatsAdapter = ChatsAdapter(chatList, currentUserUid)
+                val recyclerView: RecyclerView = view.findViewById(R.id.chatsRecyclerView)
+                recyclerView.layoutManager = LinearLayoutManager(context)
+                recyclerView.adapter = chatsAdapter
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Obsłuż błąd odczytu z bazy danych
+            }
+        })
+
+        return view
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ImplicitChatsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            ImplicitChatsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+        private const val TAG = "ImplicitChatsFragment"
     }
 }
