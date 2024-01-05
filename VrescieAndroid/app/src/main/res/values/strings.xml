@@ -64,4 +64,5 @@
     <string name="email_pl">Email:</string>
     <string name="edit_profile_pl">Edytuj profil</string>
     <string name="join_time_pl">Data dołączenia:</string>
+    <string name="message_in_implicit_chats">Jeszcze nic tu nie ma :(\nPostaraj się o polubienia innych użytkowników w anonimowym czacie by pojawiły się tu konwersacje</string>
 </resources>

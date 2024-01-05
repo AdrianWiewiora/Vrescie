@@ -17,39 +17,73 @@ class ChatsAdapter(
     private val currentUserUid: String,
     private val navController: NavController
 ) :
-    RecyclerView.Adapter<ChatsAdapter.ChatViewHolder>() {
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     class ChatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val chatNameTextView: TextView = itemView.findViewById(R.id.chatNameTextView)
         val lastMessageTextView: TextView = itemView.findViewById(R.id.lastMessageTextView)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
-        val itemView = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_chat, parent, false)
-        return ChatViewHolder(itemView)
+    class EmptyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val emptyTextView: TextView = itemView.findViewById(R.id.emptyTextView)
     }
 
-    override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
-        val chat = chatList[position]
-        val otherMemberName = getOtherMemberName(chat)
+    private val VIEW_TYPE_CHAT = 1
+    private val VIEW_TYPE_EMPTY = 2
 
-        holder.chatNameTextView.text = otherMemberName
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return when (viewType) {
+            VIEW_TYPE_CHAT -> {
+                val itemView = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_chat, parent, false)
+                ChatViewHolder(itemView)
+            }
+            VIEW_TYPE_EMPTY -> {
+                val itemView = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_empty_view, parent, false)
+                EmptyViewHolder(itemView)
+            }
+            else -> throw IllegalArgumentException("Unknown view type")
+        }
+    }
 
-        holder.chatNameTextView.text = otherMemberName
-        holder.lastMessageTextView.text = chat.lastMessage ?: "No messages"
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (holder) {
+            is ChatViewHolder -> {
+                val chat = chatList[position]
+                val otherMemberName = getOtherMemberName(chat)
 
-        holder.itemView.setOnClickListener {
-            val args = Bundle()
-            args.putString("conversationId", chat.conversationId)
+                holder.chatNameTextView.text = otherMemberName
+                holder.lastMessageTextView.text = chat.lastMessage ?: "No messages"
 
-            navController.navigate(R.id.action_mainMenu_to_implicitConversationFragment, args)
+                holder.itemView.setOnClickListener {
+                    val args = Bundle()
+                    args.putString("conversationId", chat.conversationId)
+
+                    navController.navigate(R.id.action_mainMenu_to_implicitConversationFragment, args)
+                }
+            }
+            is EmptyViewHolder -> {
+                //holder.emptyTextView.text = "Jeszcze nic tu nie ma :( ... Postaraj się o polubienia innych użytkowników w anonimowym czacie by pojawiły się tu konwersacje"
+            }
         }
 
     }
 
     override fun getItemCount(): Int {
-        return chatList.size
+        return if (chatList.isEmpty()) {
+            1
+        } else {
+            chatList.size
+        }
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return if (chatList.isEmpty()) {
+            VIEW_TYPE_EMPTY
+        } else {
+            VIEW_TYPE_CHAT
+        }
     }
 
     private fun getOtherMemberName(chat: Chat): String {

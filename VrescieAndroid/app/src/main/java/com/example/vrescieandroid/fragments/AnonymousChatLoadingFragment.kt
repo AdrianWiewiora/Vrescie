@@ -34,36 +34,21 @@ import com.google.firebase.database.ValueEventListener
 
 class AnonymousChatLoadingFragment : Fragment() {
 
-/*    private lateinit var recyclerView: RecyclerView
-    private lateinit var usersAdapter: UsersAdapter
-
-    private lateinit var buttonConnect: Button*/
-
     private lateinit var usersList: MutableList<User>
     private var isUserActive = false
 
     private lateinit var usersRef: DatabaseReference
     private val auth = FirebaseAuth.getInstance()
 
+    private lateinit var userRef: DatabaseReference
+    private var userAge: String? = null
+    private var userGender: String? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_anonymous_chat_loading, container, false)
-
-/*        buttonConnect = view.findViewById(R.id.button_connect)
-        buttonConnect.isEnabled = true
-
-        recyclerView = view.findViewById(R.id.recyclerView)
-
-        if (recyclerView.adapter == null) {
-            usersList = mutableListOf()
-            usersAdapter = UsersAdapter(usersList)
-
-            val layoutManager = LinearLayoutManager(requireContext())
-            recyclerView.layoutManager = layoutManager
-            recyclerView.adapter = usersAdapter
-        }*/
 
         usersList = mutableListOf()
 
@@ -95,15 +80,6 @@ class AnonymousChatLoadingFragment : Fragment() {
 
         usersRef = FirebaseDatabase.getInstance().reference.child("users")
 
-/*        buttonConnect.setOnClickListener {
-            connectUserToDatabase()
-            buttonConnect.isEnabled = false
-        }
-
-        if (currentUser != null) {
-            val user = User(currentUser.uid, currentUser.email.toString())
-            usersRef.child(currentUser.uid).setValue(user)
-        }*/
 
         usersRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -114,13 +90,12 @@ class AnonymousChatLoadingFragment : Fragment() {
                         usersList.add(it)
                     }
                 }
-                //usersAdapter.notifyDataSetChanged()
 
                 // Dodaj logi, aby zobaczyć, czy lista użytkowników jest aktualizowana
                 Log.d("AnonymousChatFragment", "Liczba użytkowników: ${usersList.size}")
 
                 for (user in usersList) {
-                    Log.d("AnonymousChatFragment", "UserID: ${user.userId}, Username: ${user.email}")
+                    Log.d("AnonymousChatFragment", "UserID: ${user.id}, Username: ${user.email}")
                 }
 
                 checkConversationsAndNavigate()
@@ -141,6 +116,8 @@ class AnonymousChatLoadingFragment : Fragment() {
             }
         }
 
+        connectUserToDatabase()
+
         return view
     }
 
@@ -153,12 +130,6 @@ class AnonymousChatLoadingFragment : Fragment() {
             updateHandler.postDelayed(this, 5000)
         }
     }
-
-    override fun onStart() {
-        super.onStart()
-        connectUserToDatabase()
-    }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -180,11 +151,11 @@ class AnonymousChatLoadingFragment : Fragment() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
             for (user in usersList) {
-                if (user.userId != currentUser.uid) {
-                    val conversationId = if (currentUser.uid < user.userId) {
-                        "${currentUser.uid}_${user.userId}"
+                if (user.id != currentUser.uid) {
+                    val conversationId = if (currentUser.uid < user.id) {
+                        "${currentUser.uid}_${user.id}"
                     } else {
-                        "${user.userId}_${currentUser.uid}"
+                        "${user.id}_${currentUser.uid}"
                     }
 
                     val conversationsRef = FirebaseDatabase.getInstance().reference.child("conversations")
@@ -199,7 +170,7 @@ class AnonymousChatLoadingFragment : Fragment() {
                                     // Możemy dołączyć do konwersacji, otwieranie...
                                     Log.d("AnonymousChatFragment", "Konwersacja już istnieje i można dołączyć, otwieranie...")
                                     updateHandler.removeCallbacks(updateRunnable)
-                                    startConversation(user.userId)
+                                    startConversation(user.id)
                                 } else {
                                     // Konwersacja istnieje, ale nie można dołączyć
                                     Log.d("AnonymousChatFragment", "Konwersacja już istnieje, ale nie można dołączyć.")
@@ -240,8 +211,52 @@ class AnonymousChatLoadingFragment : Fragment() {
     }
 
     private fun connectUserToDatabase() {
+
+        userRef = FirebaseDatabase.getInstance().reference.child("user")
         val currentUser = auth.currentUser
         if (currentUser != null) {
+            userRef.child(currentUser!!.uid).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        val user = snapshot.getValue(User::class.java)
+                        if (user != null) {
+                            userAge = user.age
+                            userGender = user.gender
+
+                            val user2 = User(
+                                currentUser.uid,
+                                currentUser.email.toString(),
+                                userAge ?: "",
+                                userGender ?: ""
+                            )
+                            usersRef.child(currentUser.uid).setValue(user2)
+                                .addOnSuccessListener {
+                                    Log.d("AnonymousChatFragment", "Dodano użytkownika do bazy danych")
+                                    isUserActive = true
+                                }
+                                .addOnFailureListener {
+                                    Log.e(
+                                        "AnonymousChatFragment",
+                                        "Nie udało się dodać użytkownika do bazy danych: ${it.message}"
+                                    )
+                                }
+                            usersRef.child(currentUser.uid).child("lastSeen").setValue(ServerValue.TIMESTAMP)
+
+                            updateLastSeenTime()
+                            updateHandler.postDelayed(updateRunnable, 5000)
+
+                        }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("TwójFragment", "Błąd podczas pobierania danych użytkownika: ${error.message}")
+                }
+            })
+        }
+
+
+/*        if (currentUser != null) {
             val user = User(currentUser.uid, currentUser.email.toString())
             usersRef.child(currentUser.uid).setValue(user)
                 .addOnSuccessListener {
@@ -258,7 +273,7 @@ class AnonymousChatLoadingFragment : Fragment() {
 
             updateLastSeenTime()
             updateHandler.postDelayed(updateRunnable, 5000)
-        }
+        }*/
     }
 
 

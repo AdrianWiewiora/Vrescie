@@ -39,7 +39,7 @@ class UsersAdapter(private val usersList: List<User>) :
         private val userIdTextView: TextView = itemView.findViewById(R.id.userIdTextView)
 
         fun bind(user: User) {
-            userIdTextView.text = "UserID: ${user.userId}"
+            userIdTextView.text = "UserID: ${user.id}"
         }
 
         init {
