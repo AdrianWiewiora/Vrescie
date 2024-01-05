@@ -1,19 +1,27 @@
 package com.example.vrescieandroid
 
 // ChatsAdapter.kt
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.navigation.NavController
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vrescieandroid.R
 import com.example.vrescieandroid.data.Chat
 
-class ChatsAdapter(private val chatList: List<Chat>, private val currentUserUid: String) :
+class ChatsAdapter(
+    private var chatList: List<Chat>,
+    private val currentUserUid: String,
+    private val navController: NavController
+) :
     RecyclerView.Adapter<ChatsAdapter.ChatViewHolder>() {
 
     class ChatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val chatNameTextView: TextView = itemView.findViewById(R.id.chatNameTextView)
+        val lastMessageTextView: TextView = itemView.findViewById(R.id.lastMessageTextView)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
@@ -28,7 +36,16 @@ class ChatsAdapter(private val chatList: List<Chat>, private val currentUserUid:
 
         holder.chatNameTextView.text = otherMemberName
 
-        // Dodaj dowolne inne operacje, takie jak obsługa kliknięcia itp.
+        holder.chatNameTextView.text = otherMemberName
+        holder.lastMessageTextView.text = chat.lastMessage ?: "No messages"
+
+        holder.itemView.setOnClickListener {
+            val args = Bundle()
+            args.putString("conversationId", chat.conversationId)
+
+            navController.navigate(R.id.action_mainMenu_to_implicitConversationFragment, args)
+        }
+
     }
 
     override fun getItemCount(): Int {
@@ -46,6 +63,11 @@ class ChatsAdapter(private val chatList: List<Chat>, private val currentUserUid:
         } else {
             "Group Chat"  // Możesz dostosować to w zależności od liczby członków konwersacji
         }
+    }
+
+    fun updateData(newChatList: List<Chat>) {
+        chatList = newChatList
+        notifyDataSetChanged()
     }
 }
 

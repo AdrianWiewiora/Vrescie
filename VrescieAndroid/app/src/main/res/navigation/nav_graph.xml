@@ -40,6 +40,9 @@
         <action
             android:id="@+id/action_mainMenu_to_anonymousChatLoadingFragment"
             app:destination="@id/anonymousChatLoadingFragment" />
+        <action
+            android:id="@+id/action_mainMenu_to_implicitConversationFragment"
+            app:destination="@id/implicitConversationFragment" />
     </fragment>
 
     <fragment
@@ -64,6 +67,7 @@
             android:id="@+id/action_startFragment_to_registerFragment"
             app:destination="@id/registerFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/registerFragment"
         android:name="com.example.vrescieandroid.fragments.RegisterFragment"
@@ -73,6 +77,7 @@
             android:id="@+id/action_registerFragment_to_addNameFragment"
             app:destination="@id/addNameFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/anonymousChatFragment"
         android:name="com.example.vrescieandroid.fragments.AnonymousChatFragment"
@@ -120,6 +125,7 @@
             android:id="@+id/action_anonymousChatLoadingFragment_to_mainMenu"
             app:destination="@id/mainMenu" />
     </fragment>
+
     <fragment
         android:id="@+id/addNameFragment"
         android:name="com.example.vrescieandroid.fragments.AddNameFragment"
@@ -129,4 +135,20 @@
             android:id="@+id/action_addNameFragment_to_mainMenu"
             app:destination="@id/mainMenu" />
     </fragment>
+
+    <fragment
+        android:id="@+id/implicitConversationFragment"
+        android:name="com.example.vrescieandroid.fragments.ImplicitConversationFragment"
+        android:label="fragment_implicit_conversation"
+        tools:layout="@layout/fragment_implicit_conversation" >
+
+        <argument
+            android:name="conversationId"
+            app:argType="string" />
+
+        <action
+            android:id="@+id/action_implicitConversationFragment_to_mainMenu"
+            app:destination="@id/mainMenu" />
+    </fragment>
+
 </navigation>
