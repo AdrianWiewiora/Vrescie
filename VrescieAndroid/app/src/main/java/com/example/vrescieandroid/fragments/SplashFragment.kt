@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import com.example.vrescieandroid.R
 import com.google.firebase.auth.FirebaseAuth
@@ -14,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth
 class SplashFragment : Fragment() {
 
     private lateinit var progressBar: ProgressBar
+    private lateinit var navController: NavController
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -31,7 +33,10 @@ class SplashFragment : Fragment() {
             progressBar.visibility = View.GONE
 
             if (currentUser != null) {
-                findNavController().navigate(R.id.action_splashFragment_to_anonymousChatFragment)
+                val args = Bundle()
+                args.putString("chooseFragment", "1")
+                navController = findNavController()
+                navController.navigate(R.id.action_splashFragment_to_mainMenu, args)
             } else {
                 if (isFirstRun){
                     requireActivity().getSharedPreferences("PREFS_NAME", 0)

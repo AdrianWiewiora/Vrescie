@@ -6,6 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.activity.addCallback
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import com.example.vrescieandroid.R
 
 
@@ -26,6 +29,14 @@ class ImplicitConversationFragment : Fragment() {
         // Wyświetl conversationId w TextView1
         textView1.setText("Conversation ID: $conversationId")
 
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            val navController = view?.findNavController()
+            navController?.let {
+                val args = Bundle()
+                args.putString("chooseFragment", "2")
+                findNavController().navigate(R.id.action_implicitConversationFragment_to_mainMenu, args)
+            }
+        }
 
         return view
     }

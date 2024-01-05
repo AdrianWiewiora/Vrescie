@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import com.example.vrescieandroid.R
 import com.google.android.material.textfield.TextInputEditText
@@ -18,6 +19,8 @@ class LoginFragment : Fragment() {
     private lateinit var emailEditText: TextInputEditText
     private lateinit var passwordEditText: TextInputEditText
     private lateinit var auth: FirebaseAuth
+    private lateinit var navController: NavController
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -50,7 +53,10 @@ class LoginFragment : Fragment() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(requireActivity()) { task ->
                 if (task.isSuccessful) {
-                    findNavController().navigate(R.id.action_loginFragment_to_anonymousChatFragment)
+                    val args = Bundle()
+                    args.putString("chooseFragment", "1")
+                    navController = findNavController()
+                    navController.navigate(R.id.action_loginFragment_to_anonymousChatFragment, args)
                 } else {
                     Log.w("LoginFragment", "signInWithEmail:failure", task.exception)
                     Toast.makeText(requireContext(), "Logowanie nie powiodło się", Toast.LENGTH_SHORT).show()

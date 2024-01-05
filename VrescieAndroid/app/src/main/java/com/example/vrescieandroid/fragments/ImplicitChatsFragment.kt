@@ -21,7 +21,7 @@ class ImplicitChatsFragment : Fragment() {
 
     private lateinit var chatsAdapter: ChatsAdapter
     private lateinit var currentUserUid: String
-    private lateinit var navController: NavController // Dodaj to pole
+    private lateinit var navController: NavController
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

@@ -9,6 +9,7 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import com.example.vrescieandroid.R
 import com.google.android.material.textfield.TextInputEditText
@@ -22,6 +23,7 @@ class AddNameFragment : Fragment() {
     private lateinit var nameEditText: TextInputEditText
     private lateinit var genderRadioGroup: RadioGroup
     private lateinit var auth: FirebaseAuth
+    private lateinit var navController: NavController
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -65,8 +67,10 @@ class AddNameFragment : Fragment() {
                 )
             ).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(requireContext(), "Dane zapisane do bazy danych", Toast.LENGTH_SHORT).show()
-                    findNavController().navigate(R.id.action_addNameFragment_to_mainMenu)
+                    val args = Bundle()
+                    args.putString("chooseFragment", "1")
+                    navController = findNavController()
+                    navController.navigate(R.id.action_addNameFragment_to_mainMenu, args)
                 } else {
                     Toast.makeText(requireContext(), "Błąd zapisu do bazy danych", Toast.LENGTH_SHORT).show()
                 }

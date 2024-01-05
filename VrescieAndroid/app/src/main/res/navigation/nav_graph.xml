@@ -15,11 +15,11 @@
             android:id="@+id/action_splashFragment_to_firstLaunchSplashFragment"
             app:destination="@id/firstLaunchSplashFragment" />
         <action
-            android:id="@+id/action_splashFragment_to_anonymousChatFragment"
-            app:destination="@id/mainMenu" />
-        <action
             android:id="@+id/action_splashFragment_to_startFragment"
             app:destination="@id/startFragment" />
+        <action
+            android:id="@+id/action_splashFragment_to_mainMenu"
+            app:destination="@id/mainMenu" />
     </fragment>
 
     <fragment
@@ -37,6 +37,9 @@
         android:name="com.example.vrescieandroid.fragments.MainMenuFragment"
         android:label="fragment_anonymous_chat"
         tools:layout="@layout/fragment_main_menu" >
+        <argument
+            android:name="chooseFragment"
+            app:argType="string" />
         <action
             android:id="@+id/action_mainMenu_to_anonymousChatLoadingFragment"
             app:destination="@id/anonymousChatLoadingFragment" />

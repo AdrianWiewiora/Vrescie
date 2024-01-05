@@ -36,6 +36,8 @@ class MainMenuFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_main_menu, container, false)
 
+        val chooseFragment = arguments?.getString("chooseFragment", "1") ?: "1"
+
         imageViewAnonymousChat = view.findViewById(R.id.imageViewAnonymousChat)
         imageViewImplicitChat = view.findViewById(R.id.imageViewImplicitChat)
         imageViewUser = view.findViewById(R.id.imageViewUser)
@@ -48,9 +50,17 @@ class MainMenuFragment : Fragment() {
         imageViewImplicitChat.setOnClickListener { onMenuItemClick(it) }
         imageViewUser.setOnClickListener { onMenuItemClick(it) }
 
-        onMenuItemClick(imageViewAnonymousChat)
+        // Sprawdź wartość chooseFragment i wykonaj odpowiednią akcję
+        when (chooseFragment) {
+            "1" -> onMenuItemClick(imageViewAnonymousChat)
+            "2" -> onMenuItemClick(imageViewImplicitChat)
+            "3" -> onMenuItemClick(imageViewUser)
+            else -> onMenuItemClick(imageViewAnonymousChat)
+        }
+
+/*        onMenuItemClick(imageViewAnonymousChat)
         val color = ContextCompat.getColor(requireContext(), R.color.button_clicked_menu)
-        imageViewAnonymousChatText.setTextColor(color)
+        imageViewAnonymousChatText.setTextColor(color)*/
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             handleBackPressed()

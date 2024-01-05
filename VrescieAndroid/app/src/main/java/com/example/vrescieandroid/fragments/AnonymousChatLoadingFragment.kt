@@ -135,7 +135,9 @@ class AnonymousChatLoadingFragment : Fragment() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             val navController = view?.findNavController()
             navController?.let {
-                it.navigate(R.id.action_anonymousChatLoadingFragment_to_mainMenu)
+                val args = Bundle()
+                args.putString("chooseFragment", "1")
+                findNavController().navigate(R.id.action_anonymousChatLoadingFragment_to_mainMenu, args)
             }
         }
 

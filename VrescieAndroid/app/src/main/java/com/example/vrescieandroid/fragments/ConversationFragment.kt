@@ -14,6 +14,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import androidx.activity.addCallback
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vrescieandroid.MessagesAdapter
@@ -88,8 +89,6 @@ class ConversationFragment : Fragment() {
         buttonAddLike.setOnClickListener {
             handleAddLikePressed()
         }
-
-        val isLiked = false
 
         view.findViewById<ImageView>(R.id.buttonCancel).setOnClickListener {
             showExitConfirmationDialog()
@@ -232,7 +231,9 @@ class ConversationFragment : Fragment() {
     private fun navigateToAnonymousChatLoadingFragment() {
         val navController = view?.findNavController()
         navController?.let {
-            it.navigate(R.id.action_conversationFragment_to_mainMenu)
+            val args = Bundle()
+            args.putString("chooseFragment", "1")
+            findNavController().navigate(R.id.action_conversationFragment_to_mainMenu, args)
         }
     }
 
