@@ -144,8 +144,12 @@ class ConversationFragment : Fragment() {
                     false
                 }
 
+                // Sprawdź, czy obaj użytkownicy są połączeni
+                val isBothUsersConnected = userIds.size == 2 &&
+                        isConnectedList.contains(true) && isConnectedList.indexOf(true) != -1
+
                 // Sprawdź, czy użytkownik jest rozłączony i czy wiadomość o rozłączeniu już istnieje
-                if (!isConnected && messagesList.none { it.senderId == "system" && it.text == "Użytkownik się rozłączył" }) {
+                if (!isConnected && isBothUsersConnected && messagesList.none { it.senderId == "system" && it.text == "Użytkownik się rozłączył" }) {
                     // Użytkownik się rozłączył, dodaj wiadomość o rozłączeniu
                     val disconnectedMessage = Message(
                         "system",

@@ -103,7 +103,8 @@
             android:text="@string/female"
             android:textColor="@color/black"
             android:buttonTint="@color/black"
-            android:backgroundTint="@color/black"/>
+            android:backgroundTint="@color/black"
+            android:theme="@style/RadioButtonStyle"/>
 
         <RadioButton
             android:id="@+id/radioButtonMale"
@@ -112,7 +113,8 @@
             android:text="@string/male"
             android:textColor="@color/black"
             android:buttonTint="@color/black"
-            android:backgroundTint="@color/black"/>
+            android:backgroundTint="@color/black"
+            android:theme="@style/RadioButtonStyle"/>
 
     </RadioGroup>
 

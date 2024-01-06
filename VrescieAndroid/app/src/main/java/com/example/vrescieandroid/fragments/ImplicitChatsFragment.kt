@@ -1,6 +1,7 @@
 package com.example.vrescieandroid.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,13 +24,14 @@ class ImplicitChatsFragment : Fragment() {
     private lateinit var currentUserUid: String
     private lateinit var navController: NavController
 
+    private val auth = FirebaseAuth.getInstance()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_implicit_chats, container, false)
 
-        // Pobierz UID bieżącego użytkownika (przykład użycia Firebase Authentication)
         val firebaseUser = FirebaseAuth.getInstance().currentUser
         currentUserUid = firebaseUser?.uid.orEmpty()
 
@@ -45,23 +47,34 @@ class ImplicitChatsFragment : Fragment() {
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val chatList = mutableListOf<Chat>()
+                val currentUser = auth.currentUser
 
                 for (chatSnapshot in snapshot.children) {
-                    val conversationId = chatSnapshot.key.orEmpty()
+                    // Wydrukuj informacje o dodanym elemencie
+                    val addedItemId = chatSnapshot.key
+                    val addedItemValue = chatSnapshot.value
 
-                    val members = chatSnapshot.child("members").children.map { memberSnapshot ->
-                        memberSnapshot.key.orEmpty() to memberSnapshot.value.toString()
+                    Log.d("AnonymousChatFragment", "Nowy rekord dodany. ID: $addedItemId, Wartość: $addedItemValue")
+
+                    // Sprawdź, czy currentUser.uid jest jednym z uczestników nowej konwersacji
+                    val ids = addedItemId?.split("_")
+                    if (currentUser != null && ids != null && ids.size == 2 &&
+                        (ids[0] == currentUser.uid || ids[1] == currentUser.uid)) {
+
+                        val members = chatSnapshot.child("members").children.map { memberSnapshot ->
+                            memberSnapshot.key.orEmpty() to memberSnapshot.value.toString()
+                        }
+
+                        val memberNames = members.map { it.second }
+
+                        val lastMessage = chatSnapshot.child("messages").children.lastOrNull()?.child("text")?.value?.toString()
+
+                        val chat = Chat(addedItemId.orEmpty(), members.map { it.first }, memberNames, lastMessage)
+                        chatList.add(chat)
                     }
-
-                    val memberNames = members.map { it.second }
-
-                    val lastMessage = chatSnapshot.child("messages").children.lastOrNull()?.child("text")?.value?.toString()
-
-                    val chat = Chat(conversationId, members.map { it.first }, memberNames, lastMessage)
-                    chatList.add(chat)
                 }
 
-                // Uaktualnij dane w adapterze
+                // Uaktualnij dane w adapterze tylko dla konwersacji spełniających warunek
                 chatsAdapter.updateData(chatList)
             }
 

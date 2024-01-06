@@ -44,7 +44,165 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
+            <TextView
+                android:id="@+id/textViewGender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Płeć"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:buttonTint="@color/black"
+                android:backgroundTint="@color/black"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/checkBoxFemale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kobieta"
+                    android:textColor="@color/black"
+                    android:buttonTint="@color/black"
+                    android:backgroundTint="@color/black"/>
+
+                <CheckBox
+                    android:id="@+id/checkBoxMale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mężczyzna"
+                    android:textColor="@color/black"
+                    android:buttonTint="@color/black"
+                    android:backgroundTint="@color/black"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewMaxAge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Wiek:"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/black"
+                android:buttonTint="@color/black"
+                android:backgroundTint="@color/black"/>
+
+            <com.google.android.material.slider.RangeSlider
+                android:id="@+id/rangeSliderMaxAge"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:valueFrom="18"
+                android:valueTo="70"
+                app:labelBehavior="visible"
+                app:thumbColor="@color/black"
+                app:trackColorActive="@color/black"
+                app:trackColorInactive="@color/grayTextFirstLaunch"
+                app:values="@array/initial_range_slider_values"
+                android:textColor="@color/black"
+                />
+
+            <TextView
+                android:id="@+id/textViewVerified"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Zweryfikowany:"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/black"
+                android:buttonTint="@color/black"
+                android:backgroundTint="@color/black"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioGroup
+                    android:id="@+id/radioGroupVerification"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/radioButtonRequireVerification"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/demand_pl"
+                        android:textColor="@color/black"
+                        android:buttonTint="@color/black"
+                        android:backgroundTint="@color/black"
+                        android:theme="@style/RadioButtonStyle"
+                        />
+
+                    <RadioButton
+                        android:id="@+id/radioButtonNoVerification"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/not_demand_pl"
+                        android:textColor="@color/black"
+                        android:buttonTint="@color/black"
+                        android:backgroundTint="@color/black"
+                        android:theme="@style/RadioButtonStyle"
+                        />
+                </RadioGroup>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewPreference"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Preferencje:"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/black"
+                android:buttonTint="@color/black"
+                android:backgroundTint="@color/black"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioGroup
+                    android:id="@+id/radioGroupPreference"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/radioButtonStableRelationship"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Stała relacja"
+                        android:textColor="@color/black"
+                        android:buttonTint="@color/black"
+                        android:backgroundTint="@color/black"
+                        android:theme="@style/RadioButtonStyle"/>
+
+                    <RadioButton
+                        android:id="@+id/radioButtonNoStableRelationship"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Krótka relacja"
+                        android:textColor="@color/black"
+                        android:buttonTint="@color/black"
+                        android:backgroundTint="@color/black"
+                        android:theme="@style/RadioButtonStyle"/>
+                </RadioGroup>
+
+            </LinearLayout>
+
+        </LinearLayout>
 
 
         <com.google.android.material.button.MaterialButton

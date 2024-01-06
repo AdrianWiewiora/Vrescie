@@ -67,4 +67,8 @@
     <string name="message_in_implicit_chats">Jeszcze nic tu nie ma :(\nPostaraj się o polubienia innych użytkowników w anonimowym czacie by pojawiły się tu konwersacje</string>
     <string name="confirm">Potwierdź</string>
     <string name="type_your_name_pl">Podaj swoje imię</string>
+    <string name="demand_pl">Wymagam</string>
+    <string name="not_demand_pl">Nie wymagam</string>
+    <string name="v_czat_pl">V-czat</string>
+    <string name="chats_pl">Konwersacje</string>
 </resources>

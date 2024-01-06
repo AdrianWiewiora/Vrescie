@@ -215,9 +215,7 @@ class AnonymousChatLoadingFragment : Fragment() {
                                         "Nie udało się dodać użytkownika do bazy danych: ${it.message}"
                                     )
                                 }
-                            //usersRef.child(currentUser.uid).child("lastSeen").setValue(ServerValue.TIMESTAMP)
 
-                            //updateLastSeenTime()
                             updateHandler.postDelayed(updateRunnable, 5000)
 
                         }
