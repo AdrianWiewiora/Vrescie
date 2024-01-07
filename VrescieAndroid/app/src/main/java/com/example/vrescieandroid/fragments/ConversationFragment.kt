@@ -272,7 +272,7 @@ class ConversationFragment : Fragment() {
     private val likeCheckRunnable = object : Runnable {
         override fun run() {
             checkForLikes()
-            likeCheckHandler.postDelayed(this, 30000) // Sprawdzaj co 30 sekund
+            likeCheckHandler.postDelayed(this, 10000)
         }
     }
 
