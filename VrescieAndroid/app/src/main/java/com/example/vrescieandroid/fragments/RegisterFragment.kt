@@ -12,7 +12,9 @@ import android.widget.Toast
 import androidx.navigation.fragment.findNavController
 import com.example.vrescieandroid.R
 import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.material.textfield.TextInputEditText
@@ -30,7 +32,8 @@ class RegisterFragment : Fragment() {
     private lateinit var auth: FirebaseAuth
 
     private lateinit var googleSignInButton: Button
-    private lateinit var googleSignInClient: GoogleApiClient
+    private lateinit var googleSignInClient: GoogleSignInClient
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -59,6 +62,15 @@ class RegisterFragment : Fragment() {
 
         }
 
+        // Inicjalizacja klienta Google Sign-In
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(requireContext(), gso)
+
+        // Ustawienie obsługi przycisku Google Sign In
         googleSignInButton = view.findViewById(R.id.googleRegister)
         googleSignInButton.setOnClickListener {
             signInWithGoogle()
@@ -123,16 +135,7 @@ class RegisterFragment : Fragment() {
     }
 
     private fun signInWithGoogle() {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-
-        googleSignInClient = GoogleApiClient.Builder(requireContext())
-            .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-            .build()
-
-        val signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleSignInClient)
+        val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
 
