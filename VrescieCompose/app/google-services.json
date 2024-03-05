@@ -1,0 +1,93 @@
+{
+  "project_info": {
+    "project_number": "677354439837",
+    "firebase_url": "https://vrescie-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "vrescie",
+    "storage_bucket": "vrescie.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677354439837:android:347c2cf7f62d452547c074",
+        "android_client_info": {
+          "package_name": "com.example.vrescieandroid"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "677354439837-2ph227rcl42os38a4iotjf3d2gicuvcc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vrescieandroid",
+            "certificate_hash": "1f1d20041d29c6924c537c0b65956799393d2171"
+          }
+        },
+        {
+          "client_id": "677354439837-5fjv2ca6umn6h7v0jjqu2pbkki6fpkdn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDG0niLZ_W54nCKELRHptcLou0ZauWJmzI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "677354439837-5fjv2ca6umn6h7v0jjqu2pbkki6fpkdn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "677354439837-m9ir3q7pbjld8hnimsn8gece2fd6pmil.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.michalwolanin.Vrescie",
+                "app_store_id": "123456789"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677354439837:android:d8906a9ed29c7f4647c074",
+        "android_client_info": {
+          "package_name": "com.example.vresciecompose"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "677354439837-5fjv2ca6umn6h7v0jjqu2pbkki6fpkdn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDG0niLZ_W54nCKELRHptcLou0ZauWJmzI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "677354439837-5fjv2ca6umn6h7v0jjqu2pbkki6fpkdn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "677354439837-m9ir3q7pbjld8hnimsn8gece2fd6pmil.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.michalwolanin.Vrescie",
+                "app_store_id": "123456789"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

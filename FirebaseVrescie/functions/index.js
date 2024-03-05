@@ -159,15 +159,15 @@ exports.checkAndRemoveConversations = functions.database
         const members = conversationData.members;
         const canConnected = conversationData.canConnected;
 
-        // Sprawdź, czy istnieje canConnected i czy jest równy false
+        // Sprawdza, czy istnieje canConnected i czy jest równy false
         if (canConnected === false) {
-        // Sprawdź, czy oba members są ustawione na false
+        // Sprawdza, czy oba members są ustawione na false
           if (members) {
             // eslint-disable-next-line max-len
             const allMembersFalse = Object.values(members).every((value) => value === false);
 
             if (allMembersFalse) {
-            // Usuń konwersację
+            // Usuwa konwersację
               // eslint-disable-next-line max-len
               await admin.database().ref(`/conversations/${conversationId}`).remove();
               console.log(`Usunięto konwersację: ${conversationId}`);
