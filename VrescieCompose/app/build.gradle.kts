@@ -68,4 +68,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // SplashScreen
+    implementation("androidx.core:core-splashscreen:1.0.1")
 }
