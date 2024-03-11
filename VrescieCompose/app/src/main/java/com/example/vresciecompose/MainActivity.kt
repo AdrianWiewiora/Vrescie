@@ -3,22 +3,27 @@ package com.example.vresciecompose
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
+import com.example.vresciecompose.components.LocalBackPressedDispatcher
 import com.example.vresciecompose.components.MainViewModel
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var backDispatcher: OnBackPressedDispatcher
 
     private val viewModel by viewModels<MainViewModel> {
         MainViewModelFactory(applicationContext)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        backDispatcher = onBackPressedDispatcher
 
         installSplashScreen().apply {
             setKeepOnScreenCondition {
@@ -27,16 +32,20 @@ class MainActivity : ComponentActivity() {
         }
 
         super.onCreate(savedInstanceState)
-        if(viewModel.isReady.value){
+        if (viewModel.isReady.value) {
             val startDestination = when {
                 viewModel.isFirstRun() -> Navigation.Destinations.FirstLaunch
                 viewModel.isLoggedIn() -> Navigation.Destinations.MainMenu
                 else -> Navigation.Destinations.Start
             }
             setContent {
-                VrescieComposeTheme {
-                    val navController = rememberNavController()
-                    AppNavigation(navController, startDestination)
+                CompositionLocalProvider(
+                    LocalBackPressedDispatcher provides backDispatcher
+                ) {
+                    VrescieComposeTheme {
+                        val navController = rememberNavController()
+                        AppNavigation(navController, startDestination)
+                    }
                 }
             }
             // Ustawienie isFirstRun na false dopiero po ustawieniu setContent na FirstLaunch

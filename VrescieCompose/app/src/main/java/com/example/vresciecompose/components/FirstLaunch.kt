@@ -22,6 +22,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 @Composable
@@ -66,6 +67,7 @@ fun FirstLaunch(navController: NavHostController) {
             contentDescription = null,
             modifier = Modifier
                 .padding(bottom = 16.dp)
+                .padding(horizontal = 20.dp)
                 .alpha(alphaImage.value)
         )
 
@@ -89,7 +91,8 @@ fun FirstLaunch(navController: NavHostController) {
             Text(
                 textAlign = TextAlign.Center,
                 text = currentText,
-                fontSize = 24.sp,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .padding(bottom = 16.dp)
                     .fillMaxWidth()
@@ -103,6 +106,5 @@ fun FirstLaunch(navController: NavHostController) {
 @Composable
 fun FirstLaunchPreview() {
     val navController = rememberNavController()
-    val context = LocalContext.current
     FirstLaunch(navController = navController)
 }

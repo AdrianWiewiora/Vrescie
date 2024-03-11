@@ -32,10 +32,6 @@ class StartFragment : Fragment() {
             findNavController().navigate(R.id.action_startFragment_to_registerFragment)
         }
 
-//        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-//            findNavController().popBackStack(R.id.startFragment, false)
-//        }
-
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             handleBackPressed()
         }
