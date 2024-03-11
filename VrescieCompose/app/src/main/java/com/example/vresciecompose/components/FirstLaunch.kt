@@ -19,6 +19,7 @@ import com.example.vresciecompose.R
 import kotlinx.coroutines.delay
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
@@ -26,8 +27,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun FirstLaunch(navController: NavHostController) {
     val textArray = remember { arrayOf("Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi") }
-    val timerDuration = 2000L
-    val totalDuration = timerDuration * textArray.size
+    val timerDuration = 4000L
 
     var currentStep by remember { mutableStateOf(0) }
 
@@ -36,9 +36,11 @@ fun FirstLaunch(navController: NavHostController) {
             currentStep = index
             delay(timerDuration)
         }
-        delay(timerDuration / 2)
+        delay(1000)
         navController.navigate("start")
     }
+
+    val alpha = remember { Animatable(0f) } // Zaczynamy od wartości 0, aby tekst był niewidoczny na początku
 
     Column(
         modifier = Modifier.fillMaxSize().background(color = Color.White),
@@ -52,7 +54,16 @@ fun FirstLaunch(navController: NavHostController) {
                 .padding(bottom = 16.dp)
         )
 
-        Crossfade(targetState = textArray[currentStep], label = "") { currentText ->
+        Crossfade(
+            targetState = textArray[currentStep],
+            modifier = Modifier.alpha(alpha.value),
+            label = "",
+        ) { currentText ->
+            LaunchedEffect(currentText) {
+                alpha.animateTo(1f, animationSpec = tween(durationMillis = 2000)) // Animacja z 0 do 1 (pojawienie się nowego tekstu)
+                alpha.animateTo(0f, animationSpec = tween(durationMillis = 2000)) // Animacja z obecnej alfy do 0 (wygaszanie)
+            }
+
             Text(
                 textAlign = TextAlign.Center,
                 text = currentText,
