@@ -18,18 +18,7 @@ class MainViewModel(context: Context): ViewModel() {
 
     init {
         viewModelScope.launch {
-            val isFirstRun = sharedPreferences.getBoolean("isFirstRun", true)
-
-            if (!isFirstRun) {
-                // Ustaw _isReady na true, jeśli użytkownik jest zalogowany i to nie jest pierwsze uruchomienie aplikacji
-                _isReady.value = true
-            } else {
-                // Symulacja opóźnienia
-                delay(2000L)
-                _isReady.value = true
-                // Ustaw flagę isFirstRun na false, aby oznaczyć, że aplikacja nie jest już pierwszym uruchomieniem
-                sharedPreferences.edit().putBoolean("isFirstRun", false).apply()
-            }
+            _isReady.value = true
         }
     }
 
@@ -40,5 +29,4 @@ class MainViewModel(context: Context): ViewModel() {
     fun isFirstRun(): Boolean {
         return sharedPreferences.getBoolean("isFirstRun", true)
     }
-
 }

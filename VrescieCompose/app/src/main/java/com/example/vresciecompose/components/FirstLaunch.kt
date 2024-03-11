@@ -1,6 +1,5 @@
 package com.example.vresciecompose.components
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -22,14 +21,18 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun FirstLaunch(navController: NavHostController) {
-    val textArray = remember { arrayOf("Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi") }
-    val timerDuration = 4000L
 
-    var currentStep by remember { mutableStateOf(0) }
+    val textArray =
+        remember { arrayOf("Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi") }
+    val timerDuration = 3000L
+    val totalDuration = timerDuration * textArray.size
+
+    var currentStep by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         repeat(textArray.size) { index ->
@@ -40,28 +43,47 @@ fun FirstLaunch(navController: NavHostController) {
         navController.navigate("start")
     }
 
-    val alpha = remember { Animatable(0f) } // Zaczynamy od wartości 0, aby tekst był niewidoczny na początku
+    val alphaText = remember { Animatable(0f) } // Animacja dla tekstu
+    val alphaImage = remember { Animatable(0f) } // Animacja dla obrazka
 
     Column(
-        modifier = Modifier.fillMaxSize().background(color = Color.White),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color.White),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Animacja pojawiania się obrazka
+        LaunchedEffect(Unit) {
+            alphaImage.animateTo(1f, animationSpec = tween(durationMillis = 1000))
+            delay(totalDuration - 1000)
+            alphaImage.animateTo(0f, animationSpec = tween(durationMillis = 1000))
+        }
+
+        // Obrazek
         Image(
             painter = painterResource(id = R.drawable.logotype_vreescie_svg),
             contentDescription = null,
             modifier = Modifier
                 .padding(bottom = 16.dp)
+                .alpha(alphaImage.value)
         )
 
+        // Tekst
         Crossfade(
             targetState = textArray[currentStep],
-            modifier = Modifier.alpha(alpha.value),
-            label = "",
+            modifier = Modifier.alpha(alphaText.value),
+            label = ""
         ) { currentText ->
             LaunchedEffect(currentText) {
-                alpha.animateTo(1f, animationSpec = tween(durationMillis = 2000)) // Animacja z 0 do 1 (pojawienie się nowego tekstu)
-                alpha.animateTo(0f, animationSpec = tween(durationMillis = 2000)) // Animacja z obecnej alfy do 0 (wygaszanie)
+                alphaText.animateTo(
+                    1f,
+                    animationSpec = tween(durationMillis = 1500)
+                ) // Animacja z 0 do 1 (pojawienie się nowego tekstu)
+                alphaText.animateTo(
+                    0f,
+                    animationSpec = tween(durationMillis = 1500)
+                ) // Animacja z obecnej alfy do 0 (wygaszanie)
             }
 
             Text(
@@ -77,10 +99,10 @@ fun FirstLaunch(navController: NavHostController) {
 }
 
 
-
 @Preview(showBackground = true)
 @Composable
 fun FirstLaunchPreview() {
     val navController = rememberNavController()
+    val context = LocalContext.current
     FirstLaunch(navController = navController)
 }

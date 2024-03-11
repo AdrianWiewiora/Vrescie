@@ -27,16 +27,24 @@ class MainActivity : ComponentActivity() {
         }
 
         super.onCreate(savedInstanceState)
-
-        setContent {
-            VrescieComposeTheme {
-                val navController = rememberNavController()
-                val startDestination = when {
-                    viewModel.isFirstRun() -> Navigation.Destinations.FirstLaunch
-                    viewModel.isLoggedIn() -> Navigation.Destinations.MainMenu
-                    else -> Navigation.Destinations.Start
+        if(viewModel.isReady.value){
+            val startDestination = when {
+                viewModel.isFirstRun() -> Navigation.Destinations.FirstLaunch
+                viewModel.isLoggedIn() -> Navigation.Destinations.MainMenu
+                else -> Navigation.Destinations.Start
+            }
+            setContent {
+                VrescieComposeTheme {
+                    val navController = rememberNavController()
+                    AppNavigation(navController, startDestination)
                 }
-                AppNavigation(navController, startDestination)
+            }
+            // Ustawienie isFirstRun na false dopiero po ustawieniu setContent na FirstLaunch
+            if (startDestination == Navigation.Destinations.FirstLaunch) {
+                applicationContext.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("isFirstRun", false)
+                    .apply()
             }
         }
     }
