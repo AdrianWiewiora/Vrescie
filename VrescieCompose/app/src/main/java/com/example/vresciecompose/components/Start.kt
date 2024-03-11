@@ -2,6 +2,7 @@ package com.example.vresciecompose.components
 
 import android.app.Activity
 import android.content.Context
+import android.view.Gravity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.foundation.Image
@@ -39,10 +40,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-
+import com.example.vresciecompose.ui.components.BlackButton
+import com.example.vresciecompose.ui.components.WhiteOutlinedButton
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 
 internal val LocalBackPressedDispatcher = staticCompositionLocalOf<OnBackPressedDispatcher> {
     error("No Back Dispatcher provided")
@@ -79,38 +87,64 @@ fun Start(
             painter = painterResource(id = R.drawable.logotype_vreescie_svg),
             contentDescription = null,
             modifier = Modifier
-                .padding(bottom = 30.dp)
+                .padding(bottom = 40.dp)
                 .padding(horizontal = 20.dp)
         )
 
-        OutlinedButton(
+        WhiteOutlinedButton(
             onClick = {
                 navController.navigate("login")
             },
-            contentPadding = PaddingValues(vertical = 15.dp),
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 20.dp)
-                .fillMaxWidth()
-                .background(color = Color.White),
-            border = BorderStroke(2.dp, Color.Black),
-            content = {
-                Text(
-                    text = "Mam już konto",
-                    color = Color.Black,
-                    fontSize = 24.sp
-                )
-            }
+            text = "Mam już konto"
         )
 
+        Text(
+            text = "lub",
+            color = Color.Black,
+            fontSize = 24.sp,
+            modifier = Modifier
+                .padding(vertical = 10.dp)
+        )
 
+        BlackButton(
+            onClick = {
+                navController.navigate("register")
+            },
+            text = "Zarejestruj się"
+        )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        BlackButton(
+            onClick = {
+                navController.navigate("register_google")
+            },
+            text = "Zarejestruj za pomocą Google",
+            icon = R.drawable.google_svgrepo_com,
+            iconSize = 28,
+            fontSize = 18
+        )
 
-        Button(onClick = {
-            navController.navigate("register")
-        }) {
-            Text(text = "Register")
-        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Nigdy nie udostępniamy nic bez twojej zgody",
+            color = Color.Black,
+            fontSize = 14.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(vertical = 10.dp)
+
+        )
+
+        Text(
+            text = "Rejestrując się potwierdasz, że akceptujesz nasz Regulamin. Dowiedz się, jak przetwarzamy Twoje dane z Polityki prywatności",
+            color = Color.Black,
+            fontSize = 14.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(vertical = 10.dp)
+
+        )
+
 
         if (showDialog) {
             ExitConfirmationDialog(
