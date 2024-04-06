@@ -1,8 +1,7 @@
-package com.example.vresciecompose.components
+package com.example.vresciecompose.screens
 
 import android.app.Activity
 import android.content.Context
-import android.view.Gravity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.foundation.Image
@@ -21,45 +20,22 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.vresciecompose.R
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.material3.*
-import androidx.compose.material3.contentColorFor
-import androidx.compose.ui.text.TextStyle
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.ui.components.BlackButton
 import com.example.vresciecompose.ui.components.WhiteOutlinedButton
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import com.example.vresciecompose.Navigation
 
 internal val LocalBackPressedDispatcher = staticCompositionLocalOf<OnBackPressedDispatcher> {
     error("No Back Dispatcher provided")
 }
 
 @Composable
-fun Start(
-    navController: NavHostController
-) {
+fun StartScreen(onClick:(String) -> Unit, onConfirmExit: () -> Unit) {
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
     var showDialog by remember { mutableStateOf(false) }
 
@@ -93,7 +69,7 @@ fun Start(
 
         WhiteOutlinedButton(
             onClick = {
-                navController.navigate("login")
+                onClick(Navigation.Destinations.LOGIN)
             },
             text = "Mam już konto"
         )
@@ -108,14 +84,14 @@ fun Start(
 
         BlackButton(
             onClick = {
-                navController.navigate("register")
+                onClick(Navigation.Destinations.REGISTRATION)
             },
             text = "Zarejestruj się"
         )
 
         BlackButton(
             onClick = {
-                navController.navigate("register_google")
+                onClick(Navigation.Destinations.REGISTRATION_GOOGLE)
             },
             text = "Zarejestruj za pomocą Google",
             icon = R.drawable.google_svgrepo_com,
@@ -151,7 +127,7 @@ fun Start(
                 onConfirm = {
                     // Handle exit confirmation
                     showDialog = false
-                    navController.navigateUp()
+                    onConfirmExit()
                 },
                 onDismiss = {
                     // Dismiss dialog
@@ -207,11 +183,9 @@ private fun exitApplication(context: Context) {
 @Preview
 @Composable
 fun PreviewStart() {
-    // Mocking NavHostController for preview
-    val navController = rememberNavController()
     CompositionLocalProvider(
         LocalBackPressedDispatcher provides OnBackPressedDispatcher {}
     ) {
-        Start(navController = navController)
+        StartScreen(onClick = { }, onConfirmExit = { })
     }
 }

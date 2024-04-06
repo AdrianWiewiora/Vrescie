@@ -1,4 +1,4 @@
-package com.example.vresciecompose.components
+package com.example.vresciecompose.screens
 
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -12,8 +12,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.vresciecompose.R
 import kotlinx.coroutines.delay
 
@@ -21,12 +19,11 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun FirstLaunch(navController: NavHostController) {
+fun FirstLaunchScreen(onClose:()-> Unit ) {
 
     val textArray =
         remember { arrayOf("Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi") }
@@ -41,7 +38,7 @@ fun FirstLaunch(navController: NavHostController) {
             delay(timerDuration)
         }
         delay(1000)
-        navController.navigate("start")
+        onClose()
     }
 
     val alphaText = remember { Animatable(0f) } // Animacja dla tekstu
@@ -105,6 +102,5 @@ fun FirstLaunch(navController: NavHostController) {
 @Preview(showBackground = true)
 @Composable
 fun FirstLaunchPreview() {
-    val navController = rememberNavController()
-    FirstLaunch(navController = navController)
+    FirstLaunchScreen(onClose = {})
 }

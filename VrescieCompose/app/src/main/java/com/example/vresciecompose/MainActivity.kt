@@ -1,6 +1,7 @@
 package com.example.vresciecompose
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
@@ -11,15 +12,15 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
-import com.example.vresciecompose.components.LocalBackPressedDispatcher
-import com.example.vresciecompose.components.MainViewModel
+import com.example.vresciecompose.screens.LocalBackPressedDispatcher
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
+import com.example.vresciecompose.view_models.MainViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var backDispatcher: OnBackPressedDispatcher
 
-    private val viewModel by viewModels<MainViewModel> {
-        MainViewModelFactory(applicationContext)
+    private val viewModel: MainViewModel by viewModels {
+        MainViewModelFactory(getSharedPreferences("MyPrefs", Context.MODE_PRIVATE))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,9 +35,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         if (viewModel.isReady.value) {
             val startDestination = when {
-                viewModel.isFirstRun() -> Navigation.Destinations.FirstLaunch
-                viewModel.isLoggedIn() -> Navigation.Destinations.MainMenu
-                else -> Navigation.Destinations.Start
+                viewModel.isFirstRun() -> Navigation.Destinations.FIRST_LAUNCH
+                viewModel.isLoggedIn() -> Navigation.Destinations.MAIN_MENU
+                else -> Navigation.Destinations.START
             }
             setContent {
                 CompositionLocalProvider(
@@ -49,7 +50,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             // Ustawienie isFirstRun na false dopiero po ustawieniu setContent na FirstLaunch
-            if (startDestination == Navigation.Destinations.FirstLaunch) {
+            if (startDestination == Navigation.Destinations.FIRST_LAUNCH) {
                 applicationContext.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
                     .edit()
                     .putBoolean("isFirstRun", false)
@@ -59,12 +60,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-class MainViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+class MainViewModelFactory(private val sharedPreferences: SharedPreferences) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            return MainViewModel(context) as T
+            return MainViewModel(sharedPreferences) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

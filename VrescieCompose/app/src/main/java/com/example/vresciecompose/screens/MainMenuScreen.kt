@@ -1,11 +1,10 @@
-package com.example.vresciecompose.components
+package com.example.vresciecompose.screens
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
 
 @Composable
-fun MainMenu(navController: NavHostController) {
+fun MainMenuScreen(onClick:(String) -> Unit) {
     // Komponent głównego menu
     Text(
         text = "Hello main menu!"
