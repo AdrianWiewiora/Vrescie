@@ -23,7 +23,7 @@
           }
         },
         {
-          "client_id": "677354439837-5fjv2ca6umn6h7v0jjqu2pbkki6fpkdn.apps.googleusercontent.com",
+          "client_id": "677354439837-440n0um6qaelmnrkdtcksmlmfmeqhtes.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -36,7 +36,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "677354439837-5fjv2ca6umn6h7v0jjqu2pbkki6fpkdn.apps.googleusercontent.com",
+              "client_id": "677354439837-440n0um6qaelmnrkdtcksmlmfmeqhtes.apps.googleusercontent.com",
               "client_type": 3
             },
             {
@@ -60,7 +60,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "677354439837-5fjv2ca6umn6h7v0jjqu2pbkki6fpkdn.apps.googleusercontent.com",
+          "client_id": "677354439837-b2qjtdiea5em0uuvd302hgnkh46o1gvk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vresciecompose",
+            "certificate_hash": "1f1d20041d29c6924c537c0b65956799393d2171"
+          }
+        },
+        {
+          "client_id": "677354439837-440n0um6qaelmnrkdtcksmlmfmeqhtes.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -73,7 +81,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "677354439837-5fjv2ca6umn6h7v0jjqu2pbkki6fpkdn.apps.googleusercontent.com",
+              "client_id": "677354439837-440n0um6qaelmnrkdtcksmlmfmeqhtes.apps.googleusercontent.com",
               "client_type": 3
             },
             {

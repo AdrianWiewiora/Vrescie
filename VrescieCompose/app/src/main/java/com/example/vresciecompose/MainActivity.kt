@@ -12,12 +12,15 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
-import com.example.vresciecompose.screens.LocalBackPressedDispatcher
+import com.example.vresciecompose.screenss.LocalBackPressedDispatcher
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.MainViewModel
+import com.example.vresciecompose.view_models.StartScreenViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var backDispatcher: OnBackPressedDispatcher
+
+    private lateinit var startScreenViewModel: StartScreenViewModel
 
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(getSharedPreferences("MyPrefs", Context.MODE_PRIVATE))
@@ -32,6 +35,9 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // Inicjalizacja ViewModel
+        startScreenViewModel = ViewModelProvider(this).get(StartScreenViewModel::class.java)
+
         super.onCreate(savedInstanceState)
         if (viewModel.isReady.value) {
             val startDestination = when {
@@ -45,7 +51,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     VrescieComposeTheme {
                         val navController = rememberNavController()
-                        AppNavigation(navController, startDestination)
+                        AppNavigation(navController, startDestination, startScreenViewModel)
                     }
                 }
             }

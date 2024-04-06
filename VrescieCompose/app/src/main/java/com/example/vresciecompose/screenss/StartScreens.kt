@@ -1,4 +1,4 @@
-package com.example.vresciecompose.screens
+package com.example.vresciecompose.screenss
 
 import android.app.Activity
 import android.content.Context
@@ -16,8 +16,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.vresciecompose.R
 
 import androidx.compose.runtime.Composable
@@ -29,20 +27,28 @@ import com.example.vresciecompose.ui.components.BlackButton
 import com.example.vresciecompose.ui.components.WhiteOutlinedButton
 import androidx.compose.ui.text.style.TextAlign
 import com.example.vresciecompose.Navigation
+import com.example.vresciecompose.view_models.StartScreenViewModel
 
 internal val LocalBackPressedDispatcher = staticCompositionLocalOf<OnBackPressedDispatcher> {
     error("No Back Dispatcher provided")
 }
 
+
+
 @Composable
-fun StartScreen(onClick:(String) -> Unit, onConfirmExit: () -> Unit) {
+fun StartScreens(
+    viewModel: StartScreenViewModel,
+    onClick:(String) -> Unit,
+    onConfirmExit: () -> Unit
+) {
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
-    var showDialog by remember { mutableStateOf(false) }
+    val showDialog = viewModel.showDialog.value
+
 
     DisposableEffect(key1 = onBackPressedDispatcher) {
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                showDialog = true
+                viewModel.toggleDialogVisibility()
             }
         }
         onBackPressedDispatcher.addCallback(callback)
@@ -91,7 +97,7 @@ fun StartScreen(onClick:(String) -> Unit, onConfirmExit: () -> Unit) {
 
         BlackButton(
             onClick = {
-                onClick(Navigation.Destinations.REGISTRATION_GOOGLE)
+
             },
             text = "Zarejestruj za pomocą Google",
             icon = R.drawable.google_svgrepo_com,
@@ -126,12 +132,12 @@ fun StartScreen(onClick:(String) -> Unit, onConfirmExit: () -> Unit) {
             ExitConfirmationDialog(
                 onConfirm = {
                     // Handle exit confirmation
-                    showDialog = false
+                    viewModel.toggleDialogVisibility()
                     onConfirmExit()
                 },
                 onDismiss = {
                     // Dismiss dialog
-                    showDialog = false
+                    viewModel.toggleDialogVisibility()
                 }
             )
         }
@@ -183,9 +189,11 @@ private fun exitApplication(context: Context) {
 @Preview
 @Composable
 fun PreviewStart() {
+    val viewModel = remember { StartScreenViewModel() }
+
     CompositionLocalProvider(
         LocalBackPressedDispatcher provides OnBackPressedDispatcher {}
     ) {
-        StartScreen(onClick = { }, onConfirmExit = { })
+        StartScreens(viewModel = viewModel, onClick = { }, onConfirmExit = { })
     }
 }

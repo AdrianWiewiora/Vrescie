@@ -64,7 +64,7 @@ class RegisterFragment : Fragment() {
 
         // Inicjalizacja klienta Google Sign-In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestIdToken("677354439837-2ph227rcl42os38a4iotjf3d2gicuvcc.apps.googleusercontent.com")
             .requestEmail()
             .build()
 

@@ -1,12 +1,14 @@
 package com.example.vresciecompose
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.vresciecompose.screens.FirstLaunchScreen
-import com.example.vresciecompose.screens.MainMenuScreen
-import com.example.vresciecompose.screens.StartScreen
+import com.example.vresciecompose.screenss.FirstLaunchScreen
+import com.example.vresciecompose.screenss.MainMenuScreens
+import com.example.vresciecompose.screenss.StartScreens
+import com.example.vresciecompose.view_models.StartScreenViewModel
 
 
 object Navigation {
@@ -22,10 +24,15 @@ object Navigation {
 }
 
 @Composable
-fun AppNavigation(navController: NavHostController, startDestination: String) {
+fun AppNavigation(
+    navController: NavHostController,
+    startDestination: String,
+    startScreenViewModel: StartScreenViewModel
+) {
+
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Navigation.Destinations.MAIN_MENU) {
-            MainMenuScreen(onClick = {
+            MainMenuScreens(onClick = {
                 navController.navigate(route = it)
             })
         }
@@ -36,12 +43,14 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             })
         }
         composable(Navigation.Destinations.START) {
-            StartScreen(onClick = {
-                navController.navigate(route = it)
-            },
-            onConfirmExit = {
-                navController.navigateUp()
-            })
+            StartScreens(
+                viewModel = startScreenViewModel,
+                onClick = {
+                    navController.navigate(route = it)
+                },
+                onConfirmExit = {
+                    navController.navigateUp()
+                })
         }
     }
 }
