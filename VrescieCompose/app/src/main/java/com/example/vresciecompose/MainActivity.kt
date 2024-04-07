@@ -14,7 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.example.vresciecompose.authentication.GoogleAuthentication
-import com.example.vresciecompose.screenss.LocalBackPressedDispatcher
+import com.example.vresciecompose.screens.LocalBackPressedDispatcher
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.MainViewModel
 import com.example.vresciecompose.view_models.StartScreenViewModel

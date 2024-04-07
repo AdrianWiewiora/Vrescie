@@ -1,4 +1,4 @@
-package com.example.vresciecompose.screenss
+package com.example.vresciecompose.screens
 
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
