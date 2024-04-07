@@ -11,11 +11,14 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.screenss.LocalBackPressedDispatcher
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.MainViewModel
 import com.example.vresciecompose.view_models.StartScreenViewModel
+import com.google.android.gms.auth.api.identity.Identity
 
 class MainActivity : ComponentActivity() {
     private lateinit var backDispatcher: OnBackPressedDispatcher
@@ -24,6 +27,13 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(getSharedPreferences("MyPrefs", Context.MODE_PRIVATE))
+    }
+
+    val googleAuthClient by lazy {
+        GoogleAuthentication(
+            context = applicationContext,
+            oneTapClient = Identity.getSignInClient(applicationContext)
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,7 +61,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     VrescieComposeTheme {
                         val navController = rememberNavController()
-                        AppNavigation(navController, startDestination, startScreenViewModel)
+                        AppNavigation(navController, startDestination, startScreenViewModel,
+                            googleAuthClient, lifecycleScope, applicationContext = applicationContext)
                     }
                 }
             }

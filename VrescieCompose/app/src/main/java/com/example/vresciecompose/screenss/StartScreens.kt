@@ -2,6 +2,7 @@ package com.example.vresciecompose.screenss
 
 import android.app.Activity
 import android.content.Context
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.foundation.Image
@@ -27,6 +28,7 @@ import com.example.vresciecompose.ui.components.BlackButton
 import com.example.vresciecompose.ui.components.WhiteOutlinedButton
 import androidx.compose.ui.text.style.TextAlign
 import com.example.vresciecompose.Navigation
+import com.example.vresciecompose.authentication.SignInState
 import com.example.vresciecompose.view_models.StartScreenViewModel
 
 internal val LocalBackPressedDispatcher = staticCompositionLocalOf<OnBackPressedDispatcher> {
@@ -39,10 +41,23 @@ internal val LocalBackPressedDispatcher = staticCompositionLocalOf<OnBackPressed
 fun StartScreens(
     viewModel: StartScreenViewModel,
     onClick:(String) -> Unit,
-    onConfirmExit: () -> Unit
+    onConfirmExit: () -> Unit,
+    state: SignInState,
+    onSignInClick: () -> Unit
 ) {
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
     val showDialog = viewModel.showDialog.value
+    
+    val context = LocalContext.current
+    LaunchedEffect(key1 = state.signInError) {
+        state.signInError?.let { error ->
+            Toast.makeText(
+                context,
+                error,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
 
 
     DisposableEffect(key1 = onBackPressedDispatcher) {
@@ -96,9 +111,7 @@ fun StartScreens(
         )
 
         BlackButton(
-            onClick = {
-
-            },
+            onClick = onSignInClick,
             text = "Zarejestruj za pomocą Google",
             icon = R.drawable.google_svgrepo_com,
             iconSize = 28,
@@ -186,14 +199,14 @@ private fun exitApplication(context: Context) {
     activity?.finishAffinity()
 }
 
-@Preview
-@Composable
-fun PreviewStart() {
-    val viewModel = remember { StartScreenViewModel() }
-
-    CompositionLocalProvider(
-        LocalBackPressedDispatcher provides OnBackPressedDispatcher {}
-    ) {
-        StartScreens(viewModel = viewModel, onClick = { }, onConfirmExit = { })
-    }
-}
+//@Preview
+//@Composable
+//fun PreviewStart() {
+//    val viewModel = remember { StartScreenViewModel() }
+//
+//    CompositionLocalProvider(
+//        LocalBackPressedDispatcher provides OnBackPressedDispatcher {}
+//    ) {
+//        StartScreens(viewModel = viewModel, onClick = { }, onConfirmExit = { })
+//    }
+//}
