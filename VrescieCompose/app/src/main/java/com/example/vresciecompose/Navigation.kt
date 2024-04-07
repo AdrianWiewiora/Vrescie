@@ -20,6 +20,7 @@ import com.example.vresciecompose.authentication.SignInViewModel
 import com.example.vresciecompose.screens.FirstConfigurationProfileScreen
 import com.example.vresciecompose.screens.FirstLaunchScreen
 import com.example.vresciecompose.screens.MainMenuScreens
+import com.example.vresciecompose.screens.RegistrationScreen
 import com.example.vresciecompose.screens.StartScreens
 import com.example.vresciecompose.view_models.StartScreenViewModel
 import kotlinx.coroutines.launch
@@ -113,6 +114,11 @@ fun AppNavigation(
         }
         composable(Navigation.Destinations.FIRST_CONFIGURATION) {
             FirstConfigurationProfileScreen(onClick = {
+                navController.navigate(route = it)
+            })
+        }
+        composable(Navigation.Destinations.REGISTRATION) {
+            RegistrationScreen(onClick = {
                 navController.navigate(route = it)
             })
         }
