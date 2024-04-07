@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.ui.components.BlackButton
 import com.example.vresciecompose.ui.components.WhiteOutlinedButton
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.authentication.SignInState
 import com.example.vresciecompose.view_models.StartScreenViewModel
@@ -91,7 +92,14 @@ fun StartScreens(
             onClick = {
                 onClick(Navigation.Destinations.LOGIN)
             },
-            text = "Mam już konto"
+            text = "Zaloguj się"
+        )
+
+        BlackButton(
+            onClick = {
+                onClick(Navigation.Destinations.REGISTRATION)
+            },
+            text = "Zarejestruj się"
         )
 
         Text(
@@ -103,15 +111,8 @@ fun StartScreens(
         )
 
         BlackButton(
-            onClick = {
-                onClick(Navigation.Destinations.REGISTRATION)
-            },
-            text = "Zarejestruj się"
-        )
-
-        BlackButton(
             onClick = onSignInClick,
-            text = "Zarejestruj za pomocą Google",
+            text = "Kontynuuj z Google",
             icon = R.drawable.google_svgrepo_com,
             iconSize = 28,
             fontSize = 18
@@ -198,14 +199,15 @@ private fun exitApplication(context: Context) {
     activity?.finishAffinity()
 }
 
-//@Preview
-//@Composable
-//fun PreviewStart() {
-//    val viewModel = remember { StartScreenViewModel() }
-//
-//    CompositionLocalProvider(
-//        LocalBackPressedDispatcher provides OnBackPressedDispatcher {}
-//    ) {
-//        StartScreens(viewModel = viewModel, onClick = { }, onConfirmExit = { })
-//    }
-//}
+@Preview
+@Composable
+fun PreviewStart() {
+    val viewModel = remember { StartScreenViewModel() }
+
+    CompositionLocalProvider(
+        LocalBackPressedDispatcher provides OnBackPressedDispatcher {}
+    ) {
+        StartScreens(viewModel = viewModel, onClick = { }, onConfirmExit = { }, state = SignInState(), onSignInClick = { })
+    }
+}
+
