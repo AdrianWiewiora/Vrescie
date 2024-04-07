@@ -17,6 +17,7 @@ import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.screens.LocalBackPressedDispatcher
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.MainViewModel
+import com.example.vresciecompose.view_models.RegistrationViewModel
 import com.example.vresciecompose.view_models.StartScreenViewModel
 import com.google.android.gms.auth.api.identity.Identity
 
@@ -24,6 +25,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var backDispatcher: OnBackPressedDispatcher
 
     private lateinit var startScreenViewModel: StartScreenViewModel
+    private lateinit var registrationViewModel: RegistrationViewModel
+
 
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(getSharedPreferences("MyPrefs", Context.MODE_PRIVATE))
@@ -47,6 +50,7 @@ class MainActivity : ComponentActivity() {
 
         // Inicjalizacja ViewModel
         startScreenViewModel = ViewModelProvider(this).get(StartScreenViewModel::class.java)
+        registrationViewModel = ViewModelProvider(this).get(RegistrationViewModel::class.java)
 
         super.onCreate(savedInstanceState)
         if (viewModel.isReady.value) {
@@ -62,7 +66,7 @@ class MainActivity : ComponentActivity() {
                     VrescieComposeTheme {
                         val navController = rememberNavController()
                         AppNavigation(navController, startDestination, startScreenViewModel,
-                            googleAuthClient, lifecycleScope, applicationContext = applicationContext)
+                            googleAuthClient, lifecycleScope, applicationContext = applicationContext, registrationViewModel)
                     }
                 }
             }

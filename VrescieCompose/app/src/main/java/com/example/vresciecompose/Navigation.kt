@@ -22,6 +22,7 @@ import com.example.vresciecompose.screens.FirstLaunchScreen
 import com.example.vresciecompose.screens.MainMenuScreens
 import com.example.vresciecompose.screens.RegistrationScreen
 import com.example.vresciecompose.screens.StartScreens
+import com.example.vresciecompose.view_models.RegistrationViewModel
 import com.example.vresciecompose.view_models.StartScreenViewModel
 import kotlinx.coroutines.launch
 
@@ -46,7 +47,8 @@ fun AppNavigation(
     startScreenViewModel: StartScreenViewModel,
     googleAuthClient: GoogleAuthentication,
     lifecycleScope: LifecycleCoroutineScope,
-    applicationContext: Context
+    applicationContext: Context,
+    registrationViewModel: RegistrationViewModel
 ) {
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -118,9 +120,10 @@ fun AppNavigation(
             })
         }
         composable(Navigation.Destinations.REGISTRATION) {
-            RegistrationScreen(onClick = {
-                navController.navigate(route = it)
-            })
+            RegistrationScreen(
+                onClick = { route -> navController.navigate(route) },
+                registrationViewModel = registrationViewModel // Przekazanie instancji view model
+            )
         }
     }
 }

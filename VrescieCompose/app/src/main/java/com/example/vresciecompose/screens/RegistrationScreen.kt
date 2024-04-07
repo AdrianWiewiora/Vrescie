@@ -1,5 +1,6 @@
 package com.example.vresciecompose.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -16,6 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,18 +37,44 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.BlackButton
+import com.example.vresciecompose.view_models.RegistrationViewModel
 
 
 @Composable
-fun RegistrationScreen(onClick:(String) -> Unit) {
+fun RegistrationScreen(
+    onClick:(String) -> Unit,
+    registrationViewModel: RegistrationViewModel
+) {
 
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var repeatPassword by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var repeatPasswordVisible by rememberSaveable { mutableStateOf(false) }
+
+    val registrationSuccess by registrationViewModel.registrationSuccess.collectAsState()
+    val errorMessage by registrationViewModel.errorMessage.collectAsState()
+
+    var isErrorShown by remember { mutableStateOf(false) }
+
+    if (registrationSuccess) {
+        Toast.makeText(
+            LocalContext.current,
+            "Sign in successful",
+            Toast.LENGTH_LONG
+        ).show()
+        onClick(Navigation.Destinations.FIRST_CONFIGURATION)
+    } else if (!errorMessage.isNullOrEmpty() && !isErrorShown) {
+        isErrorShown = true
+        Toast.makeText(
+            LocalContext.current,
+            errorMessage,
+            Toast.LENGTH_LONG
+        ).show()
+    }
 
     Column(
         modifier = Modifier
@@ -153,7 +181,9 @@ fun RegistrationScreen(onClick:(String) -> Unit) {
         Spacer(modifier = Modifier.height(20.dp))
 
         BlackButton(
-            onClick = { },
+            onClick = {
+                registrationViewModel.registerWithEmail(email, password, repeatPassword)
+            },
             text = "Zarejestruj się",
         )
     }
@@ -162,5 +192,6 @@ fun RegistrationScreen(onClick:(String) -> Unit) {
 @Preview
 @Composable
 fun RegistrationScreenPreview() {
-    RegistrationScreen(onClick = {})
+    val viewModel = RegistrationViewModel() // Tworzenie instancji view model
+    RegistrationScreen(onClick = {}, registrationViewModel = viewModel)
 }
