@@ -21,6 +21,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.authentication.SignInViewModel
+import com.example.vresciecompose.screenss.FirstConfigurationProfileScreen
 import com.example.vresciecompose.screenss.FirstLaunchScreen
 import com.example.vresciecompose.screenss.MainMenuScreens
 import com.example.vresciecompose.screenss.StartScreens
@@ -37,7 +38,8 @@ object Navigation {
         const val START = "start"
         const val LOGIN = "login"
         const val REGISTRATION = "registration"
-        const val REGISTRATION_GOOGLE = "registration_google"
+        const val FIRST_CONFIGURATION = "first_configuration"
+
     }
 }
 
@@ -88,6 +90,7 @@ fun AppNavigation(
                         "Sign in successful",
                         Toast.LENGTH_LONG
                     ).show()
+                    navController.navigate(Navigation.Destinations.FIRST_CONFIGURATION)
                 }
 
             }
@@ -112,6 +115,11 @@ fun AppNavigation(
                     }
                 }
                 )
+        }
+        composable(Navigation.Destinations.FIRST_CONFIGURATION) {
+            FirstConfigurationProfileScreen(onClick = {
+                navController.navigate(route = it)
+            })
         }
     }
 }
