@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.authentication.SignInViewModel
 import com.example.vresciecompose.ui.components.BlackButton
@@ -41,7 +42,8 @@ fun LoginScreen(
 ) {
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var password by rememberSaveable { mutableStateOf("") }
-    val email by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -56,19 +58,21 @@ fun LoginScreen(
             contentDescription = null,
             modifier = Modifier
                 .padding(bottom = 40.dp)
+                .padding(top = 140.dp)
                 .padding(horizontal = 20.dp)
         )
 
         // Email field
         OutlinedTextField(
             colors = OutlinedTextFieldDefaults.colors(
+                unfocusedTextColor = Color.Black,
                 focusedBorderColor = Color.Black,
                 focusedLabelColor = Color.Black,
                 focusedTextColor = Color.Black,
                 cursorColor = Color.Black
             ),
             value = email,
-            onValueChange = { },
+            onValueChange = { email = it },
             label = { Text(text = "E-mail") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
@@ -78,6 +82,7 @@ fun LoginScreen(
         // Password field
         OutlinedTextField(
             colors = OutlinedTextFieldDefaults.colors(
+                unfocusedTextColor = Color.Black,
                 focusedBorderColor = Color.Black,
                 focusedLabelColor = Color.Black,
                 focusedTextColor = Color.Black,
@@ -108,7 +113,16 @@ fun LoginScreen(
 
         // Login button
         BlackButton(
-            onClick = { },
+            onClick = {
+                loginViewModel.signInWithEmail(email, password,
+                    onSuccess = {
+                        onClick(Navigation.Destinations.MAIN_MENU)
+                    },
+                    onFailure = { error ->
+                        errorMessage = error // Aktualizacja komunikatu o błędzie
+                    }
+                )
+            },
             text = "Zaloguj się"
         )
 
@@ -117,6 +131,15 @@ fun LoginScreen(
             onClick = { /*TODO*/ },
             text = "Nie pamiętam hasła"
         )
+
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
     }
 }
 

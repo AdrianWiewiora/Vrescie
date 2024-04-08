@@ -101,6 +101,7 @@ fun RegistrationScreen(
 
         OutlinedTextField(
             colors = OutlinedTextFieldDefaults.colors(
+                unfocusedTextColor = Color.Black,
                 focusedBorderColor = Color.Black,
                 focusedLabelColor = Color.Black,
                 focusedTextColor = Color.Black,
@@ -118,6 +119,7 @@ fun RegistrationScreen(
 
         OutlinedTextField(
             colors = OutlinedTextFieldDefaults.colors(
+                unfocusedTextColor = Color.Black,
                 focusedBorderColor = Color.Black,
                 focusedLabelColor = Color.Black,
                 focusedTextColor = Color.Black,
@@ -150,6 +152,7 @@ fun RegistrationScreen(
 
         OutlinedTextField(
             colors = OutlinedTextFieldDefaults.colors(
+                unfocusedTextColor = Color.Black,
                 focusedBorderColor = Color.Black,
                 focusedLabelColor = Color.Black,
                 focusedTextColor = Color.Black,
