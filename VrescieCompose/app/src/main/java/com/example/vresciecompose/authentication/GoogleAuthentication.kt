@@ -59,7 +59,7 @@ class GoogleAuthentication(
                 data = user?.run {
                     UserData(
                         userId = uid,
-                        username = firstName, // Zmiana na imię użytkownika
+                        username = firstName,
                         profilePictureUrl = photoUrl?.toString()
                     )
                 },
@@ -89,14 +89,18 @@ class GoogleAuthentication(
         }
     }
 
-    fun getSignedInUser(): UserData? = auth.currentUser?.run {
-        UserData(
-            userId = uid,
-            username = displayName,
-            profilePictureUrl = photoUrl?.toString()
-        )
-
+    fun getSignedInUser(): UserData? {
+        val user = auth.currentUser
+        val username = user?.displayName?.split(" ")?.firstOrNull() ?: ""
+        return user?.run {
+            UserData(
+                userId = uid,
+                username = username,
+                profilePictureUrl = photoUrl?.toString()
+            )
+        }
     }
+
 
     private fun buildSignInRequest(): BeginSignInRequest {
         return BeginSignInRequest.Builder()

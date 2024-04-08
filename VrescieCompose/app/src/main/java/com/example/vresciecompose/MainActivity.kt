@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.screens.LocalBackPressedDispatcher
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
+import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.MainViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
@@ -28,6 +29,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var startScreenViewModel: StartScreenViewModel
     private lateinit var registrationViewModel: RegistrationViewModel
     private lateinit var loginViewModel: LoginViewModel
+    private lateinit var configurationProfileViewModel: ConfigurationProfileViewModel
 
 
     private val viewModel: MainViewModel by viewModels {
@@ -54,6 +56,7 @@ class MainActivity : ComponentActivity() {
         startScreenViewModel = ViewModelProvider(this).get(StartScreenViewModel::class.java)
         registrationViewModel = ViewModelProvider(this).get(RegistrationViewModel::class.java)
         loginViewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
+        configurationProfileViewModel = ViewModelProvider(this).get(ConfigurationProfileViewModel::class.java)
 
         super.onCreate(savedInstanceState)
         if (viewModel.isReady.value) {
@@ -69,7 +72,7 @@ class MainActivity : ComponentActivity() {
                     VrescieComposeTheme {
                         val navController = rememberNavController()
                         AppNavigation(navController, startDestination, startScreenViewModel,
-                            googleAuthClient, lifecycleScope, applicationContext = applicationContext, registrationViewModel, loginViewModel)
+                            googleAuthClient, lifecycleScope, applicationContext = applicationContext, registrationViewModel, loginViewModel, configurationProfileViewModel)
                     }
                 }
             }

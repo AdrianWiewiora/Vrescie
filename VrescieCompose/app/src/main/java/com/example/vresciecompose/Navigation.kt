@@ -23,6 +23,7 @@ import com.example.vresciecompose.screens.LoginScreen
 import com.example.vresciecompose.screens.MainMenuScreens
 import com.example.vresciecompose.screens.RegistrationScreen
 import com.example.vresciecompose.screens.StartScreens
+import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
 import com.example.vresciecompose.view_models.StartScreenViewModel
@@ -51,7 +52,8 @@ fun AppNavigation(
     lifecycleScope: LifecycleCoroutineScope,
     applicationContext: Context,
     registrationViewModel: RegistrationViewModel,
-    loginViewModel: LoginViewModel
+    loginViewModel: LoginViewModel,
+    configurationProfileViewModel: ConfigurationProfileViewModel
 ) {
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -126,9 +128,9 @@ fun AppNavigation(
                 )
         }
         composable(Navigation.Destinations.FIRST_CONFIGURATION) {
-            FirstConfigurationProfileScreen(onClick = {
-                navController.navigate(route = it)
-            })
+            FirstConfigurationProfileScreen(
+                onClick = { navController.navigate(route = it) },
+                configurationProfileViewModel = configurationProfileViewModel)
         }
         composable(Navigation.Destinations.REGISTRATION) {
             RegistrationScreen(
