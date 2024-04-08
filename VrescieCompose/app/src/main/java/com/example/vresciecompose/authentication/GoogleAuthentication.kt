@@ -10,6 +10,7 @@ import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.Firebase
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
@@ -18,6 +19,7 @@ class GoogleAuthentication(
     private val oneTapClient: SignInClient
 ) {
     private val auth = Firebase.auth
+    private val database = FirebaseDatabase.getInstance()
 
     suspend fun signIn(): IntentSender? {
         val result = try {
@@ -41,27 +43,40 @@ class GoogleAuthentication(
             val authResult = auth.signInWithCredential(googleCredentials).await()
             val isNewAccount = authResult.additionalUserInfo?.isNewUser ?: false
             val user = authResult.user
+
+            // Wyodrębnianie tylko imienia użytkownika z pola displayName
+            val nameParts = user?.displayName?.split(" ")
+            val firstName = nameParts?.firstOrNull() ?: ""
+
+            // Dodawanie danych użytkownika do bazy danych Firebase
+            val userId = user?.uid ?: ""
+            val userEmail = user?.email ?: ""
+            val userRef = database.getReference("user").child(userId)
+            userRef.child("email").setValue(userEmail)
+            userRef.child("name").setValue(firstName)
+
             SignInResult(
                 data = user?.run {
                     UserData(
                         userId = uid,
-                        username = displayName,
+                        username = firstName, // Zmiana na imię użytkownika
                         profilePictureUrl = photoUrl?.toString()
                     )
                 },
                 errorMessage = null,
-                isNewAccount = isNewAccount // Ustawianie informacji o tym, czy użytkownik jest nowy
+                isNewAccount = isNewAccount
             )
         } catch (e: Exception) {
             e.printStackTrace()
-            if(e is CancellationException) throw e
+            if (e is CancellationException) throw e
             SignInResult(
                 data = null,
                 errorMessage = e.message,
-                isNewAccount = false // Jeśli wystąpił błąd, ustawiamy, że użytkownik na pewno nie jest nowy
+                isNewAccount = false
             )
         }
     }
+
 
 
     suspend fun signOut() {

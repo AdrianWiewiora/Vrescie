@@ -18,7 +18,10 @@ import kotlinx.coroutines.delay
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
@@ -44,10 +47,17 @@ fun FirstLaunchScreen(onClose:()-> Unit ) {
     val alphaText = remember { Animatable(0f) } // Animacja dla tekstu
     val alphaImage = remember { Animatable(0f) } // Animacja dla obrazka
 
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color.White),
+            .background(color = Color.White)
+            .pointerInput(Unit) {
+                detectTapGestures(onDoubleTap = {
+                    onClose()
+                })
+            },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
