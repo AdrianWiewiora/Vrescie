@@ -85,15 +85,23 @@ fun AppNavigation(
             )
 
             LaunchedEffect(key1 = state.isSignedSuccessful) {
-                if(state.isSignedSuccessful) {
-                    Toast.makeText(
-                        applicationContext,
-                        "Sign in successful",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    navController.navigate(Navigation.Destinations.FIRST_CONFIGURATION)
+                if (state.isSignedSuccessful) {
+                    if (state.isNewAccount) {
+                        Toast.makeText(
+                            applicationContext,
+                            "Sign in successful",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        navController.navigate(Navigation.Destinations.FIRST_CONFIGURATION)
+                    } else {
+                        Toast.makeText(
+                            applicationContext,
+                            "Log in successful",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        navController.navigate(Navigation.Destinations.MAIN_MENU)
+                    }
                 }
-
             }
 
             StartScreens(

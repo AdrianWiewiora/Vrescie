@@ -2,5 +2,6 @@ package com.example.vresciecompose.authentication
 
 data class SignInState(
     val isSignedSuccessful: Boolean = false,
-    val signInError: String? = null
+    val signInError: String? = null,
+    val isNewAccount: Boolean = false
 )

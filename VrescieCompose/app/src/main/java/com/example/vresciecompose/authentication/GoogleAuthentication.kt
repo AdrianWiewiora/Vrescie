@@ -38,7 +38,9 @@ class GoogleAuthentication(
         val googleIdToken = credential.googleIdToken
         val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken, null)
         return try {
-            val user = auth.signInWithCredential(googleCredentials).await().user
+            val authResult = auth.signInWithCredential(googleCredentials).await()
+            val isNewAccount = authResult.additionalUserInfo?.isNewUser ?: false
+            val user = authResult.user
             SignInResult(
                 data = user?.run {
                     UserData(
@@ -47,17 +49,20 @@ class GoogleAuthentication(
                         profilePictureUrl = photoUrl?.toString()
                     )
                 },
-                errorMessage = null
+                errorMessage = null,
+                isNewAccount = isNewAccount // Ustawianie informacji o tym, czy użytkownik jest nowy
             )
         } catch (e: Exception) {
             e.printStackTrace()
             if(e is CancellationException) throw e
             SignInResult(
                 data = null,
-                errorMessage = e.message
+                errorMessage = e.message,
+                isNewAccount = false // Jeśli wystąpił błąd, ustawiamy, że użytkownik na pewno nie jest nowy
             )
         }
     }
+
 
     suspend fun signOut() {
         try {

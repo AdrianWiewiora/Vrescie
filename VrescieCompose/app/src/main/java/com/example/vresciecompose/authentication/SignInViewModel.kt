@@ -13,7 +13,8 @@ class SignInViewModel: ViewModel() {
     fun oneSignInResult(result: SignInResult) {
         _state.update { it.copy(
             isSignedSuccessful = result.data != null,
-            signInError = result.errorMessage
+            signInError = result.errorMessage,
+            isNewAccount = result.isNewAccount
         ) }
     }
 
