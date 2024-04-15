@@ -35,8 +35,6 @@ internal val LocalBackPressedDispatcher = staticCompositionLocalOf<OnBackPressed
     error("No Back Dispatcher provided")
 }
 
-
-
 @Composable
 fun StartScreens(
     viewModel: StartScreenViewModel,
