@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Vrescie</string>
     <string name="web_client_id">677354439837-440n0um6qaelmnrkdtcksmlmfmeqhtes.apps.googleusercontent.com</string>
+    <string name="hello_main_menu">Witaj w menu głównym</string>
+    <string name="v_czat_pl">V-czat</string>
+    <string name="chats_pl">Konwersacje</string>
+    <string name="profile_pl">Profil</string>
 </resources>

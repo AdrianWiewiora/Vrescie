@@ -58,9 +58,6 @@ class MainMenuFragment : Fragment() {
             else -> onMenuItemClick(imageViewAnonymousChat)
         }
 
-/*        onMenuItemClick(imageViewAnonymousChat)
-        val color = ContextCompat.getColor(requireContext(), R.color.button_clicked_menu)
-        imageViewAnonymousChatText.setTextColor(color)*/
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             handleBackPressed()

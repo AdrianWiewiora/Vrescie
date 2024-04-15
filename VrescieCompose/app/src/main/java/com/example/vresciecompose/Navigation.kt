@@ -20,7 +20,7 @@ import com.example.vresciecompose.authentication.SignInViewModel
 import com.example.vresciecompose.screens.FirstConfigurationProfileScreen
 import com.example.vresciecompose.screens.FirstLaunchScreen
 import com.example.vresciecompose.screens.LoginScreen
-import com.example.vresciecompose.screens.MainMenuScreens
+import com.example.vresciecompose.screens.MainMenuScreen
 import com.example.vresciecompose.screens.RegistrationScreen
 import com.example.vresciecompose.screens.StartScreens
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
@@ -58,7 +58,7 @@ fun AppNavigation(
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Navigation.Destinations.MAIN_MENU) {
-            MainMenuScreens(onClick = {
+            MainMenuScreen(onClick = {
                 navController.navigate(route = it)
             })
         }
