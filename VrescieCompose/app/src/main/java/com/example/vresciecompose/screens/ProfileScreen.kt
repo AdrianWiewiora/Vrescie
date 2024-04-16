@@ -88,7 +88,7 @@ fun ProfileScreen(
                             ProfileContent(userProfile.value!!)
                         } else {
                             Text(
-                                text = "Ładowanie w tej karcie",
+                                text = "Ładowanie danych",
                                 modifier = Modifier.padding(16.dp)
                             )
                         }
@@ -133,4 +133,10 @@ fun UserInfoRow(key: String, value: String) {
         Text(text = key)
         Text(text = value)
     }
+}
+
+@Preview
+@Composable
+fun PreviewProfileScreen(){
+    ProfileScreen()
 }
