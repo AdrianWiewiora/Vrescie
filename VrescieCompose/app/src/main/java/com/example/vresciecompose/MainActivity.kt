@@ -19,9 +19,11 @@ import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.MainViewModel
+import com.example.vresciecompose.view_models.ProfileViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
 import com.example.vresciecompose.view_models.StartScreenViewModel
 import com.google.android.gms.auth.api.identity.Identity
+import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     private lateinit var backDispatcher: OnBackPressedDispatcher
@@ -30,6 +32,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var registrationViewModel: RegistrationViewModel
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var configurationProfileViewModel: ConfigurationProfileViewModel
+    private lateinit var profileViewModel: ProfileViewModel
 
 
     private val viewModel: MainViewModel by viewModels {
@@ -57,6 +60,7 @@ class MainActivity : ComponentActivity() {
         registrationViewModel = ViewModelProvider(this).get(RegistrationViewModel::class.java)
         loginViewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
         configurationProfileViewModel = ViewModelProvider(this).get(ConfigurationProfileViewModel::class.java)
+        profileViewModel = ViewModelProvider(this).get(ProfileViewModel::class.java)
 
         super.onCreate(savedInstanceState)
         if (viewModel.isReady.value) {
@@ -72,7 +76,7 @@ class MainActivity : ComponentActivity() {
                     VrescieComposeTheme {
                         val navController = rememberNavController()
                         AppNavigation(navController, startDestination, startScreenViewModel,
-                            googleAuthClient, lifecycleScope, applicationContext = applicationContext, registrationViewModel, loginViewModel, configurationProfileViewModel)
+                            googleAuthClient, lifecycleScope, applicationContext = applicationContext, registrationViewModel, loginViewModel, configurationProfileViewModel, profileViewModel)
                     }
                 }
             }
@@ -84,6 +88,8 @@ class MainActivity : ComponentActivity() {
                     .apply()
             }
         }
+        // Inicjalizacja FirebaseApp
+        FirebaseApp.initializeApp(this)
     }
 }
 

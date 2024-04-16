@@ -12,3 +12,11 @@ data class UserData(
     val username: String?,
     val profilePictureUrl: String?
 )
+
+data class UserProfile(
+    val name: String = "",
+    val age: Int = 0,
+    val email: String = "",
+    val gender: String = "",
+    val joinDate: String = ""
+)

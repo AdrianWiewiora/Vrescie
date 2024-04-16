@@ -1,33 +1,28 @@
 package com.example.vresciecompose.screens
 
-import android.app.Activity
-import android.content.Context
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.vresciecompose.R
 import androidx.compose.animation.Crossfade
+import com.example.vresciecompose.authentication.UserProfile
+import com.example.vresciecompose.view_models.ProfileViewModel
 
 @Composable
-fun MainMenuScreen(onClick:(String) -> Unit) {
+fun MainMenuScreen(onClick: (String) -> Unit, profileViewModel: ProfileViewModel) {
     val (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(1) }
     val showDialog = remember { mutableStateOf(false) }
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
@@ -68,12 +63,9 @@ fun MainMenuScreen(onClick:(String) -> Unit) {
             when (target) {
                 1 -> AnonymousChatConfigurationScreen()
                 2 -> ImplicitChatsScreen()
-                3 -> ProfileScreen()
+                3 -> ProfileScreen(profileViewModel)
             }
         }
-
-
-
 
         // Row always at the bottom with fixed height
         Column(
@@ -150,5 +142,6 @@ fun MenuItem(
 @Preview
 @Composable
 fun MainMenuScreenPreview() {
-    MainMenuScreen(onClick = {})
+    val profileViewModel = ProfileViewModel()
+    MainMenuScreen(onClick = {}, profileViewModel = profileViewModel)
 }
