@@ -20,7 +20,7 @@ class ProfileViewModel : ViewModel() {
         loadUserProfile()
     }
 
-    private fun loadUserProfile() {
+    fun loadUserProfile() {
         val currentUser: FirebaseUser? = auth.currentUser
 
         currentUser?.let { user ->

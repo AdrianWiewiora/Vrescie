@@ -1,5 +1,6 @@
 package com.example.vresciecompose
 
+import ProvideContext
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -17,6 +18,7 @@ import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.screens.LocalBackPressedDispatcher
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
+import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.MainViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
@@ -33,6 +35,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var configurationProfileViewModel: ConfigurationProfileViewModel
     private lateinit var profileViewModel: ProfileViewModel
+    private lateinit var locationViewModel: LocationViewModel
 
 
     private val viewModel: MainViewModel by viewModels {
@@ -59,8 +62,10 @@ class MainActivity : ComponentActivity() {
         startScreenViewModel = ViewModelProvider(this).get(StartScreenViewModel::class.java)
         registrationViewModel = ViewModelProvider(this).get(RegistrationViewModel::class.java)
         loginViewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
-        configurationProfileViewModel = ViewModelProvider(this).get(ConfigurationProfileViewModel::class.java)
+        configurationProfileViewModel =
+            ViewModelProvider(this).get(ConfigurationProfileViewModel::class.java)
         profileViewModel = ViewModelProvider(this).get(ProfileViewModel::class.java)
+        locationViewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
 
         super.onCreate(savedInstanceState)
         if (viewModel.isReady.value) {
@@ -75,8 +80,21 @@ class MainActivity : ComponentActivity() {
                 ) {
                     VrescieComposeTheme {
                         val navController = rememberNavController()
-                        AppNavigation(navController, startDestination, startScreenViewModel,
-                            googleAuthClient, lifecycleScope, applicationContext = applicationContext, registrationViewModel, loginViewModel, configurationProfileViewModel, profileViewModel)
+                        ProvideContext {
+                            AppNavigation(
+                                navController,
+                                startDestination,
+                                startScreenViewModel,
+                                googleAuthClient,
+                                lifecycleScope,
+                                applicationContext = applicationContext,
+                                registrationViewModel,
+                                loginViewModel,
+                                configurationProfileViewModel,
+                                profileViewModel,
+                                locationViewModel
+                            )
+                        }
                     }
                 }
             }
@@ -93,7 +111,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-class MainViewModelFactory(private val sharedPreferences: SharedPreferences) : ViewModelProvider.Factory {
+class MainViewModelFactory(private val sharedPreferences: SharedPreferences) :
+    ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {

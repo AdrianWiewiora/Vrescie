@@ -51,6 +51,8 @@ android {
 }
 
 dependencies {
+    implementation("com.google.firebase:firebase-firestore-ktx:24.11.1")
+    implementation("com.google.android.gms:play-services-location:21.2.0")
     val composeBom = platform("androidx.compose:compose-bom:2024.04.00")
     implementation(composeBom)
 

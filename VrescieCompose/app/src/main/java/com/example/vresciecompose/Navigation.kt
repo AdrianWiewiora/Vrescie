@@ -1,5 +1,6 @@
 package com.example.vresciecompose
 
+import ProvideContext
 import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.widget.Toast
@@ -24,6 +25,7 @@ import com.example.vresciecompose.screens.MainMenuScreen
 import com.example.vresciecompose.screens.RegistrationScreen
 import com.example.vresciecompose.screens.StartScreens
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
+import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
@@ -55,96 +57,101 @@ fun AppNavigation(
     registrationViewModel: RegistrationViewModel,
     loginViewModel: LoginViewModel,
     configurationProfileViewModel: ConfigurationProfileViewModel,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel,
+    locationViewModel: LocationViewModel
 ) {
+    ProvideContext {
+        NavHost(navController = navController, startDestination = startDestination) {
+            composable(Navigation.Destinations.MAIN_MENU) {
+                MainMenuScreen(onClick = {
+                    navController.navigate(route = it)
+                }, profileViewModel = profileViewModel,
+                    locationViewModel = locationViewModel)
+            }
+            composable(Navigation.Destinations.FIRST_LAUNCH) {
+                FirstLaunchScreen(onClose = {
+                    navController.navigate(
+                        route = Navigation.Destinations.START
+                    )
+                })
+            }
+            composable(Navigation.Destinations.START) {
+                val viewModel = viewModel<SignInViewModel>()
+                val state by viewModel.state.collectAsStateWithLifecycle()
 
-    NavHost(navController = navController, startDestination = startDestination) {
-        composable(Navigation.Destinations.MAIN_MENU) {
-            MainMenuScreen(onClick = {
-                navController.navigate(route = it)
-            }, profileViewModel = profileViewModel)
-        }
-        composable(Navigation.Destinations.FIRST_LAUNCH) {
-            FirstLaunchScreen(onClose = {
-                navController.navigate(
-                    route = Navigation.Destinations.START)
-            })
-        }
-        composable(Navigation.Destinations.START) {
-            val viewModel = viewModel<SignInViewModel>()
-            val state by viewModel.state.collectAsStateWithLifecycle()
+                val launcher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.StartIntentSenderForResult(),
+                    onResult = { result ->
+                        if (result.resultCode == RESULT_OK) {
+                            lifecycleScope.launch {
+                                val signInResult = googleAuthClient.signInWithIntent(
+                                    intent = result.data ?: return@launch
+                                )
+                                viewModel.oneSignInResult(signInResult)
+                            }
+                        }
+                    }
+                )
 
-            val launcher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.StartIntentSenderForResult(),
-                onResult = {result ->
-                    if(result.resultCode == RESULT_OK) {
-                        lifecycleScope.launch {
-                            val signInResult = googleAuthClient.signInWithIntent(
-                                intent = result.data ?: return@launch
-                            )
-                            viewModel.oneSignInResult(signInResult)
+                LaunchedEffect(key1 = state.isSignedSuccessful) {
+                    if (state.isSignedSuccessful) {
+                        if (state.isNewAccount) {
+                            Toast.makeText(
+                                applicationContext,
+                                "Sign in successful",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            navController.navigate(Navigation.Destinations.FIRST_CONFIGURATION)
+                        } else {
+                            Toast.makeText(
+                                applicationContext,
+                                "Log in successful",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            navController.navigate(Navigation.Destinations.MAIN_MENU)
                         }
                     }
                 }
-            )
 
-            LaunchedEffect(key1 = state.isSignedSuccessful) {
-                if (state.isSignedSuccessful) {
-                    if (state.isNewAccount) {
-                        Toast.makeText(
-                            applicationContext,
-                            "Sign in successful",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        navController.navigate(Navigation.Destinations.FIRST_CONFIGURATION)
-                    } else {
-                        Toast.makeText(
-                            applicationContext,
-                            "Log in successful",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        navController.navigate(Navigation.Destinations.MAIN_MENU)
+                StartScreens(
+                    viewModel = startScreenViewModel,
+                    onClick = {
+                        navController.navigate(route = it)
+                    },
+                    onConfirmExit = {
+                        navController.navigateUp()
+                    },
+                    state = state,
+                    onSignInClick = {
+                        lifecycleScope.launch {
+                            val signInIntentSender = googleAuthClient.signIn()
+                            launcher.launch(
+                                IntentSenderRequest.Builder(
+                                    signInIntentSender ?: return@launch
+                                ).build()
+                            )
+                        }
                     }
-                }
-            }
-
-            StartScreens(
-                viewModel = startScreenViewModel,
-                onClick = {
-                    navController.navigate(route = it)
-                },
-                onConfirmExit = {
-                    navController.navigateUp()
-                },
-                state = state,
-                onSignInClick = {
-                    lifecycleScope.launch {
-                        val signInIntentSender = googleAuthClient.signIn()
-                        launcher.launch(
-                            IntentSenderRequest.Builder(
-                                signInIntentSender ?: return@launch
-                            ).build()
-                        )
-                    }
-                }
                 )
-        }
-        composable(Navigation.Destinations.FIRST_CONFIGURATION) {
-            FirstConfigurationProfileScreen(
-                onClick = { navController.navigate(route = it) },
-                configurationProfileViewModel = configurationProfileViewModel)
-        }
-        composable(Navigation.Destinations.REGISTRATION) {
-            RegistrationScreen(
-                onClick = { route -> navController.navigate(route) },
-                registrationViewModel = registrationViewModel
-            )
-        }
-        composable(Navigation.Destinations.LOGIN) {
-            LoginScreen(
-                loginViewModel = loginViewModel,
-                onClick = { navController.navigate(route = it) }
-            )
+            }
+            composable(Navigation.Destinations.FIRST_CONFIGURATION) {
+                FirstConfigurationProfileScreen(
+                    onClick = { navController.navigate(route = it) },
+                    configurationProfileViewModel = configurationProfileViewModel
+                )
+            }
+            composable(Navigation.Destinations.REGISTRATION) {
+                RegistrationScreen(
+                    onClick = { route -> navController.navigate(route) },
+                    registrationViewModel = registrationViewModel
+                )
+            }
+            composable(Navigation.Destinations.LOGIN) {
+                LoginScreen(
+                    loginViewModel = loginViewModel,
+                    onClick = { navController.navigate(route = it) }
+                )
+            }
         }
     }
 }

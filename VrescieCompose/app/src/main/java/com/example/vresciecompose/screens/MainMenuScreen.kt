@@ -19,10 +19,11 @@ import androidx.compose.ui.unit.dp
 import com.example.vresciecompose.R
 import androidx.compose.animation.Crossfade
 import com.example.vresciecompose.authentication.UserProfile
+import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 
 @Composable
-fun MainMenuScreen(onClick: (String) -> Unit, profileViewModel: ProfileViewModel) {
+fun MainMenuScreen(onClick: (String) -> Unit, profileViewModel: ProfileViewModel, locationViewModel: LocationViewModel) {
     val (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(1) }
     val showDialog = remember { mutableStateOf(false) }
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
@@ -61,7 +62,7 @@ fun MainMenuScreen(onClick: (String) -> Unit, profileViewModel: ProfileViewModel
                 .padding(bottom = 78.dp)
         ) { target ->
             when (target) {
-                1 -> AnonymousChatConfigurationScreen()
+                1 -> AnonymousChatConfigurationScreen(locationViewModel)
                 2 -> ImplicitChatsScreen()
                 3 -> ProfileScreen(profileViewModel)
             }
@@ -143,5 +144,6 @@ fun MenuItem(
 @Composable
 fun MainMenuScreenPreview() {
     val profileViewModel = ProfileViewModel()
-    MainMenuScreen(onClick = {}, profileViewModel = profileViewModel)
+    val locationViewModel = LocationViewModel()
+    MainMenuScreen(onClick = {}, profileViewModel = profileViewModel, locationViewModel = locationViewModel)
 }

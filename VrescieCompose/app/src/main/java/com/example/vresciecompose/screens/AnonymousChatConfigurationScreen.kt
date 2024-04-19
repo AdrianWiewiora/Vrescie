@@ -1,5 +1,10 @@
 package com.example.vresciecompose.screens
 
+import android.location.Location
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -7,25 +12,59 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.RangeSlider
+import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import com.example.vresciecompose.view_models.LocationViewModel
+import com.example.vresciecompose.view_models.ProfileViewModel
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import java.util.Calendar
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
+
+private const val TAG = "AnonymousChatConfig"
 
 @Composable
-fun AnonymousChatConfigurationScreen() {
+fun AnonymousChatConfigurationScreen(viewModel: LocationViewModel) {
+    var latitude by remember { mutableStateOf<Double?>(20.0) }
+    var longitude by remember { mutableStateOf<Double?>(20.0) }
+
+    var selectedGenders by remember { mutableStateOf("FM") }
+
+    var ageRange by remember { mutableStateOf(18f..70f) }
+    val minAge by remember { mutableStateOf(18f) }
+    val maxAge by remember { mutableStateOf(100f) }
+
+    var isProfileVerified by remember { mutableStateOf(false) }
+
+    var relationshipPreference by remember { mutableStateOf(true) }
+    var maxDistance by remember { mutableStateOf(10f) }
+
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -87,8 +126,14 @@ fun AnonymousChatConfigurationScreen() {
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(
-                                checked = false,
-                                onCheckedChange = { /* Ignored for now */ },
+                                checked = selectedGenders.contains("F"),
+                                onCheckedChange = {
+                                    selectedGenders = if (it) {
+                                        if (selectedGenders.contains("M")) "FM" else "F"
+                                    } else {
+                                        selectedGenders.replace("F", "")
+                                    }
+                                },
                                 modifier = Modifier.padding(end = 8.dp)
                             )
                             Text(
@@ -96,8 +141,14 @@ fun AnonymousChatConfigurationScreen() {
                                 color = Color.Black
                             )
                             Checkbox(
-                                checked = false,
-                                onCheckedChange = { /* Ignored for now */ },
+                                checked = selectedGenders.contains("M"),
+                                onCheckedChange = {
+                                    selectedGenders = if (it) {
+                                        if (selectedGenders.contains("F")) "FM" else "M"
+                                    } else {
+                                        selectedGenders.replace("M", "")
+                                    }
+                                },
                                 modifier = Modifier.padding(start = 8.dp)
                             )
                             Text(
@@ -109,42 +160,45 @@ fun AnonymousChatConfigurationScreen() {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "Wiek:",
+                            text = "Przedział wiekowy: ${ageRange.start.toInt()} - ${ageRange.endInclusive.toInt()} lat",
                             fontSize = 16.sp,
                             color = Color.Black
                         )
-                        /*                RangeSlider(
-                                            value = remember { listOf(18f, 70f) },
-                                            onValueChange = { *//* Ignored for now *//* },
-                    valueRange = 18f..70f,
-                    steps = 1,
-                    modifier = Modifier.fillMaxWidth()
-                    )*/
+                        RangeSlider(
+                            value = ageRange,
+                            onValueChange = { ageRange = it },
+                            valueRange = minAge..maxAge,
+                            steps = (maxAge - minAge).toInt(), // Ustawienie liczby kroków na liczbę możliwych wartości wieku
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "Zweryfikowany:",
+                            text = "Profil:",
                             fontSize = 16.sp,
                             color = Color.Black
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
-                                selected = false,
-                                onClick = { /* Ignored for now */ },
-                                modifier = Modifier.padding(end = 8.dp)
+                                selected = isProfileVerified,
+                                onClick = { isProfileVerified = true },
+                                modifier = Modifier.padding(end = 0.dp)
                             )
                             Text(
                                 text = "Zweryfikowany",
+                                fontSize = 14.sp,
                                 color = Color.Black
                             )
                             RadioButton(
-                                selected = false,
-                                onClick = { /* Ignored for now */ },
-                                modifier = Modifier.padding(start = 8.dp)
+                                selected = !isProfileVerified,
+                                onClick = { isProfileVerified = false },
+                                modifier = Modifier.padding(start = 0.dp)
                             )
                             Text(
                                 text = "Nie zweryfikowany",
+                                fontSize = 14.sp,
                                 color = Color.Black
                             )
                         }
@@ -152,37 +206,63 @@ fun AnonymousChatConfigurationScreen() {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "Preferencje:",
+                            text = "Relacja:",
                             fontSize = 16.sp,
                             color = Color.Black
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
-                                selected = false,
-                                onClick = { /* Ignored for now */ },
+                                selected = relationshipPreference,
+                                onClick = { relationshipPreference = true },
                                 modifier = Modifier.padding(end = 8.dp)
                             )
                             Text(
-                                text = "Stała relacja",
+                                text = "Stała",
                                 color = Color.Black
                             )
                             RadioButton(
-                                selected = false,
-                                onClick = { /* Ignored for now */ },
+                                selected = !relationshipPreference,
+                                onClick = { relationshipPreference = false },
                                 modifier = Modifier.padding(start = 8.dp)
                             )
                             Text(
-                                text = "Krótka relacja",
+                                text = "Krótka",
                                 color = Color.Black
                             )
                         }
+
+
+                        Text(
+                            text = "Maksymalna odległość: ${maxDistance.roundToInt()} km",
+                            fontSize = 16.sp,
+                            color = Color.Black
+                        )
+                        Slider(
+                            value = maxDistance,
+                            onValueChange = { maxDistance = it },
+                            valueRange = 5f..150f,
+                            steps = 28,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
                     }
+
+
                     Button(
-                        onClick = { /* Ignored for now */ },
+                        onClick = {
+                            saveUserDataToDatabase(selectedGenders, ageRange, isProfileVerified, relationshipPreference, maxDistance, latitude, longitude)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(60.dp),
-                        shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                        shape = RoundedCornerShape(
+                            topStart = 0.dp,
+                            topEnd = 0.dp,
+                            bottomStart = 20.dp,
+                            bottomEnd = 20.dp
+                        ),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Black
                         ),
@@ -201,8 +281,78 @@ fun AnonymousChatConfigurationScreen() {
     }
 }
 
+// Funkcja do zapisywania danych użytkownika i preferencji do bazy danych
+private fun saveUserDataToDatabase(
+    selectedGenders: String,
+    ageRange: ClosedFloatingPointRange<Float>,
+    isProfileVerified: Boolean,
+    relationshipPreference: Boolean,
+    maxDistance: Float,
+    latitude: Double?,
+    longitude: Double?
+) {
+    // Pobierz zalogowanego użytkownika z Firebase Auth
+    val currentUser = FirebaseAuth.getInstance().currentUser
+
+    // Sprawdź, czy użytkownik jest zalogowany
+    currentUser?.let { user ->
+        val userId = user.uid
+
+        // Pobierz bieżącą datę jako lastSeen
+        val lastSeen = Calendar.getInstance().timeInMillis
+
+        // Pobierz referencję do bazy danych
+        val database = FirebaseDatabase.getInstance()
+
+        // Referencja do gałęzi vChatUsers/<userId>/info
+        val userInfoRef = database.getReference("vChatUsers/$userId/info")
+
+        // Zapisz dane użytkownika
+        userInfoRef.setValue(
+            mapOf(
+                "age" to ageRange.endInclusive.toInt(),
+                "email" to user.email,
+                "gender" to selectedGenders,
+                "lastSeen" to lastSeen,
+                "latitude" to latitude,
+                "longitude" to longitude
+            )
+        ).addOnCompleteListener { userInfoTask ->
+            if (userInfoTask.isSuccessful) {
+                // Referencja do gałęzi vChatUsers/<userId>/pref
+                val userPrefRef = database.getReference("vChatUsers/$userId/pref")
+
+                // Zapisz preferencje użytkownika
+                userPrefRef.setValue(
+                    mapOf(
+                        "age_min_pref" to ageRange.start.toInt(),
+                        "age_max_pref" to ageRange.endInclusive.toInt(),
+                        "gender_pref" to selectedGenders,
+                        "location_max_pref" to maxDistance.toInt(),
+                        "verification_pref" to isProfileVerified,
+                        "relation_pref" to relationshipPreference
+                    )
+                ).addOnCompleteListener { userPrefTask ->
+                    if (userPrefTask.isSuccessful) {
+                        // Jeżeli zapis danych użytkownika i preferencji zakończył się sukcesem
+                        // możesz wykonać dodatkowe czynności tutaj
+                        // np. przejście do kolejnego ekranu, wyświetlenie powiadomienia itp.
+                    } else {
+                        // Jeżeli wystąpił błąd podczas zapisu preferencji
+                        // możesz obsłużyć ten błąd tutaj
+                    }
+                }
+            } else {
+                // Jeżeli wystąpił błąd podczas zapisu danych użytkownika
+                // możesz obsłużyć ten błąd tutaj
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 fun AnonymousChatConfigurationScreenPreview() {
-    AnonymousChatConfigurationScreen()
+    val locationViewModel = LocationViewModel()
+    AnonymousChatConfigurationScreen(locationViewModel)
 }
