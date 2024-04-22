@@ -1,5 +1,6 @@
 package com.example.vresciecompose.screens
 
+import LocalContext
 import android.location.Location
 import android.Manifest
 import android.content.Context
@@ -40,6 +41,7 @@ import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import java.util.Calendar
@@ -51,8 +53,25 @@ private const val TAG = "AnonymousChatConfig"
 
 @Composable
 fun AnonymousChatConfigurationScreen(viewModel: LocationViewModel) {
-    var latitude by remember { mutableStateOf<Double?>(20.0) }
-    var longitude by remember { mutableStateOf<Double?>(20.0) }
+    var latitude by remember { mutableStateOf<Double?>(null) }
+    var longitude by remember { mutableStateOf<Double?>(null) }
+    val context = LocalContext.current
+    val fusedLocationProviderClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    LaunchedEffect(key1 = Unit) {
+        viewModel.getLocation(
+            fusedLocationProviderClient = fusedLocationProviderClient,
+            context = context,
+            onSuccess = { location ->
+                latitude = location.latitude
+                longitude = location.longitude
+            },
+            onFailure = {
+                // Obsługa niepowodzenia
+                Log.e("Location", "Failed to get location")
+            }
+        )
+    }
+
 
     var selectedGenders by remember { mutableStateOf("FM") }
 
