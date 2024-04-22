@@ -1,11 +1,7 @@
 package com.example.vresciecompose.screens
 
 import LocalContext
-import android.location.Location
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
+import ProvideContext
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -33,26 +29,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.result.ActivityResultLauncher
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.view_models.LocationViewModel
-import com.example.vresciecompose.view_models.ProfileViewModel
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import java.util.Calendar
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 
 private const val TAG = "AnonymousChatConfig"
 
 @Composable
-fun AnonymousChatConfigurationScreen(viewModel: LocationViewModel) {
+fun AnonymousChatConfigurationScreen(viewModel: LocationViewModel, onClick: (String) -> Unit) {
     var latitude by remember { mutableStateOf<Double?>(null) }
     var longitude by remember { mutableStateOf<Double?>(null) }
     val context = LocalContext.current
@@ -110,14 +100,13 @@ fun AnonymousChatConfigurationScreen(viewModel: LocationViewModel) {
                 .fillMaxSize()
                 .padding(horizontal = 15.dp)
                 .padding(vertical = 0.dp),
-
             ) {
 
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .padding(top = 5.dp, bottom = 8.dp),
+                    .padding(top = 5.dp, bottom = 8.dp, start = 8.dp),
                 shape = RoundedCornerShape(20.dp),
                 border = BorderStroke(2.dp, Color.Black),
                 colors = CardDefaults.cardColors(
@@ -272,6 +261,7 @@ fun AnonymousChatConfigurationScreen(viewModel: LocationViewModel) {
                     Button(
                         onClick = {
                             saveUserDataToDatabase(selectedGenders, ageRange, isProfileVerified, relationshipPreference, maxDistance, latitude, longitude)
+                            onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -373,5 +363,8 @@ private fun saveUserDataToDatabase(
 @Composable
 fun AnonymousChatConfigurationScreenPreview() {
     val locationViewModel = LocationViewModel()
-    AnonymousChatConfigurationScreen(locationViewModel)
+    val context = LocalContext.current
+    ProvideContext(context) {
+        AnonymousChatConfigurationScreen(locationViewModel, onClick = {})
+    }
 }

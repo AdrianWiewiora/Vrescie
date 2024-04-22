@@ -1,6 +1,5 @@
 package com.example.vresciecompose.screens
 
-import LocalContext
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -19,7 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.vresciecompose.R
 import androidx.compose.animation.Crossfade
-import com.example.vresciecompose.authentication.UserProfile
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 
@@ -63,7 +61,7 @@ fun MainMenuScreen(onClick: (String) -> Unit, profileViewModel: ProfileViewModel
                 .padding(bottom = 78.dp)
         ) { target ->
             when (target) {
-                1 -> AnonymousChatConfigurationScreen(locationViewModel)
+                1 -> AnonymousChatConfigurationScreen(locationViewModel,onClick)
                 2 -> ImplicitChatsScreen()
                 3 -> ProfileScreen(profileViewModel)
             }

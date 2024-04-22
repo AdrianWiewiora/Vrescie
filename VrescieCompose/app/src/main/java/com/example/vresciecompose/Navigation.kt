@@ -20,6 +20,7 @@ import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.authentication.SignInViewModel
 import com.example.vresciecompose.screens.FirstConfigurationProfileScreen
 import com.example.vresciecompose.screens.FirstLaunchScreen
+import com.example.vresciecompose.screens.LoadingToAnonymousChatScreen
 import com.example.vresciecompose.screens.LoginScreen
 import com.example.vresciecompose.screens.MainMenuScreen
 import com.example.vresciecompose.screens.RegistrationScreen
@@ -42,7 +43,7 @@ object Navigation {
         const val LOGIN = "login"
         const val REGISTRATION = "registration"
         const val FIRST_CONFIGURATION = "first_configuration"
-
+        const val LOADING_SCREEN_TO_V_CHAT = "loading_screen_to_v_chat"
     }
 }
 
@@ -151,6 +152,11 @@ fun AppNavigation(
             LoginScreen(
                 loginViewModel = loginViewModel,
                 onClick = { navController.navigate(route = it) }
+            )
+        }
+        composable(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT) {
+            LoadingToAnonymousChatScreen(
+                onClick = { route -> navController.navigate(route) }
             )
         }
     }
