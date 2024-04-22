@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     VrescieComposeTheme {
                         val navController = rememberNavController()
-                        ProvideContext {
+                        ProvideContext(context = applicationContext) {
                             AppNavigation(
                                 navController,
                                 startDestination,
@@ -106,8 +106,6 @@ class MainActivity : ComponentActivity() {
                     .apply()
             }
         }
-        // Inicjalizacja FirebaseApp
-        FirebaseApp.initializeApp(this)
     }
 }
 

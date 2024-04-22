@@ -7,8 +7,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 val LocalContext = staticCompositionLocalOf<Context> { error("No Context provided") }
 
 @Composable
-fun ProvideContext(content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalContext provides LocalContext.current) {
+fun ProvideContext(context: Context, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalContext provides context) {
         content()
     }
 }
