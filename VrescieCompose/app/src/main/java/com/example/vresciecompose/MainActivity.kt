@@ -19,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.screens.LocalBackPressedDispatcher
+import com.example.vresciecompose.screens.removeUserFromFirebaseDatabase
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.LocationViewModel
@@ -31,6 +32,7 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     private lateinit var backDispatcher: OnBackPressedDispatcher

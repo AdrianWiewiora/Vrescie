@@ -211,10 +211,10 @@ exports.removeInactiveUsers = functions.database
       // console.log(`Różnica czasu1: ${timeDifference1} ms`);
 
       // Ustawienie opóźnienia 8 sekund (8000 milisekund)
-      const delay = 8000 - timeDifference1;
+      const delay = 13000 - timeDifference1;
 
       try {
-        // Poczekaj przez 8 sekund
+        // Poczekaj przez 13 sekund
         await new Promise((resolve) => setTimeout(resolve, delay));
 
         // Pobierz aktualne dane użytkownika
@@ -244,7 +244,7 @@ exports.removeInactiveUsers = functions.database
         // console.log(`Różnica czasu3: ${timeDifference - timeDifference1} ms`);
 
         // Sprawdź, czy minęło 7 sekund od ostatniego lastSeen
-        if (timeDifference >= 7000) {
+        if (timeDifference >= 12000) {
           // Usuń użytkownika
           await admin.database().ref(`/vChatUsers/${userId}`).remove();
         }

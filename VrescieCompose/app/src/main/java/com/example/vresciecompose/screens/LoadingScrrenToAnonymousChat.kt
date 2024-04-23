@@ -21,19 +21,36 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import java.util.Timer
+import java.util.TimerTask
 
 
 @Composable
 fun LoadingToAnonymousChatScreen(onClick: (String) -> Unit) {
     val currentUser = FirebaseAuth.getInstance().currentUser
 
+    // Dodajemy efekt do zapisu lastSeen co 10 sekund
+    val timer = remember { Timer() }
+
     DisposableEffect(true) {
+        val task = object : TimerTask() {
+            override fun run() {
+                currentUser?.uid?.let { userId ->
+                    updateUserLastSeen(userId)
+                }
+            }
+        }
+
+        timer.schedule(task, 0, 10000)
+
         onDispose {
+            timer.cancel()
             currentUser?.uid?.let { userId ->
                 removeUserFromFirebaseDatabase(userId)
             }
@@ -92,6 +109,13 @@ fun removeUserFromFirebaseDatabase(userId: String) {
     val database = Firebase.database
     val usersRef = database.getReference("vChatUsers")
     usersRef.child(userId).removeValue()
+}
+
+fun updateUserLastSeen(userId: String) {
+    val database = Firebase.database
+    val usersRef = database.getReference("vChatUsers")
+    val currentTime = System.currentTimeMillis()
+    usersRef.child(userId).child("info").child("lastSeen").setValue(currentTime)
 }
 
 @Preview(showBackground = true)
