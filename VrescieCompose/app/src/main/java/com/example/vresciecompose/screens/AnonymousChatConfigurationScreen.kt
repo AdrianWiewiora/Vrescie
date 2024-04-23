@@ -29,6 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import com.example.vresciecompose.Navigation
@@ -42,7 +45,11 @@ import java.util.Calendar
 private const val TAG = "AnonymousChatConfig"
 
 @Composable
-fun AnonymousChatConfigurationScreen(viewModel: LocationViewModel, onClick: (String) -> Unit) {
+fun AnonymousChatConfigurationScreen(
+    viewModel: LocationViewModel,
+    requestPermissionLauncher: ActivityResultLauncher<String>,
+    onClick: (String) -> Unit
+) {
     var latitude by remember { mutableStateOf<Double?>(null) }
     var longitude by remember { mutableStateOf<Double?>(null) }
     val context = LocalContext.current
@@ -51,6 +58,7 @@ fun AnonymousChatConfigurationScreen(viewModel: LocationViewModel, onClick: (Str
         viewModel.getLocation(
             fusedLocationProviderClient = fusedLocationProviderClient,
             context = context,
+            requestPermissionLauncher = requestPermissionLauncher,
             onSuccess = { location ->
                 latitude = location.latitude
                 longitude = location.longitude
@@ -380,7 +388,9 @@ private fun saveUserDataToDatabase(
 fun AnonymousChatConfigurationScreenPreview() {
     val locationViewModel = LocationViewModel()
     val context = LocalContext.current
+    val requestPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+    }
     ProvideContext(context) {
-        AnonymousChatConfigurationScreen(locationViewModel, onClick = {})
+        AnonymousChatConfigurationScreen(locationViewModel, requestPermissionLauncher, onClick = {})
     }
 }

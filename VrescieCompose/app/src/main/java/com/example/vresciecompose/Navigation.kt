@@ -5,6 +5,7 @@ import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -59,7 +60,8 @@ fun AppNavigation(
     loginViewModel: LoginViewModel,
     configurationProfileViewModel: ConfigurationProfileViewModel,
     profileViewModel: ProfileViewModel,
-    locationViewModel: LocationViewModel
+    locationViewModel: LocationViewModel,
+    requestPermissionLauncher: ActivityResultLauncher<String>,
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Navigation.Destinations.MAIN_MENU) {
@@ -67,7 +69,8 @@ fun AppNavigation(
                 onClick = {
                     navController.navigate(route = it)
                 }, profileViewModel = profileViewModel,
-                locationViewModel = locationViewModel
+                locationViewModel = locationViewModel,
+                requestPermissionLauncher = requestPermissionLauncher
             )
         }
         composable(Navigation.Destinations.FIRST_LAUNCH) {

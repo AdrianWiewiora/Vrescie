@@ -9,6 +9,8 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.app.ActivityCompat
@@ -43,6 +45,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var configurationProfileViewModel: ConfigurationProfileViewModel
     private lateinit var profileViewModel: ProfileViewModel
     private lateinit var locationViewModel: LocationViewModel
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+
 
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(getSharedPreferences("MyPrefs", Context.MODE_PRIVATE))
@@ -56,6 +60,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         backDispatcher = onBackPressedDispatcher
 
         installSplashScreen().apply {
@@ -73,7 +79,14 @@ class MainActivity : ComponentActivity() {
         profileViewModel = ViewModelProvider(this).get(ProfileViewModel::class.java)
         locationViewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
 
-        super.onCreate(savedInstanceState)
+        // Inicjalizacja ActivityResultLauncher dla żądania uprawnień
+        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (!isGranted) {
+                // Obsługa braku udzielonych uprawnień
+                Log.e("Location", "Location permission denied")
+            }
+        }
+
         if (viewModel.isReady.value) {
             val startDestination = when {
                 viewModel.isFirstRun() -> Navigation.Destinations.FIRST_LAUNCH
@@ -98,7 +111,8 @@ class MainActivity : ComponentActivity() {
                                 loginViewModel,
                                 configurationProfileViewModel,
                                 profileViewModel,
-                                locationViewModel
+                                locationViewModel,
+                                requestPermissionLauncher
                             )
                         }
                     }

@@ -1,6 +1,9 @@
 package com.example.vresciecompose.screens
 
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,7 +25,12 @@ import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 
 @Composable
-fun MainMenuScreen(onClick: (String) -> Unit, profileViewModel: ProfileViewModel, locationViewModel: LocationViewModel) {
+fun MainMenuScreen(
+    onClick: (String) -> Unit,
+    profileViewModel: ProfileViewModel,
+    locationViewModel: LocationViewModel,
+    requestPermissionLauncher: ActivityResultLauncher<String>,
+) {
     val (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(1) }
     val showDialog = remember { mutableStateOf(false) }
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
@@ -61,7 +69,7 @@ fun MainMenuScreen(onClick: (String) -> Unit, profileViewModel: ProfileViewModel
                 .padding(bottom = 78.dp)
         ) { target ->
             when (target) {
-                1 -> AnonymousChatConfigurationScreen(locationViewModel,onClick)
+                1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, onClick)
                 2 -> ImplicitChatsScreen()
                 3 -> ProfileScreen(profileViewModel)
             }
@@ -144,5 +152,7 @@ fun MenuItem(
 fun MainMenuScreenPreview() {
     val profileViewModel = ProfileViewModel()
     val locationViewModel = LocationViewModel()
-    MainMenuScreen(onClick = {}, profileViewModel = profileViewModel, locationViewModel = locationViewModel)
+    val requestPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+    }
+    MainMenuScreen(onClick = {}, profileViewModel = profileViewModel, locationViewModel = locationViewModel,requestPermissionLauncher)
 }
