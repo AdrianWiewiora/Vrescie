@@ -20,12 +20,25 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 
 
 @Composable
 fun LoadingToAnonymousChatScreen(onClick: (String) -> Unit) {
+    val currentUser = FirebaseAuth.getInstance().currentUser
+
+    DisposableEffect(true) {
+        onDispose {
+            currentUser?.uid?.let { userId ->
+                removeUserFromFirebaseDatabase(userId)
+            }
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -73,6 +86,12 @@ fun LoadingToAnonymousChatScreen(onClick: (String) -> Unit) {
             }
         }
     }
+}
+
+fun removeUserFromFirebaseDatabase(userId: String) {
+    val database = Firebase.database
+    val usersRef = database.getReference("vChatUsers")
+    usersRef.child(userId).removeValue()
 }
 
 @Preview(showBackground = true)

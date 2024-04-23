@@ -181,25 +181,23 @@ exports.checkAndRemoveConversations = functions.database
 
 
 exports.removeInactiveUsers = functions.database
-    .ref("/users/{userId}")
+    .ref("/vChatUsers/{userId}")
     .onWrite(async (change, context) => {
       const userId = context.params.userId;
 
       // Sprawdź, czy to dodanie nowego użytkownika
       if (!change.before.exists()) {
         // console.log("Nowy użytkownik został dodany:", userId);
-        // eslint-disable-next-line max-len
-        return null; // Jeśli to dodanie nowego użytkownika, nie wykonuj reszty funkcji
+        return null;
       }
 
       // Sprawdź, czy to usunięcie użytkownika
       if (!change.after.exists()) {
         // console.log("Użytkownik został usunięty:", userId);
-        // eslint-disable-next-line max-len
-        return null; // Jeśli to usunięcie użytkownika, nie wykonuj reszty funkcji
+        return null;
       }
 
-      const lastSeen3 = change.after.val().lastSeen;
+      const lastSeen3 = change.after.val().info.lastSeen;
       if (!lastSeen3) {
         // console.log("Brak informacji o lastSeen");
         return null;
@@ -207,7 +205,7 @@ exports.removeInactiveUsers = functions.database
 
       const currentTimeS = Date.now();
       // console.log(`currentTime1: ${currentTimeS} ms`);
-      const lastSeen1 = change.after.val().lastSeen;
+      const lastSeen1 = change.after.val().info.lastSeen;
       // console.log(`lastSeen1: ${lastSeen1} ms`);
       const timeDifference1 = currentTimeS - lastSeen1;
       // console.log(`Różnica czasu1: ${timeDifference1} ms`);
@@ -221,7 +219,7 @@ exports.removeInactiveUsers = functions.database
 
         // Pobierz aktualne dane użytkownika
         // eslint-disable-next-line max-len
-        const userSnapshot = await admin.database().ref(`/users/${userId}`).once("value");
+        const userSnapshot = await admin.database().ref(`/vChatUsers/${userId}`).once("value");
         const currentUserData = userSnapshot.val();
 
         // Sprawdź, czy użytkownik nadal istnieje
@@ -235,7 +233,7 @@ exports.removeInactiveUsers = functions.database
         // console.log(`currentTime2: ${currentTime} ms`);
 
         // Odczytaj lastSeen użytkownika
-        const lastSeen = currentUserData.lastSeen;
+        const lastSeen = currentUserData.info.lastSeen;
         // console.log(`lastSeen2: ${lastSeen} ms`);
 
         // Oblicz różnicę czasu
@@ -248,7 +246,7 @@ exports.removeInactiveUsers = functions.database
         // Sprawdź, czy minęło 7 sekund od ostatniego lastSeen
         if (timeDifference >= 7000) {
           // Usuń użytkownika
-          await admin.database().ref(`/users/${userId}`).remove();
+          await admin.database().ref(`/vChatUsers/${userId}`).remove();
         }
 
         return null;

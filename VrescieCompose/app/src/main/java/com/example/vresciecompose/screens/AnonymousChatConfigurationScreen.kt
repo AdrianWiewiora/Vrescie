@@ -65,7 +65,7 @@ fun AnonymousChatConfigurationScreen(viewModel: LocationViewModel, onClick: (Str
 
     var selectedGenders by remember { mutableStateOf("FM") }
 
-    var ageRange by remember { mutableStateOf(18f..70f) }
+    var ageRange by remember { mutableStateOf(18f..100f) }
     val minAge by remember { mutableStateOf(18f) }
     val maxAge by remember { mutableStateOf(100f) }
 
@@ -174,9 +174,25 @@ fun AnonymousChatConfigurationScreen(viewModel: LocationViewModel, onClick: (Str
                         )
                         RangeSlider(
                             value = ageRange,
-                            onValueChange = { ageRange = it },
+                            onValueChange = {
+                                when {
+                                    it.start == it.endInclusive -> {
+                                        if (it.start == minAge) {
+                                            ageRange = (it.start..(it.endInclusive + 1).coerceAtMost(maxAge))
+                                        } else if (it.endInclusive == maxAge) {
+                                            ageRange = (((it.start - 1).coerceAtLeast(minAge))..it.endInclusive)
+                                        }
+                                    }
+                                    it.start > it.endInclusive -> {
+                                        ageRange = (it.endInclusive..it.start)
+                                    }
+                                    else -> {
+                                        ageRange = it
+                                    }
+                                }
+                            },
                             valueRange = minAge..maxAge,
-                            steps = (maxAge - minAge).toInt(), // Ustawienie liczby kroków na liczbę możliwych wartości wieku
+                            steps = 80,
                             modifier = Modifier.fillMaxWidth()
                         )
 
