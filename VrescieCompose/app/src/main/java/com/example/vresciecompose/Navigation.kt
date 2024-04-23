@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.authentication.SignInViewModel
+import com.example.vresciecompose.screens.AnonymousConversationScreen
 import com.example.vresciecompose.screens.FirstConfigurationProfileScreen
 import com.example.vresciecompose.screens.FirstLaunchScreen
 import com.example.vresciecompose.screens.LoadingToAnonymousChatScreen
@@ -45,6 +46,7 @@ object Navigation {
         const val REGISTRATION = "registration"
         const val FIRST_CONFIGURATION = "first_configuration"
         const val LOADING_SCREEN_TO_V_CHAT = "loading_screen_to_v_chat"
+        const val ANONYMOUS_CONVERSATION = "anonymous_conversation"
     }
 }
 
@@ -159,6 +161,12 @@ fun AppNavigation(
         }
         composable(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT) {
             LoadingToAnonymousChatScreen(
+                onClick = { route -> navController.navigate(route) }
+            )
+        }
+
+        composable(Navigation.Destinations.ANONYMOUS_CONVERSATION) {
+            AnonymousConversationScreen(
                 onClick = { route -> navController.navigate(route) }
             )
         }

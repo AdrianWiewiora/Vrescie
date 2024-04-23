@@ -144,4 +144,8 @@ async function createConversation(userId1, userId2) {
   };
 
   await conversationRef.set(conversationData);
+
+  // Usuń rekordy użytkowników z vChatUsers
+  await admin.database().ref(`/vChatUsers/${userId1}`).remove();
+  await admin.database().ref(`/vChatUsers/${userId2}`).remove();
 }

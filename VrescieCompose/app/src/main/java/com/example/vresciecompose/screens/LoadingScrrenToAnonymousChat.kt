@@ -24,7 +24,11 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
+import com.example.vresciecompose.Navigation
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import java.util.Timer
@@ -56,6 +60,24 @@ fun LoadingToAnonymousChatScreen(onClick: (String) -> Unit) {
             }
         }
     }
+
+    // Dodaj nasłuchiwanie nowych konwersacji dla zalogowanego użytkownika
+    val conversationRef = Firebase.database.reference.child("conversations")
+    conversationRef.addChildEventListener(object : ChildEventListener {
+        override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+            val conversationData = snapshot.value as? Map<*, *>
+            val userId = FirebaseAuth.getInstance().currentUser?.uid
+            if (userId != null && conversationData != null && userId in (conversationData["members"] as? Map<*, *> ?: emptyMap<String, Any>())) {
+                onClick(Navigation.Destinations.ANONYMOUS_CONVERSATION)
+            }
+        }
+
+        override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+        override fun onChildRemoved(snapshot: DataSnapshot) {}
+        override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+        override fun onCancelled(error: DatabaseError) {}
+    })
+
     Column(
         modifier = Modifier
             .fillMaxSize()
