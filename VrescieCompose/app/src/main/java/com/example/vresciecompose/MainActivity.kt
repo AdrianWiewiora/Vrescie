@@ -31,10 +31,6 @@ import com.example.vresciecompose.view_models.ProfileViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
 import com.example.vresciecompose.view_models.StartScreenViewModel
 import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     private lateinit var backDispatcher: OnBackPressedDispatcher

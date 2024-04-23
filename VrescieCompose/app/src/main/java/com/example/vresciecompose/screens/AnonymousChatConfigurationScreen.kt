@@ -29,10 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.view_models.LocationViewModel
@@ -284,8 +286,27 @@ fun AnonymousChatConfigurationScreen(
 
                     Button(
                         onClick = {
-                            saveUserDataToDatabase(selectedGenders, ageRange, isProfileVerified, relationshipPreference, maxDistance, latitude, longitude)
-                            onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
+                            if (latitude == null || longitude == null) {
+                                viewModel.getLocation(
+                                    fusedLocationProviderClient = fusedLocationProviderClient,
+                                    context = context,
+                                    requestPermissionLauncher = requestPermissionLauncher,
+                                    onSuccess = { location ->
+                                        latitude = location.latitude
+                                        longitude = location.longitude
+                                        saveUserDataToDatabase(selectedGenders, ageRange, isProfileVerified, relationshipPreference, maxDistance, latitude, longitude)
+                                        onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
+                                    },
+                                    onFailure = {
+                                        // Obsługa niepowodzenia
+                                        Log.e(TAG, "Failed to get location")
+                                        Toast.makeText(context, "Failed to get location", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            } else {
+                                saveUserDataToDatabase(selectedGenders, ageRange, isProfileVerified, relationshipPreference, maxDistance, latitude, longitude)
+                                onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
