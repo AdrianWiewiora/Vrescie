@@ -24,6 +24,7 @@ import com.example.vresciecompose.screens.LocalBackPressedDispatcher
 import com.example.vresciecompose.screens.removeUserFromFirebaseDatabase
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
+import com.example.vresciecompose.view_models.ConversationViewModel
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.MainViewModel
@@ -43,6 +44,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var locationViewModel: LocationViewModel
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
+    private lateinit var conversationViewModel: ConversationViewModel
 
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(getSharedPreferences("MyPrefs", Context.MODE_PRIVATE))
@@ -83,6 +85,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        conversationViewModel = ViewModelProvider(this).get(ConversationViewModel::class.java)
+
         if (viewModel.isReady.value) {
             val startDestination = when {
                 viewModel.isFirstRun() -> Navigation.Destinations.FIRST_LAUNCH
@@ -108,7 +112,8 @@ class MainActivity : ComponentActivity() {
                                 configurationProfileViewModel,
                                 profileViewModel,
                                 locationViewModel,
-                                requestPermissionLauncher
+                                requestPermissionLauncher,
+                                conversationViewModel
                             )
                         }
                     }

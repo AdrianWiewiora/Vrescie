@@ -28,6 +28,7 @@ import com.example.vresciecompose.screens.MainMenuScreen
 import com.example.vresciecompose.screens.RegistrationScreen
 import com.example.vresciecompose.screens.StartScreens
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
+import com.example.vresciecompose.view_models.ConversationViewModel
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
@@ -64,6 +65,7 @@ fun AppNavigation(
     profileViewModel: ProfileViewModel,
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
+    conversationViewModel: ConversationViewModel
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Navigation.Destinations.MAIN_MENU) {
@@ -167,7 +169,8 @@ fun AppNavigation(
 
         composable(Navigation.Destinations.ANONYMOUS_CONVERSATION) {
             AnonymousConversationScreen(
-                onClick = { route -> navController.navigate(route) }
+                onClick = { route -> navController.navigate(route) },
+                conversationViewModel
             )
         }
     }
