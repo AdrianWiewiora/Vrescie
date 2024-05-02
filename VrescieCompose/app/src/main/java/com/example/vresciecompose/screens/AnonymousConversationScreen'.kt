@@ -32,7 +32,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.snapshotFlow
 import androidx.core.view.WindowCompat
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
@@ -50,7 +52,7 @@ fun AnonymousConversationScreen(
 ) {
     // Pole tekstowe do wprowadzania wiadomości
     var messageText by remember { mutableStateOf("") }
-
+    val showDialogLike = remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
     DisposableEffect(key1 = onBackPressedDispatcher) {
@@ -94,6 +96,18 @@ fun AnonymousConversationScreen(
         )
     }
 
+    if (showDialogLike.value) {
+        ShowAddLikeConfirmationDialog(
+            onConfirm = {
+                showDialogLike.value = false
+                addLike(conversationID)
+            },
+            onDismiss = {
+                showDialogLike.value = false
+            }
+        )
+    }
+
     viewModel.setConversationId(conversationID)
     val messages by viewModel.messages.collectAsState()
 
@@ -128,6 +142,9 @@ fun AnonymousConversationScreen(
                     painter = painterResource(id = R.drawable.baseline_add_reaction_24),
                     contentDescription = "Add Like",
                     modifier = Modifier.size(48.dp)
+                        .clickable {
+                            showDialogLike.value = true
+                        }
                 )
 
                 Icon(
@@ -187,9 +204,7 @@ fun AnonymousConversationScreen(
                 modifier = Modifier
                     .size(50.dp)
                     .clickable {
-                        // Wywołanie funkcji sendMessage w ViewModelu
                         viewModel.sendMessage(messageText)
-                        // Wyczyszczenie pola tekstowego po wysłaniu wiadomości
                         messageText = ""
                     }
             )
@@ -230,4 +245,52 @@ fun BackToMenuConfirmationDialog(
             }
         }
     )
+}
+
+
+@Composable
+fun ShowAddLikeConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = {
+            onDismiss()
+        },
+        title = {
+            Text(text = "Potwierdź polubienie")
+        },
+        text = {
+            Text(text = "Czy na pewno chcesz polubić osobę z którą rozmawiasz?")
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm()
+                }
+            ) {
+                Text(text = "Tak")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = {
+                    onDismiss()
+                }
+            ) {
+                Text(text = "Nie")
+            }
+        }
+    )
+}
+
+fun addLike(conversationID : String) {
+    val conversationRef = FirebaseDatabase.getInstance().reference
+        .child("conversations")
+        .child(conversationID)
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val currentUserID = currentUser?.uid
+    currentUserID?.let { userId ->
+        conversationRef.child("likes").child(userId).setValue(true)
+    }
 }
