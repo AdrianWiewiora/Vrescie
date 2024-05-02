@@ -1,6 +1,5 @@
 package com.example.vresciecompose
 
-import ProvideContext
 import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.widget.Toast
@@ -70,13 +69,14 @@ fun AppNavigation(
     conversationViewModel: ConversationViewModel
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
-        composable(Navigation.Destinations.MAIN_MENU) {
+        composable(Navigation.Destinations.MAIN_MENU) { backStackEntry ->
+            val defaultFragment = backStackEntry.arguments?.getInt("defaultFragment") ?: 1
             MainMenuScreen(
-                onClick = {
-                    navController.navigate(route = it)
-                }, profileViewModel = profileViewModel,
+                onClick = { route -> navController.navigate(route) },
+                profileViewModel = profileViewModel,
                 locationViewModel = locationViewModel,
-                requestPermissionLauncher = requestPermissionLauncher
+                requestPermissionLauncher = requestPermissionLauncher,
+                defaultFragment = defaultFragment
             )
         }
         composable(Navigation.Destinations.FIRST_LAUNCH) {

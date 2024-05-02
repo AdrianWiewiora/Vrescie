@@ -1,5 +1,6 @@
 package com.example.vresciecompose.screens
 
+import android.util.Log
 import android.view.Window
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +42,12 @@ import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.MessageList
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 
 @Composable
@@ -53,8 +59,49 @@ fun AnonymousConversationScreen(
     // Pole tekstowe do wprowadzania wiadomości
     var messageText by remember { mutableStateOf("") }
     val showDialogLike = remember { mutableStateOf(false) }
+    val showDialogLikeNotification = remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
+    var conversationRef by remember { mutableStateOf<DatabaseReference?>(null) }
+
+    // Zdefiniuj likeEventListener
+    val likeEventListener = object : ChildEventListener {
+        override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+            checkIfBothLiked()
+        }
+
+        private fun checkIfBothLiked() {
+            conversationRef!!.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val likesCount = snapshot.childrenCount.toInt()
+
+                    // Sprawdź, czy są dwa lajki
+                    if (likesCount >= 2) {
+                        showDialogLikeNotification.value = true
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("LikeEventListener", "Database error: ${error.message}")
+                }
+            })
+        }
+
+
+        override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+        override fun onChildRemoved(snapshot: DataSnapshot) {}
+        override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+        override fun onCancelled(error: DatabaseError) {
+            Log.e("LikeEventListener", "Database error: ${error.message}")
+        }
+    }
+
+    conversationRef = FirebaseDatabase.getInstance().reference
+        .child("conversations")
+        .child(conversationID)
+        .child("likes")
+    conversationRef!!.addChildEventListener(likeEventListener)
+
     DisposableEffect(key1 = onBackPressedDispatcher) {
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -64,7 +111,7 @@ fun AnonymousConversationScreen(
         onBackPressedDispatcher.addCallback(callback)
 
         onDispose {
-            // Resetuj stan wiadomości w ViewModelu po utracie dostępu do komponentu
+            conversationRef?.removeEventListener(likeEventListener)
             viewModel.resetMessages()
             callback.remove()
         }
@@ -87,7 +134,6 @@ fun AnonymousConversationScreen(
                     conversationRef.child("members").child(currentUserID).setValue(false)
                 }
                 // Przejście do głównego menu
-
                 onClick(Navigation.Destinations.MAIN_MENU)
             },
             onDismiss = {
@@ -104,6 +150,18 @@ fun AnonymousConversationScreen(
             },
             onDismiss = {
                 showDialogLike.value = false
+            }
+        )
+    }
+
+    if (showDialogLikeNotification.value) {
+        ShowLikeNotificationDialog(
+            onConfirm = {
+                showDialogLikeNotification.value = false
+                onClick(Navigation.Destinations.MAIN_MENU + "?defaultFragment=2")
+            },
+            onDismiss = {
+                showDialogLikeNotification.value = false
             }
         )
     }
@@ -293,4 +351,40 @@ fun addLike(conversationID : String) {
     currentUserID?.let { userId ->
         conversationRef.child("likes").child(userId).setValue(true)
     }
+}
+
+@Composable
+fun ShowLikeNotificationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = {
+            onDismiss()
+        },
+        title = {
+            Text(text = "Brawo!!! Użytkownik cię polubił.")
+        },
+        text = {
+            Text(text = "Czy chcesz opuścić konwersację by przejść do jawnej konwersacji?")
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm()
+                }
+            ) {
+                Text(text = "Tak")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = {
+                    onDismiss()
+                }
+            ) {
+                Text(text = "Nie")
+            }
+        }
+    )
 }

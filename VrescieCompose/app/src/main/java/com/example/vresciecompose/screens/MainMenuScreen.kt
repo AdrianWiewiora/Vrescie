@@ -30,10 +30,13 @@ fun MainMenuScreen(
     profileViewModel: ProfileViewModel,
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
+    defaultFragment: Int,
 ) {
-    val (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(1) }
+    var (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(defaultFragment) }
     val showDialog = remember { mutableStateOf(false) }
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
+
+    if(currentFragment == 0) setCurrentFragment(1)
 
 
     DisposableEffect(key1 = onBackPressedDispatcher) {
@@ -154,5 +157,12 @@ fun MainMenuScreenPreview() {
     val locationViewModel = LocationViewModel()
     val requestPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
     }
-    MainMenuScreen(onClick = {}, profileViewModel = profileViewModel, locationViewModel = locationViewModel,requestPermissionLauncher)
+    val defaultFragment = 1
+    MainMenuScreen(
+        onClick = {},
+        profileViewModel = profileViewModel,
+        locationViewModel = locationViewModel,
+        requestPermissionLauncher,
+        defaultFragment
+    )
 }
