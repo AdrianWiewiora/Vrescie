@@ -68,7 +68,8 @@ fun LoadingToAnonymousChatScreen(onClick: (String) -> Unit) {
             val conversationData = snapshot.value as? Map<*, *>
             val userId = FirebaseAuth.getInstance().currentUser?.uid
             if (userId != null && conversationData != null && userId in (conversationData["members"] as? Map<*, *> ?: emptyMap<String, Any>())) {
-                onClick(Navigation.Destinations.ANONYMOUS_CONVERSATION)
+                val conversationID = snapshot.key
+                onClick("${Navigation.Destinations.ANONYMOUS_CONVERSATION}/$conversationID")
             }
         }
 

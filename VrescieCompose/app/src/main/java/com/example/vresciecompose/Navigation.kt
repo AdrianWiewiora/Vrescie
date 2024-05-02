@@ -15,8 +15,10 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.authentication.SignInViewModel
 import com.example.vresciecompose.screens.AnonymousConversationScreen
@@ -167,12 +169,17 @@ fun AppNavigation(
             )
         }
 
-        composable(Navigation.Destinations.ANONYMOUS_CONVERSATION) {
+        composable(Navigation.Destinations.ANONYMOUS_CONVERSATION + "/{conversationID}",
+            arguments = listOf(navArgument("conversationID") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val conversationID = backStackEntry.arguments?.getString("conversationID") ?: ""
             AnonymousConversationScreen(
+                conversationID = conversationID,
                 onClick = { route -> navController.navigate(route) },
                 conversationViewModel
             )
         }
+
     }
 }
 

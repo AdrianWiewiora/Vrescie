@@ -47,18 +47,6 @@ class ConversationFragment : Fragment() {
     private lateinit var messagesRef: DatabaseReference
     private val auth = FirebaseAuth.getInstance()
 
-
-    companion object {
-        fun newInstance(userId1: String, userId2: String): ConversationFragment {
-            val fragment = ConversationFragment()
-            val args = Bundle()
-            args.putString("userId1", userId1)
-            args.putString("userId2", userId2)
-            fragment.arguments = args
-            return fragment
-        }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

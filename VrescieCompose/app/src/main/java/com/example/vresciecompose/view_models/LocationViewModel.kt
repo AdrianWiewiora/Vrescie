@@ -47,11 +47,11 @@ class LocationViewModel() : ViewModel() {
                 onSuccess(it)
                 setLocation(it.latitude, it.longitude)
             } else {
-                Log.i("Location", "Failed to get location")
+                Log.i("Location", "Failed to get location1")
                 onFailure()
             }
         }.addOnFailureListener {
-            Log.i("Location", "Failed to get location")
+            Log.i("Location", "Failed to get location2")
             onFailure()
         }
     }
