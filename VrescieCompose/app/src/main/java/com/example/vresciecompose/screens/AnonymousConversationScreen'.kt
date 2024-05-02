@@ -1,27 +1,17 @@
 package com.example.vresciecompose.screens
 
-import android.util.Log
+import android.view.Window
 import androidx.activity.OnBackPressedCallback
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,37 +20,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.view.WindowCompat
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.MessageList
 import com.example.vresciecompose.view_models.ConversationViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 
 @Composable
 fun AnonymousConversationScreen(
     conversationID: String,
     onClick: (String) -> Unit,
-    viewModel: ConversationViewModel)
-{
+    viewModel: ConversationViewModel
+) {
     // Pole tekstowe do wprowadzania wiadomości
     var messageText by remember { mutableStateOf("") }
 
@@ -80,11 +67,25 @@ fun AnonymousConversationScreen(
             callback.remove()
         }
     }
-
     if (showDialog.value) {
         BackToMenuConfirmationDialog(
             onConfirm = {
+                // Pobranie aktualnie zalogowanego użytkownika
+                val currentUser = FirebaseAuth.getInstance().currentUser
+                val currentUserID = currentUser?.uid
+
                 showDialog.value = false
+                // Aktualizacja wartości w Firebase Realtime Database
+                val database = FirebaseDatabase.getInstance()
+                val conversationRef = database.reference
+                    .child("conversations")
+                    .child(conversationID)
+                conversationRef.child("canConnected").setValue(false)
+                if (currentUserID != null) {
+                    conversationRef.child("members").child(currentUserID).setValue(false)
+                }
+                // Przejście do głównego menu
+
                 onClick(Navigation.Destinations.MAIN_MENU)
             },
             onDismiss = {
@@ -99,7 +100,7 @@ fun AnonymousConversationScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 0.dp, vertical = 0.dp),
+            .imePadding(),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(
@@ -157,6 +158,9 @@ fun AnonymousConversationScreen(
                 painter = painterResource(id = R.drawable.baseline_highlight_off_24),
                 contentDescription = "Cancel",
                 modifier = Modifier.size(55.dp)
+                    .clickable {
+                        showDialog.value = true
+                    }
             )
 
             TextField(
@@ -227,12 +231,3 @@ fun BackToMenuConfirmationDialog(
         }
     )
 }
-
-//@Preview
-//@Composable
-//fun PreviewAnonymousConversationScreen() {
-//    val onClick: (String) -> Unit = {}
-//    val viewModel = ConversationViewModel()
-//
-//    AnonymousConversationScreen(onClick, viewModel)
-//}

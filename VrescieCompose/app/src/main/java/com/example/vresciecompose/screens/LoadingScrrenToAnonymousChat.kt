@@ -61,15 +61,18 @@ fun LoadingToAnonymousChatScreen(onClick: (String) -> Unit) {
         }
     }
 
-    // Dodaj nasłuchiwanie nowych konwersacji dla zalogowanego użytkownika
+    // nasłuchiwanie nowych konwersacji dla zalogowanego użytkownika
     val conversationRef = Firebase.database.reference.child("conversations")
     conversationRef.addChildEventListener(object : ChildEventListener {
         override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
             val conversationData = snapshot.value as? Map<*, *>
             val userId = FirebaseAuth.getInstance().currentUser?.uid
             if (userId != null && conversationData != null && userId in (conversationData["members"] as? Map<*, *> ?: emptyMap<String, Any>())) {
+                val canConnected = conversationData["canConnected"] as? Boolean
                 val conversationID = snapshot.key
-                onClick("${Navigation.Destinations.ANONYMOUS_CONVERSATION}/$conversationID")
+                if (canConnected == true) {
+                    onClick("${Navigation.Destinations.ANONYMOUS_CONVERSATION}/$conversationID")
+                }
             }
         }
 
