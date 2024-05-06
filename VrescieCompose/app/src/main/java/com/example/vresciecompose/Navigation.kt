@@ -21,6 +21,7 @@ import androidx.navigation.navArgument
 import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.authentication.SignInViewModel
 import com.example.vresciecompose.screens.AnonymousConversationScreen
+import com.example.vresciecompose.screens.ExplicitConversationScreen
 import com.example.vresciecompose.screens.FirstConfigurationProfileScreen
 import com.example.vresciecompose.screens.FirstLaunchScreen
 import com.example.vresciecompose.screens.LoadingToAnonymousChatScreen
@@ -49,6 +50,7 @@ object Navigation {
         const val FIRST_CONFIGURATION = "first_configuration"
         const val LOADING_SCREEN_TO_V_CHAT = "loading_screen_to_v_chat"
         const val ANONYMOUS_CONVERSATION = "anonymous_conversation"
+        const val EXPLICIT_CONVERSATION = "explicit_conversation"
     }
 }
 
@@ -174,6 +176,16 @@ fun AppNavigation(
         ) { backStackEntry ->
             val conversationID = backStackEntry.arguments?.getString("conversationID") ?: ""
             AnonymousConversationScreen(
+                conversationID = conversationID,
+                onClick = { route -> navController.navigate(route) },
+                conversationViewModel
+            )
+        }
+        composable(Navigation.Destinations.EXPLICIT_CONVERSATION + "/{conversationID}",
+            arguments = listOf(navArgument("conversationID") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val conversationID = backStackEntry.arguments?.getString("conversationID") ?: ""
+            ExplicitConversationScreen(
                 conversationID = conversationID,
                 onClick = { route -> navController.navigate(route) },
                 conversationViewModel

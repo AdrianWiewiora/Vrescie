@@ -32,7 +32,7 @@ fun MainMenuScreen(
     requestPermissionLauncher: ActivityResultLauncher<String>,
     defaultFragment: Int,
 ) {
-    var (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(defaultFragment) }
+    val (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(defaultFragment) }
     val showDialog = remember { mutableStateOf(false) }
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
 
@@ -73,7 +73,7 @@ fun MainMenuScreen(
         ) { target ->
             when (target) {
                 1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, onClick)
-                2 -> ImplicitChatsScreen()
+                2 -> ImplicitChatsScreen(onClick)
                 3 -> ProfileScreen(profileViewModel)
             }
         }

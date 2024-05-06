@@ -32,10 +32,32 @@ class ConversationViewModel : ViewModel() {
         }
     }
 
+    fun sendMessageExp(message: String, senderId: String = "") {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        currentUser?.let { user ->
+            val currentTime = System.currentTimeMillis()
+            val senderId2 = senderId.ifEmpty { user.uid }
+            val messageData = Message(senderId2, message, currentTime)
+
+            val conversationMessagesRef = FirebaseDatabase.getInstance().reference
+                .child("explicit_conversations")
+                .child(conversationId)
+                .child("messages")
+
+            conversationMessagesRef.push().setValue(messageData)
+        }
+    }
+
     // Funkcja do ustawiania conversationId
     fun setConversationId(id: String) {
         conversationId = id
         initializeDatabaseRef()
+    }
+
+    // Funkcja do ustawiania conversationIdJawnych
+    fun setConversationIdExplicit(id: String) {
+        conversationId = id
+        initializeDatabaseRefExplicit()
     }
 
     fun resetMessages() {
@@ -46,6 +68,55 @@ class ConversationViewModel : ViewModel() {
         // Utwórz odwołanie do węzła konwersacji
         val conversationRef = FirebaseDatabase.getInstance().reference
             .child("conversations")
+            .child(conversationId)
+            .child("messages")
+
+        // Nasłuchuj zmian w bazie danych Firebase
+        conversationRef.addChildEventListener(object : ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                val message = snapshot.getValue(Message::class.java)
+                message?.let {
+                    val messageType = when {
+                        it.senderId == currentUserID -> MessageType.Sent
+                        it.senderId == "system" -> MessageType.System
+                        else -> MessageType.Received
+                    }
+
+                    // Sprawdzamy, czy wiadomość nie istnieje już na liście
+                    val messageExists = _messages.value.any { pair ->
+                        pair.first == it.text && pair.second == messageType
+                    }
+
+                    // Jeśli wiadomość nie istnieje, dodaj ją do listy
+                    if (!messageExists) {
+                        _messages.value += it.text to messageType
+                    }
+                }
+            }
+
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                // Obsługa zmian w wiadomościach (opcjonalne)
+            }
+
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                // Obsługa usunięcia wiadomości (opcjonalne)
+            }
+
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                // Obsługa przemieszczenia wiadomości (opcjonalne)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Obsługa błędów
+            }
+        })
+    }
+
+    private fun initializeDatabaseRefExplicit() {
+        // Utwórz odwołanie do węzła konwersacji
+        val conversationRef = FirebaseDatabase.getInstance().reference
+            .child("explicit_conversations")
             .child(conversationId)
             .child("messages")
 
