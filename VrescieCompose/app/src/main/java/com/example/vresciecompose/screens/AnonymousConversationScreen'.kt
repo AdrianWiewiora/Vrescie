@@ -1,7 +1,6 @@
 package com.example.vresciecompose.screens
 
 import android.util.Log
-import android.view.Window
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,16 +26,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.snapshotFlow
-import androidx.core.view.WindowCompat
+import androidx.compose.ui.semantics.SemanticsProperties.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.MessageList
@@ -126,13 +124,14 @@ fun AnonymousConversationScreen(
                 showDialog.value = false
                 // Aktualizacja wartości w Firebase Realtime Database
                 val database = FirebaseDatabase.getInstance()
-                val conversationRef = database.reference
+                val conversationRef2 = database.reference
                     .child("conversations")
                     .child(conversationID)
-                conversationRef.child("canConnected").setValue(false)
+                conversationRef2.child("canConnected").setValue(false)
                 if (currentUserID != null) {
-                    conversationRef.child("members").child(currentUserID).setValue(false)
+                    conversationRef2.child("members").child(currentUserID).setValue(false)
                 }
+                viewModel.sendMessage("Użytkownik się rozłączył", senderId = "system")
                 // Przejście do głównego menu
                 onClick(Navigation.Destinations.MAIN_MENU)
             },
@@ -244,7 +243,10 @@ fun AnonymousConversationScreen(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 5.dp),
-                textStyle = TextStyle(color = Color.Black),
+                textStyle = TextStyle(
+                    color = Color.Black,
+                    fontSize = 18.sp
+                ),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = Color.White,
                     focusedContainerColor = Color.White,
@@ -253,7 +255,8 @@ fun AnonymousConversationScreen(
                     unfocusedIndicatorColor = Color.Black,
                     cursorColor = Color.Black
                 ),
-                placeholder = { Text(text = "Wpisz wiadomość", color = Color.Black) }
+                placeholder = { Text(text = "Wpisz wiadomość", color = Color.Black) },
+                maxLines = 5,
             )
 
             Icon(

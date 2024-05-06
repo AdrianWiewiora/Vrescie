@@ -16,11 +16,12 @@ class ConversationViewModel : ViewModel() {
     private var conversationId: String = ""
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
 
-    fun sendMessage(message: String) {
+    fun sendMessage(message: String, senderId: String = "") {
         val currentUser = FirebaseAuth.getInstance().currentUser
         currentUser?.let { user ->
             val currentTime = System.currentTimeMillis()
-            val messageData = Message(user.uid, message, currentTime)
+            val senderId2 = senderId.ifEmpty { user.uid }
+            val messageData = Message(senderId2, message, currentTime)
 
             val conversationMessagesRef = FirebaseDatabase.getInstance().reference
                 .child("conversations")
