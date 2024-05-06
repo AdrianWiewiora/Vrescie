@@ -157,6 +157,21 @@ fun AnonymousConversationScreen(
         ShowLikeNotificationDialog(
             onConfirm = {
                 showDialogLikeNotification.value = false
+
+                // Pobranie aktualnie zalogowanego użytkownika
+                val currentUser = FirebaseAuth.getInstance().currentUser
+                val currentUserID = currentUser?.uid
+
+                val database = FirebaseDatabase.getInstance()
+                val conversationRef3 = database.reference
+                    .child("conversations")
+                    .child(conversationID)
+                conversationRef3.child("canConnected").setValue(false)
+                if (currentUserID != null) {
+                    conversationRef3.child("members").child(currentUserID).setValue(false)
+                }
+                viewModel.sendMessage("Użytkownik się rozłączył", senderId = "system")
+
                 onClick(Navigation.Destinations.MAIN_MENU + "?defaultFragment=2")
             },
             onDismiss = {
