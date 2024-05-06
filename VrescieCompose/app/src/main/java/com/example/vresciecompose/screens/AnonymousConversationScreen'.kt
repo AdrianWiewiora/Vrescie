@@ -265,6 +265,7 @@ fun AnonymousConversationScreen(
                 modifier = Modifier
                     .size(50.dp)
                     .clickable {
+                        messageText = messageText.trimEnd(' ', '\n')
                         viewModel.sendMessage(messageText)
                         messageText = ""
                     }

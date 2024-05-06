@@ -33,6 +33,9 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.RadioButtonColors
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -146,6 +149,11 @@ fun AnonymousChatConfigurationScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(
                                 checked = selectedGenders.contains("F"),
+                                colors = CheckboxDefaults.colors(
+                                    uncheckedColor = Color.Gray,
+                                    checkedColor = Color.Black,
+                                    checkmarkColor = Color.White
+                                ),
                                 onCheckedChange = {
                                     selectedGenders = if (it) {
                                         if (selectedGenders.contains("M")) "FM" else "F"
@@ -161,6 +169,11 @@ fun AnonymousChatConfigurationScreen(
                             )
                             Checkbox(
                                 checked = selectedGenders.contains("M"),
+                                colors = CheckboxDefaults.colors(
+                                    uncheckedColor = Color.Gray,
+                                    checkedColor = Color.Black,
+                                    checkmarkColor = Color.White
+                                ),
                                 onCheckedChange = {
                                     selectedGenders = if (it) {
                                         if (selectedGenders.contains("F")) "FM" else "M"
@@ -208,7 +221,13 @@ fun AnonymousChatConfigurationScreen(
                             },
                             valueRange = minAge..maxAge,
                             steps = 80,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = SliderDefaults.colors(
+                                activeTrackColor = Color.Black,
+                                inactiveTrackColor = Color.Gray,
+                                thumbColor = Color.Black
+                            )
+
                         )
 
 
@@ -223,7 +242,13 @@ fun AnonymousChatConfigurationScreen(
                             RadioButton(
                                 selected = isProfileVerified,
                                 onClick = { isProfileVerified = true },
-                                modifier = Modifier.padding(end = 0.dp)
+                                modifier = Modifier.padding(end = 0.dp),
+                                colors = RadioButtonColors(
+                                    disabledSelectedColor = Color.Black,
+                                    disabledUnselectedColor = Color.Black,
+                                    selectedColor = Color.Black,
+                                    unselectedColor = Color.Gray,
+                                )
                             )
                             Text(
                                 text = "Zweryfikowany",
@@ -233,7 +258,13 @@ fun AnonymousChatConfigurationScreen(
                             RadioButton(
                                 selected = !isProfileVerified,
                                 onClick = { isProfileVerified = false },
-                                modifier = Modifier.padding(start = 0.dp)
+                                modifier = Modifier.padding(start = 0.dp),
+                                colors = RadioButtonColors(
+                                    disabledSelectedColor = Color.Black,
+                                    disabledUnselectedColor = Color.Black,
+                                    selectedColor = Color.Black,
+                                    unselectedColor = Color.Gray,
+                                )
                             )
                             Text(
                                 text = "Nie zweryfikowany",
@@ -253,7 +284,13 @@ fun AnonymousChatConfigurationScreen(
                             RadioButton(
                                 selected = relationshipPreference,
                                 onClick = { relationshipPreference = true },
-                                modifier = Modifier.padding(end = 8.dp)
+                                modifier = Modifier.padding(end = 8.dp),
+                                colors = RadioButtonColors(
+                                    disabledSelectedColor = Color.Black,
+                                    disabledUnselectedColor = Color.Black,
+                                    selectedColor = Color.Black,
+                                    unselectedColor = Color.Gray,
+                                )
                             )
                             Text(
                                 text = "Stała",
@@ -262,7 +299,13 @@ fun AnonymousChatConfigurationScreen(
                             RadioButton(
                                 selected = !relationshipPreference,
                                 onClick = { relationshipPreference = false },
-                                modifier = Modifier.padding(start = 8.dp)
+                                modifier = Modifier.padding(start = 8.dp),
+                                colors = RadioButtonColors(
+                                    disabledSelectedColor = Color.Black,
+                                    disabledUnselectedColor = Color.Black,
+                                    selectedColor = Color.Black,
+                                    unselectedColor = Color.Gray,
+                                )
                             )
                             Text(
                                 text = "Krótka",
@@ -281,7 +324,12 @@ fun AnonymousChatConfigurationScreen(
                             onValueChange = { maxDistance = it },
                             valueRange = 5f..150f,
                             steps = 28,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = SliderDefaults.colors(
+                                activeTrackColor = Color.Black,
+                                inactiveTrackColor = Color.Gray,
+                                thumbColor = Color.Black
+                            )
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))

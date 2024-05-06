@@ -27,7 +27,7 @@ fun ReceivedMessage(message: String) {
             .padding(end = 25.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.LightGray,
+            containerColor = Color(0xFF7FC1FD),
             contentColor = Color.Black
         )
     ) {
@@ -46,7 +46,7 @@ fun SentMessage(message: String) {
             .padding(start = 25.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.Cyan,
+            containerColor = Color(0xFFCCCCCC),
             contentColor = Color.Black
         )
     ) {
