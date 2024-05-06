@@ -133,7 +133,7 @@ fun AnonymousConversationScreen(
                 }
                 viewModel.sendMessage("Użytkownik się rozłączył", senderId = "system")
                 // Przejście do głównego menu
-                onClick(Navigation.Destinations.MAIN_MENU)
+                onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
             },
             onDismiss = {
                 showDialog.value = false
@@ -172,7 +172,7 @@ fun AnonymousConversationScreen(
                 }
                 viewModel.sendMessage("Użytkownik się rozłączył", senderId = "system")
 
-                onClick(Navigation.Destinations.MAIN_MENU + "?defaultFragment=2")
+                onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
             },
             onDismiss = {
                 showDialogLikeNotification.value = false

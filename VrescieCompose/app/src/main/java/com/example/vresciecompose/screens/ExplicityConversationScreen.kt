@@ -56,12 +56,10 @@ fun ExplicitConversationScreen(
     DisposableEffect(key1 = onBackPressedDispatcher) {
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                onClick(Navigation.Destinations.MAIN_MENU + "?defaultFragment=3")
-                Log.d("ExplicitConversationScreen", "handleOnBackPressed called")
+                onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
             }
         }
         onBackPressedDispatcher.addCallback(callback)
-
         onDispose {
             viewModel.resetMessages()
             callback.remove()

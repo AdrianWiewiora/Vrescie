@@ -90,7 +90,7 @@ class MainActivity : ComponentActivity() {
         if (viewModel.isReady.value) {
             val startDestination = when {
                 viewModel.isFirstRun() -> Navigation.Destinations.FIRST_LAUNCH
-                viewModel.isLoggedIn() -> Navigation.Destinations.MAIN_MENU
+                viewModel.isLoggedIn() -> Navigation.Destinations.MAIN_MENU+"/1"
                 else -> Navigation.Destinations.START
             }
             setContent {

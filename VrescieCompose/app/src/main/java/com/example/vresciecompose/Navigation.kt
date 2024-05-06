@@ -2,6 +2,7 @@ package com.example.vresciecompose
 
 import android.app.Activity.RESULT_OK
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -71,8 +72,10 @@ fun AppNavigation(
     conversationViewModel: ConversationViewModel
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
-        composable(Navigation.Destinations.MAIN_MENU) { backStackEntry ->
-            val defaultFragment = backStackEntry.arguments?.getInt("defaultFragment") ?: 1
+        composable(Navigation.Destinations.MAIN_MENU + "/{defaultFragment}",
+            arguments = listOf(navArgument("defaultFragment") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val defaultFragment = backStackEntry.arguments?.getString("defaultFragment") ?: "1"
             MainMenuScreen(
                 onClick = { route -> navController.navigate(route) },
                 profileViewModel = profileViewModel,

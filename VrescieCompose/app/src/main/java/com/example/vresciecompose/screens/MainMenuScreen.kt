@@ -1,5 +1,6 @@
 package com.example.vresciecompose.screens
 
+import android.util.Log
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -30,9 +31,11 @@ fun MainMenuScreen(
     profileViewModel: ProfileViewModel,
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
-    defaultFragment: Int,
+    defaultFragment: String,
 ) {
-    val (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(defaultFragment) }
+    Log.d("MainMenuScreen", "Default Fragment received: $defaultFragment")
+
+    val (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(defaultFragment.toInt()) }
     val showDialog = remember { mutableStateOf(false) }
     val onBackPressedDispatcher = LocalBackPressedDispatcher.current
 
@@ -157,7 +160,7 @@ fun MainMenuScreenPreview() {
     val locationViewModel = LocationViewModel()
     val requestPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
     }
-    val defaultFragment = 1
+    val defaultFragment = "1"
     MainMenuScreen(
         onClick = {},
         profileViewModel = profileViewModel,
