@@ -62,7 +62,9 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
                         val secondParticipantName = secondParticipant?.value as? String ?: ""
 
                         // Pobierz ostatnią wiadomość
-                        val lastMessage = conversationSnapshot.child("messages").children.lastOrNull()?.child("text")?.value?.toString() ?: ""
+                        val lastMessage = conversationSnapshot.child("messages")
+                            .children.sortedByDescending { it.child("timestamp").value as? Long }
+                            .firstOrNull()?.child("text")?.value?.toString() ?: ""
 
                         // Stwórz obiekt Conversation i dodaj go do listy
                         val conversation = Conversation(id = conversationSnapshot.key ?: "", name = secondParticipantName)

@@ -120,7 +120,7 @@ fun AnonymousChatConfigurationScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .padding(top = 5.dp, bottom = 8.dp, start = 8.dp),
+                    .padding(top = 5.dp, bottom = 8.dp),
                 shape = RoundedCornerShape(20.dp),
                 border = BorderStroke(2.dp, Color.Black),
                 colors = CardDefaults.cardColors(

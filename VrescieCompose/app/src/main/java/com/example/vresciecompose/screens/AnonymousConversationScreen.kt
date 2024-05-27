@@ -26,14 +26,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.semantics.SemanticsProperties.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
@@ -170,7 +167,7 @@ fun AnonymousConversationScreen(
                 if (currentUserID != null) {
                     conversationRef3.child("members").child(currentUserID).setValue(false)
                 }
-                viewModel.sendMessage("Użytkownik się rozłączył", senderId = "system")
+                //viewModel.sendMessage("Początek jawnej konwersacji", senderId = "system")
 
                 onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
             },
