@@ -116,7 +116,7 @@ fun LoginScreen(
             onClick = {
                 loginViewModel.signInWithEmail(email, password,
                     onSuccess = {
-                        onClick(Navigation.Destinations.MAIN_MENU)
+                        onClick(Navigation.Destinations.MAIN_MENU+"/1")
                     },
                     onFailure = { error ->
                         errorMessage = error // Aktualizacja komunikatu o błędzie
