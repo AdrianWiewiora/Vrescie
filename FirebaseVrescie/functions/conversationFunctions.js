@@ -90,28 +90,50 @@ async function createConversation(userId1, userId2) {
 // Funkcja do tworzenia unikalnego identyfikatora konwersacji
 // eslint-disable-next-line require-jsdoc
 async function recreateConversation(userId) {
-  // eslint-disable-next-line max-len,indent
-    // Użytkownik nie jest w żadnej konwersacji, więc wylosuj drugiego użytkownika
-  // eslint-disable-next-line max-len
   const usersSnapshot = await admin.database().ref("/vChatUsers").once("value");
-  const usersList = Object.keys(usersSnapshot.val());
+  const usersData = usersSnapshot.val();
 
-  // Wylosuj innego użytkownika
-  let randomIndex = Math.floor(Math.random() * usersList.length);
-  while (usersList[randomIndex] === userId) {
-    randomIndex = Math.floor(Math.random() * usersList.length);
+  let randomIndex = Math.floor(Math.random() * Object.keys(usersData).length);
+  let otherUserId = null;
+  let attempts = 0; // Licznik prób
+
+  while (!otherUserId && attempts < Object.keys(usersData).length) {
+    randomIndex = Math.floor(Math.random() * Object.keys(usersData).length);
+    const otherUserKey = Object.keys(usersData)[randomIndex];
+    if (otherUserKey !== userId) {
+      const otherUserData = usersData[otherUserKey];
+      if (
+      // eslint-disable-next-line max-len
+        ((usersData[userId].info.gender === "male" && (otherUserData.pref.gender_pref === "FM" || otherUserData.pref.gender_pref === "M")) ||
+        // eslint-disable-next-line max-len
+        (usersData[userId].info.gender === "female" && (otherUserData.pref.gender_pref === "FM" || otherUserData.pref.gender_pref === "F"))) &&
+        // eslint-disable-next-line max-len
+        ((otherUserData.info.gender === "male" && (usersData[userId].pref.gender_pref === "FM" || usersData[userId].pref.gender_pref === "M")) ||
+        // eslint-disable-next-line max-len
+        (otherUserData.info.gender === "female" && (usersData[userId].pref.gender_pref === "FM" || usersData[userId].pref.gender_pref === "F")))
+      ) {
+        otherUserId = otherUserKey;
+      }
+    }
+    attempts++; // Zwiększ licznik prób
   }
 
-  const otherUserId = usersList[randomIndex];
+  if (!otherUserId) {
+    // eslint-disable-next-line max-len
+    console.log("Nie można znaleźć odpowiedniego użytkownika spełniającego preferencje płciowe.");
+    // eslint-disable-next-line max-len
+    setTimeout(() => {
+      delete recentUsers[userId];
+      delete recentUsers[otherUserId];
+    }, 3000);
+    return null;
+  }
 
-  // Utwórz nową konwersację
   await createConversation(userId, otherUserId);
 
-  // Dodaj informacje o użytkownikach do ostatnich użytkowników
   recentUsers[userId] = true;
   recentUsers[otherUserId] = true;
 
-  // Ustaw timer do usunięcia informacji po 3 sekundach
   setTimeout(() => {
     delete recentUsers[userId];
     delete recentUsers[otherUserId];
@@ -119,3 +141,4 @@ async function recreateConversation(userId) {
 
   return null;
 }
+
