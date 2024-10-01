@@ -5,6 +5,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -29,11 +30,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.authentication.SignInState
+import com.example.vresciecompose.ui.components.ExitConfirmationDialog
 import com.example.vresciecompose.view_models.StartScreenViewModel
 
-internal val LocalBackPressedDispatcher = staticCompositionLocalOf<OnBackPressedDispatcher> {
-    error("No Back Dispatcher provided")
-}
 
 @Composable
 fun StartScreens(
@@ -43,7 +42,6 @@ fun StartScreens(
     state: SignInState,
     onSignInClick: () -> Unit
 ) {
-    val onBackPressedDispatcher = LocalBackPressedDispatcher.current
     val showDialog = viewModel.showDialog.value
     
     val context = LocalContext.current
@@ -57,17 +55,8 @@ fun StartScreens(
         }
     }
 
-
-    DisposableEffect(key1 = onBackPressedDispatcher) {
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                viewModel.toggleDialogVisibility()
-            }
-        }
-        onBackPressedDispatcher.addCallback(callback)
-        onDispose {
-            callback.remove()
-        }
+    BackHandler {
+        viewModel.showDialog.value = true
     }
 
     Column(
@@ -155,57 +144,5 @@ fun StartScreens(
     }
 }
 
-@Composable
-fun ExitConfirmationDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    val context = LocalContext.current
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = "Potwierdź zamknięcie")
-        },
-        text = {
-            Text(text = "Czy na pewno chcesz zamknąć aplikację?")
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onConfirm()
-                    exitApplication(context)
-                }
-            ) {
-                Text(text = "Tak")
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = {
-                    onDismiss()
-                }
-            ) {
-                Text(text = "Nie")
-            }
-        }
-    )
-}
-
-private fun exitApplication(context: Context) {
-    val activity = context as? Activity
-    activity?.finishAffinity()
-}
-
-@Preview
-@Composable
-fun PreviewStart() {
-    val viewModel = remember { StartScreenViewModel() }
-
-    CompositionLocalProvider(
-        LocalBackPressedDispatcher provides OnBackPressedDispatcher {}
-    ) {
-        StartScreens(viewModel = viewModel, onClick = { }, onConfirmExit = { }, state = SignInState(), onSignInClick = { })
-    }
-}
 

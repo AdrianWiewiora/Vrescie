@@ -2,6 +2,7 @@ package com.example.vresciecompose.screens
 
 import android.util.Log
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -50,20 +51,10 @@ fun ExplicitConversationScreen(
 ) {
     // Pole tekstowe do wprowadzania wiadomości
     var messageText by remember { mutableStateOf("") }
-    val onBackPressedDispatcher = LocalBackPressedDispatcher.current
 
-
-    DisposableEffect(key1 = onBackPressedDispatcher) {
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
-            }
-        }
-        onBackPressedDispatcher.addCallback(callback)
-        onDispose {
-            viewModel.resetMessages()
-            callback.remove()
-        }
+    BackHandler {
+        onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
+        viewModel.resetMessages()
     }
 
     viewModel.setConversationIdExplicit(conversationID)

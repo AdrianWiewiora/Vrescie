@@ -29,7 +29,7 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDG0niLZ_W54nCKELRHptcLou0ZauWJmzI"
+          "current_key": "AIzaSyBgNEqZyFSlv9skQvK425SV-ooSBwqnPtE"
         }
       ],
       "services": {
@@ -60,11 +60,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "677354439837-0ohflni1ogq1bmf8p0bf0d82tl963mj5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vresciecompose",
+            "certificate_hash": "7cdcc79ca971acb8fb8ecdd8b645616a5325231b"
+          }
+        },
+        {
           "client_id": "677354439837-b2qjtdiea5em0uuvd302hgnkh46o1gvk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.vresciecompose",
             "certificate_hash": "1f1d20041d29c6924c537c0b65956799393d2171"
+          }
+        },
+        {
+          "client_id": "677354439837-i7q5rc6puto3h1tklp7rlh6dr3tk8m5b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vresciecompose",
+            "certificate_hash": "e6164ec1830dd29182407a2382e68929d2e1b484"
           }
         },
         {
@@ -74,7 +90,7 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDG0niLZ_W54nCKELRHptcLou0ZauWJmzI"
+          "current_key": "AIzaSyBgNEqZyFSlv9skQvK425SV-ooSBwqnPtE"
         }
       ],
       "services": {

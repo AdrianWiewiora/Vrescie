@@ -2,6 +2,7 @@ package com.example.vresciecompose.screens
 
 import android.util.Log
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,7 +57,6 @@ fun AnonymousConversationScreen(
     val showDialogLike = remember { mutableStateOf(false) }
     val showDialogLikeNotification = remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
-    val onBackPressedDispatcher = LocalBackPressedDispatcher.current
     var conversationRef by remember { mutableStateOf<DatabaseReference?>(null) }
 
     // Zdefiniuj likeEventListener
@@ -97,20 +97,10 @@ fun AnonymousConversationScreen(
         .child("likes")
     conversationRef!!.addChildEventListener(likeEventListener)
 
-    DisposableEffect(key1 = onBackPressedDispatcher) {
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                showDialog.value = true
-            }
-        }
-        onBackPressedDispatcher.addCallback(callback)
-
-        onDispose {
-            conversationRef?.removeEventListener(likeEventListener)
-            viewModel.resetMessages()
-            callback.remove()
-        }
+    BackHandler {
+        showDialog.value = true
     }
+
     if (showDialog.value) {
         BackToMenuConfirmationDialog(
             onConfirm = {

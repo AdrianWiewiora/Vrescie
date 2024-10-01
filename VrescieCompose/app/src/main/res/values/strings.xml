@@ -5,4 +5,7 @@
     <string name="v_czat_pl">V-czat</string>
     <string name="chats_pl">Konwersacje</string>
     <string name="profile_pl">Profil</string>
+
+    <string name="settings_en">Settings</string>
+    <string name="settings_pl">Ustawienia</string>
 </resources>

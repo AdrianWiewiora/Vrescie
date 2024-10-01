@@ -12,7 +12,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
@@ -20,7 +23,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.example.vresciecompose.authentication.GoogleAuthentication
-import com.example.vresciecompose.screens.LocalBackPressedDispatcher
 import com.example.vresciecompose.screens.removeUserFromFirebaseDatabase
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
@@ -94,10 +96,10 @@ class MainActivity : ComponentActivity() {
                 else -> Navigation.Destinations.START
             }
             setContent {
-                CompositionLocalProvider(
-                    LocalBackPressedDispatcher provides backDispatcher
-                ) {
-                    VrescieComposeTheme {
+                VrescieComposeTheme {
+                    Surface(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
                         val navController = rememberNavController()
                         ProvideContext(context = applicationContext) {
                             AppNavigation(

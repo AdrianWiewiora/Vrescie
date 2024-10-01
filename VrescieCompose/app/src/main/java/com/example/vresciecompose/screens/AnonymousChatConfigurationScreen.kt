@@ -33,13 +33,25 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.RadioButtonColors
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import com.example.vresciecompose.Navigation
+import com.example.vresciecompose.R
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
@@ -94,19 +106,25 @@ fun AnonymousChatConfigurationScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Image(
-                painter = painterResource(id = com.example.vresciecompose.R.drawable.logotype_vreescie_svg),
+                painter = painterResource(id = R.drawable.logotype_vreescie_svg),
                 contentDescription = null,
                 modifier = Modifier
                     .size(width = 198.dp, height = 47.dp)
                     .padding(2.dp)
             )
-
-            Image(
-                painter = painterResource(id = com.example.vresciecompose.R.drawable.baseline_settings_24),
-                contentDescription = null,
+            IconButton(
+                onClick = {},
                 modifier = Modifier
-                    .size(52.dp)
-            )
+                    .size(dimensionResource(R.dimen.icon_settings_size))
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = stringResource(R.string.settings_pl),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(dimensionResource(R.dimen.icon_settings_size))
+                )
+            }
         }
 
         Column(
@@ -122,12 +140,6 @@ fun AnonymousChatConfigurationScreen(
                     .fillMaxHeight()
                     .padding(top = 5.dp, bottom = 8.dp),
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(2.dp, Color.Black),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White, //Card background color
-                    contentColor = Color.Black  //Card content color,e.g.text
-                )
-
             ) {
                 Column(
                     modifier = Modifier
@@ -141,19 +153,13 @@ fun AnonymousChatConfigurationScreen(
 
                         ) {
                         Text(
-                            text = "Płeć",
+                            text = "Płeć:",
                             fontSize = 16.sp,
-                            color = Color.Black
                         )
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(
                                 checked = selectedGenders.contains("F"),
-                                colors = CheckboxDefaults.colors(
-                                    uncheckedColor = Color.Gray,
-                                    checkedColor = Color.Black,
-                                    checkmarkColor = Color.White
-                                ),
                                 onCheckedChange = {
                                     selectedGenders = if (it) {
                                         if (selectedGenders.contains("M")) "FM" else "F"
@@ -164,16 +170,10 @@ fun AnonymousChatConfigurationScreen(
                                 modifier = Modifier.padding(end = 8.dp)
                             )
                             Text(
-                                text = "Kobieta",
-                                color = Color.Black
+                                text = "Kobieta"
                             )
                             Checkbox(
                                 checked = selectedGenders.contains("M"),
-                                colors = CheckboxDefaults.colors(
-                                    uncheckedColor = Color.Gray,
-                                    checkedColor = Color.Black,
-                                    checkmarkColor = Color.White
-                                ),
                                 onCheckedChange = {
                                     selectedGenders = if (it) {
                                         if (selectedGenders.contains("F")) "FM" else "M"
@@ -185,7 +185,6 @@ fun AnonymousChatConfigurationScreen(
                             )
                             Text(
                                 text = "Mężczyzna",
-                                color = Color.Black
                             )
                         }
 
@@ -194,7 +193,6 @@ fun AnonymousChatConfigurationScreen(
                         Text(
                             text = "Przedział wiekowy: ${ageRange.start.toInt()} - ${ageRange.endInclusive.toInt()} lat",
                             fontSize = 16.sp,
-                            color = Color.Black
                         )
                         RangeSlider(
                             value = ageRange,
@@ -221,13 +219,7 @@ fun AnonymousChatConfigurationScreen(
                             },
                             valueRange = minAge..maxAge,
                             steps = 80,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = SliderDefaults.colors(
-                                activeTrackColor = Color.Black,
-                                inactiveTrackColor = Color.Gray,
-                                thumbColor = Color.Black
-                            )
-
+                            modifier = Modifier.fillMaxWidth()
                         )
 
 
@@ -236,40 +228,25 @@ fun AnonymousChatConfigurationScreen(
                         Text(
                             text = "Profil:",
                             fontSize = 16.sp,
-                            color = Color.Black
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
                                 selected = isProfileVerified,
                                 onClick = { isProfileVerified = true },
-                                modifier = Modifier.padding(end = 0.dp),
-                                colors = RadioButtonColors(
-                                    disabledSelectedColor = Color.Black,
-                                    disabledUnselectedColor = Color.Black,
-                                    selectedColor = Color.Black,
-                                    unselectedColor = Color.Gray,
-                                )
+                                modifier = Modifier.padding(end = 0.dp)
                             )
                             Text(
                                 text = "Zweryfikowany",
                                 fontSize = 14.sp,
-                                color = Color.Black
                             )
                             RadioButton(
                                 selected = !isProfileVerified,
                                 onClick = { isProfileVerified = false },
-                                modifier = Modifier.padding(start = 0.dp),
-                                colors = RadioButtonColors(
-                                    disabledSelectedColor = Color.Black,
-                                    disabledUnselectedColor = Color.Black,
-                                    selectedColor = Color.Black,
-                                    unselectedColor = Color.Gray,
-                                )
+                                modifier = Modifier.padding(start = 0.dp)
                             )
                             Text(
                                 text = "Nie zweryfikowany",
-                                fontSize = 14.sp,
-                                color = Color.Black
+                                fontSize = 14.sp
                             )
                         }
 
@@ -277,59 +254,38 @@ fun AnonymousChatConfigurationScreen(
 
                         Text(
                             text = "Relacja:",
-                            fontSize = 16.sp,
-                            color = Color.Black
+                            fontSize = 16.sp
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
                                 selected = relationshipPreference,
                                 onClick = { relationshipPreference = true },
-                                modifier = Modifier.padding(end = 8.dp),
-                                colors = RadioButtonColors(
-                                    disabledSelectedColor = Color.Black,
-                                    disabledUnselectedColor = Color.Black,
-                                    selectedColor = Color.Black,
-                                    unselectedColor = Color.Gray,
-                                )
+                                modifier = Modifier.padding(end = 8.dp)
                             )
                             Text(
-                                text = "Stała",
-                                color = Color.Black
+                                text = "Stała"
                             )
                             RadioButton(
                                 selected = !relationshipPreference,
                                 onClick = { relationshipPreference = false },
-                                modifier = Modifier.padding(start = 8.dp),
-                                colors = RadioButtonColors(
-                                    disabledSelectedColor = Color.Black,
-                                    disabledUnselectedColor = Color.Black,
-                                    selectedColor = Color.Black,
-                                    unselectedColor = Color.Gray,
-                                )
+                                modifier = Modifier.padding(start = 8.dp)
                             )
                             Text(
-                                text = "Krótka",
-                                color = Color.Black
+                                text = "Krótka"
                             )
                         }
 
 
                         Text(
                             text = "Maksymalna odległość: ${maxDistance.roundToInt()} km",
-                            fontSize = 16.sp,
-                            color = Color.Black
+                            fontSize = 16.sp
                         )
                         Slider(
                             value = maxDistance,
                             onValueChange = { maxDistance = it },
                             valueRange = 5f..150f,
                             steps = 28,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = SliderDefaults.colors(
-                                activeTrackColor = Color.Black,
-                                inactiveTrackColor = Color.Gray,
-                                thumbColor = Color.Black
-                            )
+                            modifier = Modifier.fillMaxWidth()
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -389,14 +345,10 @@ fun AnonymousChatConfigurationScreen(
                             topEnd = 0.dp,
                             bottomStart = 20.dp,
                             bottomEnd = 20.dp
-                        ),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Black
-                        ),
+                        )
                     ) {
                         Text(
-                            text = "Losuj",
-                            color = Color.White
+                            text = "Losuj"
                         )
                     }
 
@@ -485,18 +437,5 @@ private fun saveUserDataToDatabase(
         }.addOnFailureListener { exception ->
 
         }
-    }
-}
-
-@Preview
-@Composable
-fun AnonymousChatConfigurationScreenPreview() {
-    val locationViewModel = LocationViewModel()
-    val context = LocalContext.current
-    val requestPermissionLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-        }
-    ProvideContext(context) {
-        AnonymousChatConfigurationScreen(locationViewModel, requestPermissionLauncher, onClick = {})
     }
 }
