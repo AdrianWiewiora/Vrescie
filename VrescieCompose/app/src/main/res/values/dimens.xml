@@ -4,4 +4,5 @@
     <dimen name="padding_medium">16dp</dimen>
     <dimen name="image_medium_size">50dp</dimen>
     <dimen name="icon_settings_size">52dp</dimen>
+    <dimen name="icon_small_size">40dp</dimen>
 </resources>

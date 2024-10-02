@@ -36,6 +36,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ElevatedCard
@@ -89,14 +91,13 @@ fun AnonymousChatConfigurationScreen(
     }
 
 
-    var selectedGenders by remember { mutableStateOf("FM") }
+    val (selectedGenders, setSelectedGenders) = remember { mutableStateOf("FM") }
 
-    var ageRange by remember { mutableStateOf(18f..100f) }
+    val (ageRange, setAgeRange) = remember {mutableStateOf(18f..100f)}
     val minAge by remember { mutableStateOf(18f) }
     val maxAge by remember { mutableStateOf(100f) }
 
     var isProfileVerified by remember { mutableStateOf(false) }
-
     var relationshipPreference by remember { mutableStateOf(true) }
     var maxDistance by remember { mutableStateOf(10f) }
 
@@ -110,78 +111,22 @@ fun AnonymousChatConfigurationScreen(
         Column(
             modifier = Modifier.padding(16.dp)
             ) {
-            GenderSelectionRow(modifier = Modifier)
 
-            Text(
-                text = "Płeć:",
-                fontSize = 16.sp,
+            GenderSelectionRow(
+                modifier = Modifier,
+                selectedGenders = selectedGenders,
+                setSelectedGenders = setSelectedGenders
             )
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = selectedGenders.contains("F"),
-                    onCheckedChange = {
-                        selectedGenders = if (it) {
-                            if (selectedGenders.contains("M")) "FM" else "F"
-                        } else {
-                            selectedGenders.replace("F", "")
-                        }
-                    },
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-                    text = "Kobieta"
-                )
-                Checkbox(
-                    checked = selectedGenders.contains("M"),
-                    onCheckedChange = {
-                        selectedGenders = if (it) {
-                            if (selectedGenders.contains("F")) "FM" else "M"
-                        } else {
-                            selectedGenders.replace("M", "")
-                        }
-                    },
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-                Text(
-                    text = "Mężczyzna",
-                )
-            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Przedział wiekowy: ${ageRange.start.toInt()} - ${ageRange.endInclusive.toInt()} lat",
-                fontSize = 16.sp,
-            )
-            RangeSlider(
-                value = ageRange,
-                onValueChange = {
-                    when {
-                        it.start == it.endInclusive -> {
-                            if (it.start == minAge) {
-                                ageRange =
-                                    (it.start..(it.endInclusive + 1).coerceAtMost(maxAge))
-                            } else if (it.endInclusive == maxAge) {
-                                ageRange =
-                                    (((it.start - 1).coerceAtLeast(minAge))..it.endInclusive)
-                            }
-                        }
-
-                        it.start > it.endInclusive -> {
-                            ageRange = (it.endInclusive..it.start)
-                        }
-
-                        else -> {
-                            ageRange = it
-                        }
-                    }
-                },
-                valueRange = minAge..maxAge,
-                steps = 80,
+            AgeSelectionRow(
+                ageRange = ageRange,
+                setAgeRange = setAgeRange,
+                minAge = minAge,
+                maxAge = maxAge,
                 modifier = Modifier.fillMaxWidth()
             )
-
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -320,9 +265,137 @@ fun AnonymousChatConfigurationScreen(
 @Composable
 fun GenderSelectionRow(
     modifier: Modifier,
-
+    selectedGenders: String,
+    setSelectedGenders: (String) -> Unit
 ){
+    Column(
+        modifier = modifier,
+    )
+    {
+        Text(
+            text = "Płeć:",
+            style = MaterialTheme.typography.titleMedium,
+        )
 
+        Row(horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = selectedGenders.contains("F"),
+                onCheckedChange = {
+                    setSelectedGenders(
+                        if (it) {
+                            if (selectedGenders.contains("M")) "FM" else "F"
+                        } else {
+                            selectedGenders.replace("F", "")
+                        }
+                    )
+                },
+                modifier = Modifier
+            )
+            Text(
+                text = "Kobieta",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier
+            )
+            Icon(
+                imageVector = Icons.Filled.Female,
+                contentDescription = "none",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(dimensionResource(R.dimen.icon_small_size))
+            )
+
+            Checkbox(
+                checked = selectedGenders.contains("M"),
+                onCheckedChange = {
+                    setSelectedGenders(
+                        if (it) {
+                            if (selectedGenders.contains("F")) "FM" else "M"
+                        } else {
+                            selectedGenders.replace("M", "")
+                        }
+                    )
+                },
+                modifier = Modifier.padding(start = 12.dp)
+            )
+            Text(
+                text = "Mężczyzna",
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Icon(
+                imageVector = Icons.Filled.Male,
+                contentDescription = "none",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(dimensionResource(R.dimen.icon_small_size))
+            )
+        }
+    }
+
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GenderSelectionRowPreview() {
+    val (selectedGenders, setSelectedGenders) = remember { mutableStateOf("FM") }
+    GenderSelectionRow(
+        modifier = Modifier.fillMaxWidth(),
+        selectedGenders = selectedGenders,
+        setSelectedGenders = setSelectedGenders
+    )
+}
+
+@Composable
+fun AgeSelectionRow(
+    ageRange: ClosedFloatingPointRange<Float> = 18f..100f,
+    setAgeRange: (ClosedFloatingPointRange<Float>) -> Unit = {},
+    minAge: Float = 18f,
+    maxAge: Float = 100f,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+    ) {
+        Text(
+            text = "Przedział wiekowy: ${ageRange.start.toInt()} - ${ageRange.endInclusive.toInt()} lat",
+            style = MaterialTheme.typography.titleMedium
+        )
+        RangeSlider(
+            value = ageRange,
+            onValueChange = { newRange ->
+                when {
+                    newRange.start == newRange.endInclusive -> {
+                        if (newRange.start == minAge) {
+                            setAgeRange((newRange.start..(newRange.endInclusive + 1).coerceAtMost(maxAge)))
+                        } else if (newRange.endInclusive == maxAge) {
+                            setAgeRange(((newRange.start - 1).coerceAtLeast(minAge))..newRange.endInclusive)
+                        }
+                    }
+
+                    newRange.start > newRange.endInclusive -> {
+                        setAgeRange(newRange.endInclusive..newRange.start)
+                    }
+
+                    else -> {
+                        setAgeRange(newRange)
+                    }
+                }
+            },
+            valueRange = minAge..maxAge,
+            steps = 80,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AgeSelectionRowPreview() {
+    val (ageRange, setAgeRange) = remember { mutableStateOf(18f..100f) }
+    val minAge by remember { mutableStateOf(26f) }
+    val maxAge by remember { mutableStateOf(58f) }
+
+    AgeSelectionRow(ageRange, setAgeRange, minAge, maxAge)
 }
 
 // Funkcja do zapisywania danych użytkownika i preferencji do bazy danych
@@ -335,7 +408,7 @@ private fun saveUserDataToDatabase(
     latitude: Double?,
     longitude: Double?
 ) {
-    // Pobierz zalogowanego użytkownika z Firebase Auth
+    // Pobiera zalogowanego użytkownika z Firebase Auth
     val currentUser = FirebaseAuth.getInstance().currentUser
 
     // Sprawdź, czy użytkownik jest zalogowany
