@@ -100,264 +100,229 @@ fun AnonymousChatConfigurationScreen(
     var relationshipPreference by remember { mutableStateOf(true) }
     var maxDistance by remember { mutableStateOf(10f) }
 
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.logotype_vreescie_svg),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(width = 198.dp, height = 47.dp)
-                    .padding(2.dp)
-            )
-            IconButton(
-                onClick = {},
-                modifier = Modifier
-                    .size(dimensionResource(R.dimen.icon_settings_size))
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = stringResource(R.string.settings_pl),
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .size(dimensionResource(R.dimen.icon_settings_size))
-                )
-            }
-        }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 15.dp)
-                .padding(vertical = 0.dp),
-        ) {
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .padding(top = 5.dp, bottom = 8.dp),
-                shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.padding(16.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
+            GenderSelectionRow(modifier = Modifier)
 
-                    Column(
-                        modifier = Modifier.padding(16.dp),
+            Text(
+                text = "Płeć:",
+                fontSize = 16.sp,
+            )
 
-                        ) {
-                        Text(
-                            text = "Płeć:",
-                            fontSize = 16.sp,
-                        )
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = selectedGenders.contains("F"),
-                                onCheckedChange = {
-                                    selectedGenders = if (it) {
-                                        if (selectedGenders.contains("M")) "FM" else "F"
-                                    } else {
-                                        selectedGenders.replace("F", "")
-                                    }
-                                },
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text(
-                                text = "Kobieta"
-                            )
-                            Checkbox(
-                                checked = selectedGenders.contains("M"),
-                                onCheckedChange = {
-                                    selectedGenders = if (it) {
-                                        if (selectedGenders.contains("F")) "FM" else "M"
-                                    } else {
-                                        selectedGenders.replace("M", "")
-                                    }
-                                },
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
-                            Text(
-                                text = "Mężczyzna",
-                            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = selectedGenders.contains("F"),
+                    onCheckedChange = {
+                        selectedGenders = if (it) {
+                            if (selectedGenders.contains("M")) "FM" else "F"
+                        } else {
+                            selectedGenders.replace("F", "")
                         }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "Przedział wiekowy: ${ageRange.start.toInt()} - ${ageRange.endInclusive.toInt()} lat",
-                            fontSize = 16.sp,
-                        )
-                        RangeSlider(
-                            value = ageRange,
-                            onValueChange = {
-                                when {
-                                    it.start == it.endInclusive -> {
-                                        if (it.start == minAge) {
-                                            ageRange =
-                                                (it.start..(it.endInclusive + 1).coerceAtMost(maxAge))
-                                        } else if (it.endInclusive == maxAge) {
-                                            ageRange =
-                                                (((it.start - 1).coerceAtLeast(minAge))..it.endInclusive)
-                                        }
-                                    }
-
-                                    it.start > it.endInclusive -> {
-                                        ageRange = (it.endInclusive..it.start)
-                                    }
-
-                                    else -> {
-                                        ageRange = it
-                                    }
-                                }
-                            },
-                            valueRange = minAge..maxAge,
-                            steps = 80,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "Profil:",
-                            fontSize = 16.sp,
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(
-                                selected = isProfileVerified,
-                                onClick = { isProfileVerified = true },
-                                modifier = Modifier.padding(end = 0.dp)
-                            )
-                            Text(
-                                text = "Zweryfikowany",
-                                fontSize = 14.sp,
-                            )
-                            RadioButton(
-                                selected = !isProfileVerified,
-                                onClick = { isProfileVerified = false },
-                                modifier = Modifier.padding(start = 0.dp)
-                            )
-                            Text(
-                                text = "Nie zweryfikowany",
-                                fontSize = 14.sp
-                            )
+                    },
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = "Kobieta"
+                )
+                Checkbox(
+                    checked = selectedGenders.contains("M"),
+                    onCheckedChange = {
+                        selectedGenders = if (it) {
+                            if (selectedGenders.contains("F")) "FM" else "M"
+                        } else {
+                            selectedGenders.replace("M", "")
                         }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "Relacja:",
-                            fontSize = 16.sp
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(
-                                selected = relationshipPreference,
-                                onClick = { relationshipPreference = true },
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text(
-                                text = "Stała"
-                            )
-                            RadioButton(
-                                selected = !relationshipPreference,
-                                onClick = { relationshipPreference = false },
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
-                            Text(
-                                text = "Krótka"
-                            )
-                        }
-
-
-                        Text(
-                            text = "Maksymalna odległość: ${maxDistance.roundToInt()} km",
-                            fontSize = 16.sp
-                        )
-                        Slider(
-                            value = maxDistance,
-                            onValueChange = { maxDistance = it },
-                            valueRange = 5f..150f,
-                            steps = 28,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                    }
-
-
-                    Button(
-                        onClick = {
-                            if (latitude == null || longitude == null) {
-                                viewModel.getLocation(
-                                    fusedLocationProviderClient = fusedLocationProviderClient,
-                                    context = context,
-                                    requestPermissionLauncher = requestPermissionLauncher,
-                                    onSuccess = { location ->
-                                        latitude = location.latitude
-                                        longitude = location.longitude
-                                        saveUserDataToDatabase(
-                                            selectedGenders,
-                                            ageRange,
-                                            isProfileVerified,
-                                            relationshipPreference,
-                                            maxDistance,
-                                            latitude,
-                                            longitude
-                                        )
-                                        onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
-                                    },
-                                    onFailure = {
-                                        // Obsługa niepowodzenia
-                                        Log.e(TAG, "Failed to get location")
-                                        Toast.makeText(
-                                            context,
-                                            "Failed to get location",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                )
-                            } else {
-                                saveUserDataToDatabase(
-                                    selectedGenders,
-                                    ageRange,
-                                    isProfileVerified,
-                                    relationshipPreference,
-                                    maxDistance,
-                                    latitude,
-                                    longitude
-                                )
-                                onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp),
-                        shape = RoundedCornerShape(
-                            topStart = 0.dp,
-                            topEnd = 0.dp,
-                            bottomStart = 20.dp,
-                            bottomEnd = 20.dp
-                        )
-                    ) {
-                        Text(
-                            text = "Losuj"
-                        )
-                    }
-
-                }
-
+                    },
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+                Text(
+                    text = "Mężczyzna",
+                )
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Przedział wiekowy: ${ageRange.start.toInt()} - ${ageRange.endInclusive.toInt()} lat",
+                fontSize = 16.sp,
+            )
+            RangeSlider(
+                value = ageRange,
+                onValueChange = {
+                    when {
+                        it.start == it.endInclusive -> {
+                            if (it.start == minAge) {
+                                ageRange =
+                                    (it.start..(it.endInclusive + 1).coerceAtMost(maxAge))
+                            } else if (it.endInclusive == maxAge) {
+                                ageRange =
+                                    (((it.start - 1).coerceAtLeast(minAge))..it.endInclusive)
+                            }
+                        }
+
+                        it.start > it.endInclusive -> {
+                            ageRange = (it.endInclusive..it.start)
+                        }
+
+                        else -> {
+                            ageRange = it
+                        }
+                    }
+                },
+                valueRange = minAge..maxAge,
+                steps = 80,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Profil:",
+                fontSize = 16.sp,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = isProfileVerified,
+                    onClick = { isProfileVerified = true },
+                    modifier = Modifier.padding(end = 0.dp)
+                )
+                Text(
+                    text = "Zweryfikowany",
+                    fontSize = 14.sp,
+                )
+                RadioButton(
+                    selected = !isProfileVerified,
+                    onClick = { isProfileVerified = false },
+                    modifier = Modifier.padding(start = 0.dp)
+                )
+                Text(
+                    text = "Nie zweryfikowany",
+                    fontSize = 14.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Relacja:",
+                fontSize = 16.sp
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = relationshipPreference,
+                    onClick = { relationshipPreference = true },
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = "Stała"
+                )
+                RadioButton(
+                    selected = !relationshipPreference,
+                    onClick = { relationshipPreference = false },
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+                Text(
+                    text = "Krótka"
+                )
+            }
+
+
+            Text(
+                text = "Maksymalna odległość: ${maxDistance.roundToInt()} km",
+                fontSize = 16.sp
+            )
+            Slider(
+                value = maxDistance,
+                onValueChange = { maxDistance = it },
+                valueRange = 5f..150f,
+                steps = 28,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
         }
+
+
+        Button(
+            onClick = {
+                if (latitude == null || longitude == null) {
+                    viewModel.getLocation(
+                        fusedLocationProviderClient = fusedLocationProviderClient,
+                        context = context,
+                        requestPermissionLauncher = requestPermissionLauncher,
+                        onSuccess = { location ->
+                            latitude = location.latitude
+                            longitude = location.longitude
+                            saveUserDataToDatabase(
+                                selectedGenders,
+                                ageRange,
+                                isProfileVerified,
+                                relationshipPreference,
+                                maxDistance,
+                                latitude,
+                                longitude
+                            )
+                            onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
+                        },
+                        onFailure = {
+                            // Obsługa niepowodzenia
+                            Log.e(TAG, "Failed to get location")
+                            Toast.makeText(
+                                context,
+                                "Problem z pobraniem lokalizacji",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    )
+                } else {
+                    saveUserDataToDatabase(
+                        selectedGenders,
+                        ageRange,
+                        isProfileVerified,
+                        relationshipPreference,
+                        maxDistance,
+                        latitude,
+                        longitude
+                    )
+                    onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 20.dp,
+                bottomEnd = 20.dp
+            )
+        ) {
+            Text(
+                text = "LOSUJ",
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+
     }
+}
+
+
+@Composable
+fun GenderSelectionRow(
+    modifier: Modifier,
+
+){
+
 }
 
 // Funkcja do zapisywania danych użytkownika i preferencji do bazy danych

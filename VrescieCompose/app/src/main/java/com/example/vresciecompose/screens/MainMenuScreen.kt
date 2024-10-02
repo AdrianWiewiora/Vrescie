@@ -1,13 +1,11 @@
 package com.example.vresciecompose.screens
 
 import android.util.Log
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +28,19 @@ import androidx.compose.ui.res.dimensionResource
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Card
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.res.painterResource
+import androidx.core.app.ActivityOptionsCompat
 import com.example.vresciecompose.ui.components.ExitConfirmationDialog
 
 @Composable
@@ -61,25 +72,42 @@ fun MainMenuScreen(
         showDialog.value = true
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Crossfade(targetState = currentFragment,
-            label = "",
+    WholeMenu(
+        modifier = Modifier.fillMaxSize(),
+        currentFragment,
+        onClick,
+        locationViewModel,
+        requestPermissionLauncher,
+        setCurrentFragment
+    )
+
+}
+
+@Composable
+fun WholeMenu(
+    modifier: Modifier,
+    currentFragment: Int,
+    onClick: (String) -> Unit,
+    locationViewModel: LocationViewModel,
+    requestPermissionLauncher: ActivityResultLauncher<String>,
+    setCurrentFragment: (Int) -> Unit
+){
+    Column(modifier = modifier) {
+        TopRowMenu(modifier = Modifier.fillMaxWidth())
+
+        MiddleCard(
             modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.TopStart)
-                .padding(bottom = 78.dp)
-        ) { target ->
-            when (target) {
-                1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, onClick)
-                2 -> ImplicitChatsScreen(onClick)
-                3 -> ProfileScreen(profileViewModel)
-            }
-        }
+                .padding(horizontal = 15.dp)
+                .padding(vertical = 0.dp)
+                .weight(1f),
+            currentFragment,
+            onClick,
+            locationViewModel,
+            requestPermissionLauncher
+        )
+
         BottomMenu(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Max)
-                .align(Alignment.BottomStart),
+            modifier = Modifier,
             currentFragment,
             setCurrentFragment
         )
@@ -87,39 +115,106 @@ fun MainMenuScreen(
 }
 
 @Composable
+fun TopRowMenu(modifier: Modifier){
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logotype_vreescie_svg),
+            contentDescription = null,
+            modifier = Modifier
+                .size(width = 198.dp, height = 47.dp)
+                .padding(2.dp)
+        )
+        IconButton(
+            onClick = {},
+            modifier = Modifier
+                .size(dimensionResource(R.dimen.icon_settings_size))
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = stringResource(R.string.settings_pl),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(dimensionResource(R.dimen.icon_settings_size))
+            )
+        }
+    }
+}
+
+@Composable
+fun MiddleCard(
+    modifier: Modifier,
+    currentFragment: Int,
+    onClick: (String) -> Unit,
+    locationViewModel: LocationViewModel,
+    requestPermissionLauncher: ActivityResultLauncher<String>
+){
+    Column(
+        modifier = modifier
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 5.dp, bottom = 8.dp),
+            shape = RoundedCornerShape(20.dp),
+        ) {
+            Crossfade(targetState = currentFragment,
+                label = "",
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) { target ->
+                when (target) {
+                    1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, onClick)
+                    2 -> ImplicitChatsScreen(onClick)
+                    3 -> ProfileScreen()
+                    else ->  Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        Text("Preview Screen")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
 fun BottomMenu(
     modifier: Modifier = Modifier,
     currentFragment: Int,
     setCurrentFragment: (Int) -> Unit = {}
 ){
-    Column(
+    Row(
         modifier = modifier
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            MenuItem(
-                text = stringResource(id = R.string.v_czat_pl),
-                icon = Icons.Filled.AddComment,
-                onClick = { setCurrentFragment(1) },
-                modifier = Modifier.weight(1f),
-                color = if(currentFragment == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
-            )
-            MenuItem(
-                text = stringResource(id = R.string.chats_pl),
-                icon = Icons.Filled.MarkChatRead,
-                onClick = { setCurrentFragment(2) },
-                modifier = Modifier.weight(1f),
-                color = if(currentFragment == 2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
-            )
-            MenuItem(
-                text = stringResource(id = R.string.profile_pl),
-                icon = Icons.Filled.AccountCircle,
-                onClick = { setCurrentFragment(3) },
-                modifier = Modifier.weight(1f),
-                color = if(currentFragment == 3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
-            )
-        }
+        MenuItem(
+            text = stringResource(id = R.string.v_czat_pl),
+            icon = Icons.Filled.AddComment,
+            modifier = Modifier.weight(1f)
+                .clickable(onClick = { setCurrentFragment(1) }),
+            color = if(currentFragment == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+        )
+        MenuItem(
+            text = stringResource(id = R.string.chats_pl),
+            icon = Icons.Filled.MarkChatRead,
+            modifier = Modifier.weight(1f)
+                .clickable(onClick = { setCurrentFragment(2) }),
+            color = if(currentFragment == 2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+        )
+        MenuItem(
+            text = stringResource(id = R.string.profile_pl),
+            icon = Icons.Filled.AccountCircle,
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = { setCurrentFragment(3) }),
+            color = if(currentFragment == 3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+        )
     }
 }
 
@@ -127,16 +222,12 @@ fun BottomMenu(
 fun MenuItem(
     text: String,
     icon: ImageVector,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     color: Color
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .clickable(onClick = onClick)
-            .fillMaxHeight()
-            .wrapContentHeight(),
+        modifier = modifier.wrapContentHeight(),
     ) {
         Icon(
             imageVector = icon,
@@ -148,8 +239,26 @@ fun MenuItem(
 
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = text,style = MaterialTheme.typography.labelSmall,color = color)
-
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewWholeMenu() {
+    // Przykładowe dane do podglądu
+    val mockOnClick: (String) -> Unit = { println("Clicked: $it") }
+
+    WholeMenu(
+        modifier = Modifier.fillMaxSize(),
+        currentFragment = 5,  // Zmień to na 1 lub 3, aby przetestować inne ekrany
+        onClick = mockOnClick,
+        locationViewModel = LocationViewModel(),  // Dodaj mockowane dane
+        requestPermissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+            onResult = { /* Obsłuż wynik */ }
+        ),
+        setCurrentFragment = {}
+    )
 }
 
 @Preview
@@ -157,3 +266,10 @@ fun MenuItem(
 fun BottomMenuPreview() {
     BottomMenu(currentFragment = 1)
 }
+
+@Preview
+@Composable
+fun TopMenuPreview() {
+    TopRowMenu(modifier = Modifier.fillMaxWidth())
+}
+

@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
@@ -28,9 +30,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.Navigation
+import com.example.vresciecompose.data.Conversation
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -89,89 +93,51 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
         onClick("${Navigation.Destinations.EXPLICIT_CONVERSATION}/${conversation.id}")
     }
 
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Image(
-                painter = painterResource(id = com.example.vresciecompose.R.drawable.logotype_vreescie_svg),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(width = 198.dp, height = 47.dp)
-                    .padding(2.dp)
-            )
 
-            Image(
-                painter = painterResource(id = com.example.vresciecompose.R.drawable.baseline_settings_24),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(52.dp)
-            )
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 15.dp)
-                .padding(vertical = 0.dp),
-
-            ) {
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .padding(top = 5.dp, bottom = 8.dp),
-                shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(2.dp, Color.Black),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White,
-                    contentColor = Color.Black
-                )
-
-            ) {
-                if (conversationList.isNotEmpty()) {
-                    // Jeśli są konwersacje, wyświetl listę
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        items(conversationList) { conversation ->
-                            val lastMessage = lastMessageMap[conversation.id] ?: ""
-                            ConversationItem(
-                                conversation = conversation,
-                                lastMessage = lastMessage,
-                                onItemClick = onItemClick
-                            )
-                        }
-                    }
-                } else {
-                    // Jeśli brak konwersacji, wyświetl komunikat
-                    Text(
-                        text = "Jeszcze nic tu nie ma :(\nPostaraj się o polubienia\ninnych użytkowników\nw anonimowym czacie aby\n pojawiły się tu konwersacje",
-                        fontSize = 26.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 40.dp, horizontal = 20.dp)
-                    )
-                }
-            }
-
-        }
+    if (conversationList.isNotEmpty()) {
+        ImplicitChats(conversationList, onItemClick, lastMessageMap)
+    } else {
+        Text(
+            text = "Jeszcze nic tu nie ma :(\nPostaraj się o polubienia\ninnych użytkowników\nw anonimowym czacie aby\n pojawiły się tu konwersacje",
+            fontSize = 26.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(vertical = 40.dp, horizontal = 20.dp)
+        )
     }
 }
 
 @Composable
+fun ImplicitChats(
+    conversationList: List<Conversation>,
+    onItemClick: (Conversation) -> Unit,
+    lastMessageMap: Map<String, String>
+){
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        items(conversationList) { conversation ->
+            val lastMessage = lastMessageMap[conversation.id] ?: ""
+            ConversationItem(
+                conversation = conversation,
+                lastMessage = lastMessage,
+                onItemClick = onItemClick
+            )
+        }
+    }
+}
+
+
+@Composable
 fun ConversationItem(conversation: Conversation, lastMessage: String, onItemClick: (Conversation) -> Unit) {
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .clickable { onItemClick(conversation) },
-        border = BorderStroke(2.dp, Color.Black),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White,
-            contentColor = Color.Black
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
         )
     ) {
         Column(
@@ -179,19 +145,44 @@ fun ConversationItem(conversation: Conversation, lastMessage: String, onItemClic
         ) {
             Text(
                 text = conversation.name,
-                fontSize = 18.sp
+                style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = lastMessage,
-                fontSize = 14.sp
+                style = MaterialTheme.typography.bodyMedium
             )
         }
     }
 }
 
 
-data class Conversation(
-    val id: String,
-    val name: String,
-)
+@Preview(showBackground = true)
+@Composable
+fun PreviewImplicitChatsScreen() {
+    // Przykładowe dane konwersacji do podglądu
+    val sampleConversations = listOf(
+        Conversation(id = "1", name = "Jan Kowalski"),
+        Conversation(id = "2", name = "Anna Nowak"),
+        Conversation(id = "3", name = "Piotr Wiśniewski")
+    )
+
+    // Przykładowe ostatnie wiadomości
+    val sampleLastMessages = mapOf(
+        "1" to "Cześć! Jak się masz?",
+        "2" to "Dziękuję, do zobaczenia!",
+        "3" to "Co słychać?"
+    )
+
+    // Mock funkcji onClick
+    val mockOnClick: (String) -> Unit = { conversationId ->
+        println("Clicked on conversation with id: $conversationId")
+    }
+
+    // Wywołanie ImplicitChats z przykładowymi danymi
+    ImplicitChats(
+        conversationList = sampleConversations,
+        onItemClick = { conversation -> mockOnClick(conversation.id) },
+        lastMessageMap = sampleLastMessages
+    )
+}

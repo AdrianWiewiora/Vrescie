@@ -8,7 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
 
-class ProfileViewModel : ViewModel() {
+open class ProfileViewModel : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
