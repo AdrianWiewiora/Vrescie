@@ -37,6 +37,7 @@ import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
 import com.example.vresciecompose.view_models.StartScreenViewModel
+import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import kotlinx.coroutines.launch
 
 
@@ -69,8 +70,10 @@ fun AppNavigation(
     profileViewModel: ProfileViewModel,
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
-    conversationViewModel: ConversationViewModel
-) {
+    conversationViewModel: ConversationViewModel,
+    database: AppDatabase,
+    userChatPrefsViewModel: UserChatPrefsViewModel
+    ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Navigation.Destinations.MAIN_MENU + "/{defaultFragment}",
             arguments = listOf(navArgument("defaultFragment") { type = NavType.StringType })
@@ -81,7 +84,8 @@ fun AppNavigation(
                 profileViewModel = profileViewModel,
                 locationViewModel = locationViewModel,
                 requestPermissionLauncher = requestPermissionLauncher,
-                defaultFragment = defaultFragment
+                defaultFragment = defaultFragment,
+                userChatPrefsViewModel = userChatPrefsViewModel
             )
         }
         composable(Navigation.Destinations.FIRST_LAUNCH) {

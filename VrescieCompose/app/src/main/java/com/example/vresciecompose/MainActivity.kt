@@ -22,7 +22,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.example.vresciecompose.authentication.GoogleAuthentication
+import com.example.vresciecompose.data.UserChatPrefs
+import com.example.vresciecompose.data.UserChatPrefsDao
 import com.example.vresciecompose.screens.removeUserFromFirebaseDatabase
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
@@ -33,9 +39,16 @@ import com.example.vresciecompose.view_models.MainViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
 import com.example.vresciecompose.view_models.StartScreenViewModel
+import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.android.gms.auth.api.identity.Identity
 
 class MainActivity : ComponentActivity() {
+    // Baza danych
+    companion object {
+        lateinit var database: AppDatabase
+    }
+    private lateinit var userChatPrefsViewModel: UserChatPrefsViewModel
+
     private lateinit var backDispatcher: OnBackPressedDispatcher
 
     private lateinit var startScreenViewModel: StartScreenViewModel
@@ -61,6 +74,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Inicjalizacja bazy danych
+        database = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "my-database").build()
+        // Inicjalizacja ViewModelu z fabryką
+        val userChatPrefsDao = database.userChatPrefsDao()
+        val viewModelFactory = UserChatPrefsViewModelFactory(userChatPrefsDao)
+        userChatPrefsViewModel = ViewModelProvider(this, viewModelFactory).get(UserChatPrefsViewModel::class.java)
 
         backDispatcher = onBackPressedDispatcher
 
@@ -115,7 +135,9 @@ class MainActivity : ComponentActivity() {
                                 profileViewModel,
                                 locationViewModel,
                                 requestPermissionLauncher,
-                                conversationViewModel
+                                conversationViewModel,
+                                database = database,
+                                userChatPrefsViewModel,
                             )
                         }
                     }
@@ -139,6 +161,21 @@ class MainViewModelFactory(private val sharedPreferences: SharedPreferences) :
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             return MainViewModel(sharedPreferences) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+
+@Database(entities = [UserChatPrefs::class], version = 1)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun userChatPrefsDao(): UserChatPrefsDao
+}
+
+class UserChatPrefsViewModelFactory(private val userChatPrefsDao: UserChatPrefsDao) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(UserChatPrefsViewModel::class.java)) {
+            return UserChatPrefsViewModel(userChatPrefsDao) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

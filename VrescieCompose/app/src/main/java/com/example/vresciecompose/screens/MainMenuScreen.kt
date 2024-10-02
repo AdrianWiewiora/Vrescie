@@ -41,7 +41,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.res.painterResource
 import androidx.core.app.ActivityOptionsCompat
+import com.example.vresciecompose.AppDatabase
+import com.example.vresciecompose.data.UserChatPrefs
+import com.example.vresciecompose.data.UserChatPrefsDao
 import com.example.vresciecompose.ui.components.ExitConfirmationDialog
+import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 
 @Composable
 fun MainMenuScreen(
@@ -50,6 +54,7 @@ fun MainMenuScreen(
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
     defaultFragment: String,
+    userChatPrefsViewModel: UserChatPrefsViewModel
 ) {
     Log.d("MainMenuScreen", "Default Fragment received: $defaultFragment")
 
@@ -78,7 +83,8 @@ fun MainMenuScreen(
         onClick,
         locationViewModel,
         requestPermissionLauncher,
-        setCurrentFragment
+        setCurrentFragment,
+        userChatPrefsViewModel
     )
 
 }
@@ -90,7 +96,8 @@ fun WholeMenu(
     onClick: (String) -> Unit,
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
-    setCurrentFragment: (Int) -> Unit
+    setCurrentFragment: (Int) -> Unit,
+    userChatPrefsViewModel: UserChatPrefsViewModel
 ){
     Column(modifier = modifier) {
         TopRowMenu(modifier = Modifier.fillMaxWidth())
@@ -103,7 +110,8 @@ fun WholeMenu(
             currentFragment,
             onClick,
             locationViewModel,
-            requestPermissionLauncher
+            requestPermissionLauncher,
+            userChatPrefsViewModel
         )
 
         BottomMenu(
@@ -149,7 +157,8 @@ fun MiddleCard(
     currentFragment: Int,
     onClick: (String) -> Unit,
     locationViewModel: LocationViewModel,
-    requestPermissionLauncher: ActivityResultLauncher<String>
+    requestPermissionLauncher: ActivityResultLauncher<String>,
+    userChatPrefsViewModel: UserChatPrefsViewModel
 ){
     Column(
         modifier = modifier
@@ -166,7 +175,7 @@ fun MiddleCard(
                     .fillMaxWidth()
             ) { target ->
                 when (target) {
-                    1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, onClick)
+                    1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, onClick, userChatPrefsViewModel)
                     2 -> ImplicitChatsScreen(onClick)
                     3 -> ProfileScreen()
                     else ->  Column(
@@ -247,6 +256,29 @@ fun MenuItem(
 fun PreviewWholeMenu() {
     // Przykładowe dane do podglądu
     val mockOnClick: (String) -> Unit = { println("Clicked: $it") }
+    // Tworzenie mockowanej wersji DAO i ViewModelu
+    val mockUserChatPrefsDao = object : UserChatPrefsDao {
+        override suspend fun getAllUserChatPrefs(): List<UserChatPrefs> {
+            return listOf(
+                UserChatPrefs(1, "Male", 18f, 30f),
+                UserChatPrefs(2, "Female", 25f, 35f)
+            )
+        }
+
+        override suspend fun insert(userChatPrefs: UserChatPrefs) {}
+        override suspend fun getUserChatPrefs(): UserChatPrefs? {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun getUserChatPrefsById(id: Long): UserChatPrefs? {
+            return UserChatPrefs(id, "Other", 20f, 40f)
+        }
+
+        override suspend fun update(userChatPrefs: UserChatPrefs) {}
+    }
+
+    // Tworzenie mockowanego UserChatPrefsViewModel
+    val userChatPrefsViewModel = UserChatPrefsViewModel(mockUserChatPrefsDao)
 
     WholeMenu(
         modifier = Modifier.fillMaxSize(),
@@ -257,7 +289,8 @@ fun PreviewWholeMenu() {
             contract = ActivityResultContracts.RequestPermission(),
             onResult = { /* Obsłuż wynik */ }
         ),
-        setCurrentFragment = {}
+        setCurrentFragment = {},
+        userChatPrefsViewModel = userChatPrefsViewModel
     )
 }
 

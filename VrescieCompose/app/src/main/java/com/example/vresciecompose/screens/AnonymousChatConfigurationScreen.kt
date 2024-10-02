@@ -50,11 +50,17 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.Observer
+import com.example.vresciecompose.AppDatabase
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
+import com.example.vresciecompose.data.UserChatPrefs
 import com.example.vresciecompose.view_models.LocationViewModel
+import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -67,13 +73,15 @@ private const val TAG = "AnonymousChatConfig"
 fun AnonymousChatConfigurationScreen(
     viewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
-    onClick: (String) -> Unit
+    onClick: (String) -> Unit,
+    userChatPrefsViewModel: UserChatPrefsViewModel
 ) {
+    val allChatPrefs by userChatPrefsViewModel.allChatPrefs.observeAsState(emptyList())
+
     var latitude by remember { mutableStateOf<Double?>(null) }
     var longitude by remember { mutableStateOf<Double?>(null) }
     val context = LocalContext.current
-    val fusedLocationProviderClient =
-        remember { LocationServices.getFusedLocationProviderClient(context) }
+    val fusedLocationProviderClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     LaunchedEffect(key1 = Unit) {
         viewModel.getLocation(
             fusedLocationProviderClient = fusedLocationProviderClient,
@@ -90,12 +98,29 @@ fun AnonymousChatConfigurationScreen(
         )
     }
 
-
     val (selectedGenders, setSelectedGenders) = remember { mutableStateOf("FM") }
 
     val (ageRange, setAgeRange) = remember {mutableStateOf(18f..100f)}
     val minAge by remember { mutableStateOf(18f) }
     val maxAge by remember { mutableStateOf(100f) }
+
+    // Odczyt danych z bazy
+    LaunchedEffect(Unit) {
+        userChatPrefsViewModel.fetchChatPrefs()
+    }
+    // Jeżeli dane są dostępne, ustaw wartości
+    LaunchedEffect(allChatPrefs) {
+        allChatPrefs.firstOrNull()?.let {
+            setSelectedGenders(it.selectedGenders)
+            setAgeRange(it.ageStart..it.ageEnd)
+        }
+    }
+
+
+    val updatePreferences: (String, ClosedRange<Float>) -> Unit = { genders, range ->
+        userChatPrefsViewModel.savePreferences(genders, range)
+    }
+
 
     var isProfileVerified by remember { mutableStateOf(false) }
     var relationshipPreference by remember { mutableStateOf(true) }
@@ -115,7 +140,9 @@ fun AnonymousChatConfigurationScreen(
             GenderSelectionRow(
                 modifier = Modifier,
                 selectedGenders = selectedGenders,
-                setSelectedGenders = setSelectedGenders
+                setSelectedGenders = setSelectedGenders,
+                onPreferenceChange = updatePreferences, // Przekaż funkcję aktualizacji
+                ageRange = ageRange // Przekaż przedział wieku
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -125,6 +152,8 @@ fun AnonymousChatConfigurationScreen(
                 setAgeRange = setAgeRange,
                 minAge = minAge,
                 maxAge = maxAge,
+                onPreferenceChange = updatePreferences,
+                selectedGenders = selectedGenders,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -266,7 +295,9 @@ fun AnonymousChatConfigurationScreen(
 fun GenderSelectionRow(
     modifier: Modifier,
     selectedGenders: String,
-    setSelectedGenders: (String) -> Unit
+    setSelectedGenders: (String) -> Unit,
+    onPreferenceChange: (String, ClosedRange<Float>) -> Unit,
+    ageRange: ClosedRange<Float>
 ){
     Column(
         modifier = modifier,
@@ -281,13 +312,13 @@ fun GenderSelectionRow(
             Checkbox(
                 checked = selectedGenders.contains("F"),
                 onCheckedChange = {
-                    setSelectedGenders(
-                        if (it) {
-                            if (selectedGenders.contains("M")) "FM" else "F"
-                        } else {
-                            selectedGenders.replace("F", "")
-                        }
-                    )
+                    val newGenders = if (it) {
+                        if (selectedGenders.contains("M")) "FM" else "F"
+                    } else {
+                        selectedGenders.replace("F", "")
+                    }
+                    setSelectedGenders(newGenders)
+                    onPreferenceChange(newGenders, ageRange)  // Wywołaj aktualizację
                 },
                 modifier = Modifier
             )
@@ -307,13 +338,13 @@ fun GenderSelectionRow(
             Checkbox(
                 checked = selectedGenders.contains("M"),
                 onCheckedChange = {
-                    setSelectedGenders(
-                        if (it) {
-                            if (selectedGenders.contains("F")) "FM" else "M"
-                        } else {
-                            selectedGenders.replace("M", "")
-                        }
-                    )
+                    val newGenders = if (it) {
+                        if (selectedGenders.contains("F")) "FM" else "M"
+                    } else {
+                        selectedGenders.replace("M", "")
+                    }
+                    setSelectedGenders(newGenders)
+                    onPreferenceChange(newGenders, ageRange)
                 },
                 modifier = Modifier.padding(start = 12.dp)
             )
@@ -340,7 +371,9 @@ fun GenderSelectionRowPreview() {
     GenderSelectionRow(
         modifier = Modifier.fillMaxWidth(),
         selectedGenders = selectedGenders,
-        setSelectedGenders = setSelectedGenders
+        setSelectedGenders = setSelectedGenders,
+        onPreferenceChange = { _, _ -> },
+        ageRange = 18f..100f
     )
 }
 
@@ -350,6 +383,8 @@ fun AgeSelectionRow(
     setAgeRange: (ClosedFloatingPointRange<Float>) -> Unit = {},
     minAge: Float = 18f,
     maxAge: Float = 100f,
+    onPreferenceChange: (String, ClosedRange<Float>) -> Unit, // Dodaj ten parametr
+    selectedGenders: String,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -362,29 +397,20 @@ fun AgeSelectionRow(
         RangeSlider(
             value = ageRange,
             onValueChange = { newRange ->
-                when {
-                    newRange.start == newRange.endInclusive -> {
-                        if (newRange.start == minAge) {
-                            setAgeRange((newRange.start..(newRange.endInclusive + 1).coerceAtMost(maxAge)))
-                        } else if (newRange.endInclusive == maxAge) {
-                            setAgeRange(((newRange.start - 1).coerceAtLeast(minAge))..newRange.endInclusive)
-                        }
-                    }
-
-                    newRange.start > newRange.endInclusive -> {
-                        setAgeRange(newRange.endInclusive..newRange.start)
-                    }
-
-                    else -> {
-                        setAgeRange(newRange)
-                    }
-                }
+                setAgeRange(newRange)
+                onPreferenceChange(selectedGenders, newRange)
             },
             valueRange = minAge..maxAge,
             steps = 80,
             modifier = Modifier.fillMaxWidth()
         )
     }
+    // To jest wersja onValueChange żeby nie miał min i max tej samej wartośći
+//    if (newRange.start < newRange.endInclusive) {
+//        val start = newRange.start.coerceAtLeast(minAge).coerceAtMost(maxAge)
+//        val end = newRange.endInclusive.coerceAtLeast(minAge).coerceAtMost(maxAge)
+//        setAgeRange(start..end)
+//    }
 
 }
 
@@ -395,7 +421,15 @@ fun AgeSelectionRowPreview() {
     val minAge by remember { mutableStateOf(26f) }
     val maxAge by remember { mutableStateOf(58f) }
 
-    AgeSelectionRow(ageRange, setAgeRange, minAge, maxAge)
+    AgeSelectionRow(
+        ageRange,
+        setAgeRange,
+        minAge,
+        maxAge,
+        onPreferenceChange = { _, _ -> },
+        "FM"
+    )
+
 }
 
 // Funkcja do zapisywania danych użytkownika i preferencji do bazy danych
