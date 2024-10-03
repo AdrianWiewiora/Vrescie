@@ -40,7 +40,6 @@ import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.MainViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
-import com.example.vresciecompose.view_models.StartScreenViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.android.gms.auth.api.identity.Identity
 
@@ -53,7 +52,6 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var backDispatcher: OnBackPressedDispatcher
 
-    private lateinit var startScreenViewModel: StartScreenViewModel
     private lateinit var registrationViewModel: RegistrationViewModel
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var configurationProfileViewModel: ConfigurationProfileViewModel
@@ -104,7 +102,6 @@ class MainActivity : ComponentActivity() {
         }
 
         // Inicjalizacja ViewModel
-        startScreenViewModel = ViewModelProvider(this).get(StartScreenViewModel::class.java)
         registrationViewModel = ViewModelProvider(this).get(RegistrationViewModel::class.java)
         loginViewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
         configurationProfileViewModel =
@@ -138,7 +135,6 @@ class MainActivity : ComponentActivity() {
                             AppNavigation(
                                 navController,
                                 startDestination,
-                                startScreenViewModel,
                                 googleAuthClient,
                                 lifecycleScope,
                                 applicationContext = applicationContext,

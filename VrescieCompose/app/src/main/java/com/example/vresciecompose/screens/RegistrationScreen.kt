@@ -2,21 +2,22 @@ package com.example.vresciecompose.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.onFocusedBoundsChanged
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,10 +27,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -37,9 +37,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
-import com.example.vresciecompose.ui.components.BlackButton
+import com.example.vresciecompose.ui.components.ErrorAlertDialog
+import com.example.vresciecompose.ui.components.FilledButton
 import com.example.vresciecompose.view_models.RegistrationViewModel
 
 
@@ -60,20 +62,36 @@ fun RegistrationScreen(
 
     var isErrorShown by remember { mutableStateOf(false) }
 
+    LaunchedEffect(errorMessage) {
+        if (!errorMessage.isNullOrEmpty()) {
+            isErrorShown = true // Ustawienie isErrorShown na true, aby pokazać dialog
+        }
+    }
+
     if (registrationSuccess) {
-        Toast.makeText(
-            LocalContext.current,
-            "Sign in successful",
-            Toast.LENGTH_LONG
-        ).show()
-        onClick(Navigation.Destinations.FIRST_CONFIGURATION)
-    } else if (!errorMessage.isNullOrEmpty() && !isErrorShown) {
-        isErrorShown = true
-        Toast.makeText(
-            LocalContext.current,
-            errorMessage,
-            Toast.LENGTH_LONG
-        ).show()
+        AlertDialog(
+            onDismissRequest = { onClick(Navigation.Destinations.FIRST_CONFIGURATION)  },
+            title = {
+                Text(text = "Zarejestrowałeś się")
+            },
+            text = {
+                Text(text = "Pamiętaj by potwierdzić konto poprzez w wiadomości wysłanej na podany adres e-mail")
+            },
+            confirmButton = {
+                Button(onClick = {onClick(Navigation.Destinations.FIRST_CONFIGURATION) }) {
+                    Text("Ok")
+                }
+            }
+        )
+    }
+
+    // Wyświetlanie ErrorAlertDialog, jeśli jest błąd
+    if (isErrorShown) {
+        ErrorAlertDialog(
+            onDismiss = { isErrorShown = false }, // Zamykanie dialogu
+            text1 = "Błąd rejestracji",
+            text2 = errorMessage ?: "Wystąpił nieznany błąd"
+        )
     }
 
     Column(
@@ -92,7 +110,7 @@ fun RegistrationScreen(
 
         Text(
             text = "Podaj swój e-mail i hasło",
-            fontSize = 22.sp,
+            style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -100,40 +118,26 @@ fun RegistrationScreen(
         Spacer(modifier = Modifier.height(30.dp))
 
         OutlinedTextField(
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                focusedTextColor = Color.Black,
-                cursorColor = Color.Black
-            ),
             value = email,
             onValueChange = { email = it },
             label = { Text(text = "E-mail") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+            shape = RoundedCornerShape(25.dp)
         )
 
         Spacer(modifier = Modifier.height(6.dp))
 
         OutlinedTextField(
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                focusedTextColor = Color.Black,
-                cursorColor = Color.Black,
-                focusedTrailingIconColor = Color.Black
-            ),
             value = password,
             onValueChange = { password = it },
             label = { Text(text = "Hasło") },
             singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            shape = RoundedCornerShape(25.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
             trailingIcon = {
                 val image = if (passwordVisible)
                     Icons.Filled.Visibility
@@ -151,22 +155,14 @@ fun RegistrationScreen(
         Spacer(modifier = Modifier.height(6.dp))
 
         OutlinedTextField(
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                focusedTextColor = Color.Black,
-                cursorColor = Color.Black,
-                focusedTrailingIconColor = Color.Black
-            ),
             value = repeatPassword,
             onValueChange = { repeatPassword = it },
             label = { Text(text = "Powtórz hasło") },
             singleLine = true,
             visualTransformation = if (repeatPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            shape = RoundedCornerShape(25.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
             trailingIcon = {
                 val image = if (repeatPasswordVisible)
                     Icons.Filled.Visibility
@@ -183,11 +179,14 @@ fun RegistrationScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        BlackButton(
+        FilledButton(
             onClick = {
                 registrationViewModel.registerWithEmail(email, password, repeatPassword)
             },
             text = "Zarejestruj się",
+            modifier = Modifier
+                .padding(horizontal = 8.dp, vertical = 5.dp)
+                .fillMaxWidth(),
         )
     }
 }

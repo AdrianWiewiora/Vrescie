@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -82,53 +83,12 @@ fun LoadingToAnonymousChatScreen(onClick: (String) -> Unit) {
         override fun onCancelled(error: DatabaseError) {}
     })
 
-    Column(
+    LoadingScreenImageAndCard(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 15.dp)
             .padding(vertical = 0.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(id = com.example.vresciecompose.R.drawable.logotype_vreescie_svg),
-            contentDescription = "logotype",
-            modifier = Modifier.size(width = 198.dp, height = 47.dp)
-        )
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(top = 5.dp, bottom = 8.dp),
-            shape = RoundedCornerShape(20.dp),
-            border = BorderStroke(2.dp, Color.Black),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White,
-                contentColor = Color.Black
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text ="Czekaj!!!\n\nTrwa szukanie osoby odpowiedniej dla twoich preferencji" ,
-                    modifier = Modifier
-                        .padding(horizontal = 30.dp),
-                    color = Color.Black,
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    style = TextStyle(
-                        lineHeight = 40.sp,
-                    )
-                )
-            }
-        }
-    }
+    )
 }
 
 fun removeUserFromFirebaseDatabase(userId: String) {
@@ -144,8 +104,55 @@ fun updateUserLastSeen(userId: String) {
     usersRef.child(userId).child("info").child("lastSeen").setValue(currentTime)
 }
 
+
+@Composable
+fun LoadingScreenImageAndCard(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Image(
+            painter = painterResource(id = com.example.vresciecompose.R.drawable.logotype_vreescie_svg),
+            contentDescription = "logotype",
+            modifier = Modifier.size(width = 198.dp, height = 47.dp)
+        )
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .padding(top = 5.dp, bottom = 8.dp),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text ="Czekaj!!!\n\nTrwa szukanie osoby odpowiedniej dla twoich preferencji" ,
+                    modifier = Modifier
+                        .padding(horizontal = 30.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.headlineLarge
+                )
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
-fun LoadingToAnonymousChatScreenPreview() {
-    LoadingToAnonymousChatScreen {}
+fun LoadingScreenPreview() {
+    LoadingScreenImageAndCard(
+        modifier = Modifier
+        .fillMaxSize()
+        .padding(horizontal = 15.dp)
+        .padding(vertical = 0.dp),
+    )
 }

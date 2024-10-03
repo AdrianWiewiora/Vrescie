@@ -3,7 +3,11 @@ package com.example.vresciecompose.authentication
 
 
 import android.util.Log
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.database.FirebaseDatabase
 
 class EMailAuthentication {
@@ -32,7 +36,15 @@ class EMailAuthentication {
                         }
                 } else {
                     Log.e("EMailAuthentication", "Registration failed: ${task.exception?.message}")
-                    onFailure(task.exception?.message ?: "Unknown error")
+                    val errorMessage = when (val exception = task.exception) {
+                        is FirebaseAuthWeakPasswordException -> "Password is too weak."
+                        is FirebaseAuthInvalidCredentialsException -> "Invalid email address."
+                        is FirebaseAuthUserCollisionException -> "An account with this email already exists."
+                        is FirebaseNetworkException -> "Network error. Please try again."
+                        else -> "Registration failed. ${exception?.message}"
+                    }
+                    Log.e("EMailAuthentication", "Registration failed: $errorMessage")
+                    onFailure(errorMessage)
                 }
             }
     }

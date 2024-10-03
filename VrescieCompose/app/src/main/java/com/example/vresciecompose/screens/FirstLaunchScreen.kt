@@ -19,6 +19,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -27,12 +28,9 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun FirstLaunchScreen(onClose:()-> Unit ) {
-
-    val textArray =
-        remember { arrayOf("Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi") }
+    val textArray = remember { arrayOf("Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi") }
     val timerDuration = 3000L
     val totalDuration = timerDuration * textArray.size
-
     var currentStep by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
@@ -47,17 +45,33 @@ fun FirstLaunchScreen(onClose:()-> Unit ) {
     val alphaText = remember { Animatable(0f) } // Animacja dla tekstu
     val alphaImage = remember { Animatable(0f) } // Animacja dla obrazka
 
-    val context = LocalContext.current
-
-    Column(
+    FirstLaunchColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color.White)
             .pointerInput(Unit) {
                 detectTapGestures(onDoubleTap = {
                     onClose()
                 })
             },
+        alphaText = alphaText,
+        alphaImage = alphaImage,
+        totalDuration = totalDuration,
+        textArray = textArray,
+        currentStep = currentStep
+    )
+}
+
+@Composable
+fun FirstLaunchColumn(
+    modifier: Modifier,
+    alphaText: Animatable<Float, *>,
+    alphaImage: Animatable<Float, *>,
+    totalDuration: Long = 3000L,
+    textArray: Array<String>,
+    currentStep: Int = 0
+){
+    Column(
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -98,7 +112,7 @@ fun FirstLaunchScreen(onClose:()-> Unit ) {
             Text(
                 textAlign = TextAlign.Center,
                 text = currentText,
-                fontSize = 30.sp,
+                style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .padding(bottom = 16.dp)
@@ -112,5 +126,11 @@ fun FirstLaunchScreen(onClose:()-> Unit ) {
 @Preview(showBackground = true)
 @Composable
 fun FirstLaunchPreview() {
-    FirstLaunchScreen(onClose = {})
+    FirstLaunchColumn(
+        modifier = Modifier.fillMaxSize(),
+        alphaText = remember { Animatable(1f) }, // Ustaw animację tekstu na 1 (widoczna)
+        alphaImage = remember { Animatable(1f) }, // Ustaw animację obrazu na 1 (widoczna)
+        textArray = arrayOf("Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi"),
+        currentStep = 0 // Pierwszy tekst z listy
+    )
 }

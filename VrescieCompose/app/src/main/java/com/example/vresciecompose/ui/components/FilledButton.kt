@@ -1,8 +1,6 @@
 package com.example.vresciecompose.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,34 +9,32 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.vresciecompose.R
 
 @Composable
-fun BlackButton(
+fun FilledButton(
     onClick: () -> Unit,
     text: String,
     icon: Int? = null,
-    fontSize: Int = 24,
-    iconSize: Int? = null
+    iconSize: Int? = null,
+    modifier: Modifier = Modifier
 ) {
 
 
     Button(
         onClick = onClick,
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 5.dp)
-            .fillMaxWidth(),
+        modifier = modifier,
         content = {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -56,14 +52,21 @@ fun BlackButton(
 
                 Text(
                     text = text,
-                    color = Color.White,
-                    fontSize = fontSize.sp
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
                 )
             }
-        },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Black
-        ),
+        }
     )
 }
 
+@Preview(showBackground = true)
+@Composable
+fun FilledButtonPreview(){
+    FilledButton(
+        onClick = {},
+        text = "Zaloguj się",
+        icon = R.drawable.google_svgrepo_com,
+        iconSize = 28
+    )
+}

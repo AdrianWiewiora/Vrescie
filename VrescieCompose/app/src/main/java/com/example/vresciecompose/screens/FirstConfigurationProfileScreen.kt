@@ -1,5 +1,6 @@
 package com.example.vresciecompose.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,9 +23,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.R
-import com.example.vresciecompose.ui.components.BlackButton
+import com.example.vresciecompose.ui.components.FilledButton
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.Navigation
+import com.example.vresciecompose.ui.components.ExitConfirmationDialog
 
 @Composable
 fun FirstConfigurationProfileScreen(
@@ -36,6 +38,20 @@ fun FirstConfigurationProfileScreen(
     val ageState = remember { mutableStateOf("") }
     val genderState = remember { mutableStateOf("") }
 
+    val showDialog = remember { mutableStateOf(false) }
+    if (showDialog.value) {
+        ExitConfirmationDialog(
+            onConfirm = {
+                showDialog.value = false
+            },
+            onDismiss = {
+                showDialog.value = false
+            }
+        )
+    }
+    BackHandler {
+        showDialog.value = true
+    }
 
     Column(
         modifier = Modifier
@@ -172,14 +188,14 @@ fun FirstConfigurationProfileScreen(
 
 
         }
-        BlackButton(
+        FilledButton(
             onClick = {
                 val name = nameState.value
                 val age = ageState.value
                 val gender = genderState.value
 
                 configurationProfileViewModel.saveUserData(name, age, gender)
-                onClick(Navigation.Destinations.MAIN_MENU)
+                onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
             },
             text = "Kontynuuj",
         )

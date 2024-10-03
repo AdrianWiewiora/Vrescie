@@ -2,7 +2,6 @@ package com.example.vresciecompose
 
 import android.app.Activity.RESULT_OK
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -29,14 +28,13 @@ import com.example.vresciecompose.screens.LoadingToAnonymousChatScreen
 import com.example.vresciecompose.screens.LoginScreen
 import com.example.vresciecompose.screens.MainMenuScreen
 import com.example.vresciecompose.screens.RegistrationScreen
-import com.example.vresciecompose.screens.StartScreens
+import com.example.vresciecompose.screens.StartScreen
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
-import com.example.vresciecompose.view_models.StartScreenViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import kotlinx.coroutines.launch
 
@@ -60,7 +58,6 @@ object Navigation {
 fun AppNavigation(
     navController: NavHostController,
     startDestination: String,
-    startScreenViewModel: StartScreenViewModel,
     googleAuthClient: GoogleAuthentication,
     lifecycleScope: LifecycleCoroutineScope,
     applicationContext: Context,
@@ -128,18 +125,14 @@ fun AppNavigation(
                             "Log in successful",
                             Toast.LENGTH_LONG
                         ).show()
-                        navController.navigate(Navigation.Destinations.MAIN_MENU)
+                        navController.navigate(Navigation.Destinations.MAIN_MENU + "/1")
                     }
                 }
             }
 
-            StartScreens(
-                viewModel = startScreenViewModel,
+            StartScreen(
                 onClick = {
                     navController.navigate(route = it)
-                },
-                onConfirmExit = {
-                    navController.navigateUp()
                 },
                 state = state,
                 onSignInClick = {

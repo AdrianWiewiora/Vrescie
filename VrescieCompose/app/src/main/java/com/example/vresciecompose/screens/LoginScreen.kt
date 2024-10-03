@@ -1,19 +1,18 @@
 package com.example.vresciecompose.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -29,11 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
-import com.example.vresciecompose.authentication.SignInViewModel
-import com.example.vresciecompose.ui.components.BlackButton
-import com.example.vresciecompose.ui.components.WhiteOutlinedButton
+import com.example.vresciecompose.ui.components.ErrorAlertDialog
+import com.example.vresciecompose.ui.components.FilledButton
+import com.example.vresciecompose.ui.components.OutlinedButton
 import com.example.vresciecompose.view_models.LoginViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
@@ -43,102 +41,100 @@ fun LoginScreen(
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var password by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
-    var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var showErrorDialog by rememberSaveable { mutableStateOf(false) } // Flaga dialogu
 
     Column(
         modifier = Modifier
             .padding(16.dp)
             .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Logo
         Image(
             painter = painterResource(id = R.drawable.logotype_vreescie_svg),
             contentDescription = null,
             modifier = Modifier
-                .padding(bottom = 40.dp)
-                .padding(top = 140.dp)
-                .padding(horizontal = 20.dp)
+                .padding(20.dp)
         )
 
-        // Email field
-        OutlinedTextField(
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                focusedTextColor = Color.Black,
-                cursorColor = Color.Black
-            ),
-            value = email,
-            onValueChange = { email = it },
-            label = { Text(text = "E-mail") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
-        )
-
-        // Password field
-        OutlinedTextField(
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                focusedTextColor = Color.Black,
-                cursorColor = Color.Black,
-                focusedTrailingIconColor = Color.Black
-            ),
-            value = password,
-            onValueChange = { password = it },
-            label = { Text(text = "Hasło") },
-            singleLine = true,
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            trailingIcon = {
-                val image = if (passwordVisible)
-                    Icons.Filled.Visibility
-                else Icons.Filled.VisibilityOff
-
-                // Please provide localized description for accessibility services
-                val description = if (passwordVisible) "Hide password" else "Show password"
-
-                IconButton(onClick = {passwordVisible = !passwordVisible}){
-                    Icon(imageVector  = image, description)
-                }
-            }
-        )
-
-        // Login button
-        BlackButton(
-            onClick = {
-                loginViewModel.signInWithEmail(email, password,
-                    onSuccess = {
-                        onClick(Navigation.Destinations.MAIN_MENU+"/1")
-                    },
-                    onFailure = { error ->
-                        errorMessage = error // Aktualizacja komunikatu o błędzie
-                    }
-                )
-            },
-            text = "Zaloguj się"
-        )
-
-        // Forgot password button
-        WhiteOutlinedButton(
-            onClick = { /*TODO*/ },
-            text = "Nie pamiętam hasła"
-        )
-
-        errorMessage?.let { message ->
-            Text(
-                text = message,
-                color = Color.Red,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(vertical = 8.dp)
+        Column(
+            verticalArrangement = Arrangement.Center,
+        ){
+            // Email field
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text(text = "E-mail") },
+                singleLine = true,
+                modifier = Modifier
+                    .padding(horizontal = 8.dp, vertical = 0.dp)
+                    .fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                shape = RoundedCornerShape(25.dp)
             )
+
+            // Password field
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text(text = "Hasło") },
+                singleLine = true,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .padding(bottom = 32.dp)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(25.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                trailingIcon = {
+                    val image = if (passwordVisible)
+                        Icons.Filled.Visibility
+                    else Icons.Filled.VisibilityOff
+
+                    // Please provide localized description for accessibility services
+                    val description = if (passwordVisible) "Hide password" else "Show password"
+
+                    IconButton(onClick = {passwordVisible = !passwordVisible}){
+                        Icon(imageVector  = image, description)
+                    }
+                }
+            )
+
+            // Login button
+            FilledButton(
+                onClick = {
+                    if (email.isBlank() || password.isBlank()) {
+                        showErrorDialog = true
+                    } else {
+                        loginViewModel.signInWithEmail(email, password,
+                            onSuccess = {
+                                onClick(Navigation.Destinations.MAIN_MENU+"/1")
+                            },
+                            onFailure = {
+                                showErrorDialog = true
+                            }
+                        )
+                    }
+                },
+                text = "Zaloguj się",
+                modifier = Modifier
+                    .padding(horizontal = 8.dp, vertical = 5.dp)
+                    .fillMaxWidth(),
+            )
+
+            // Forgot password button
+            OutlinedButton(
+                onClick = { /*TODO*/ },
+                text = "Nie pamiętam hasła",
+                modifier = Modifier
+                    .padding(horizontal = 8.dp, vertical = 5.dp)
+                    .fillMaxWidth(),
+            )
+
+        }
+
+        if (showErrorDialog) {
+            ErrorAlertDialog(onDismiss = { showErrorDialog = false })
         }
     }
 }
