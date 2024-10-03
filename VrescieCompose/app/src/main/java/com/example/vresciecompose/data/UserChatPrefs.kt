@@ -12,7 +12,10 @@ data class UserChatPrefs(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val selectedGenders: String,
     val ageStart: Float,
-    val ageEnd: Float
+    val ageEnd: Float,
+    val isProfileVerified: Boolean,
+    val relationshipPreference: Boolean,
+    val maxDistance: Float
 )
 
 @Dao

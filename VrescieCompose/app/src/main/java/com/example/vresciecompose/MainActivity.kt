@@ -26,6 +26,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.data.UserChatPrefs
 import com.example.vresciecompose.data.UserChatPrefsDao
@@ -43,7 +45,7 @@ import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.android.gms.auth.api.identity.Identity
 
 class MainActivity : ComponentActivity() {
-    // Baza danych
+    // Room database
     companion object {
         lateinit var database: AppDatabase
     }
@@ -75,8 +77,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
+//        val MIGRATION_1_2 = object : Migration(1, 2) {
+//            override fun migrate(database: SupportSQLiteDatabase) {
+//                database.execSQL("ALTER TABLE UserChatPrefs ADD COLUMN isProfileVerified INTEGER NOT NULL DEFAULT 0")
+//                database.execSQL("ALTER TABLE UserChatPrefs ADD COLUMN relationshipPreference INTEGER NOT NULL DEFAULT 0")
+//                database.execSQL("ALTER TABLE UserChatPrefs ADD COLUMN maxDistance REAL NOT NULL DEFAULT 0")
+//            }
+//        }
+
+
         // Inicjalizacja bazy danych
-        database = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "my-database").build()
+        database = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "my-database").addMigrations().build()
+
         // Inicjalizacja ViewModelu z fabryką
         val userChatPrefsDao = database.userChatPrefsDao()
         val viewModelFactory = UserChatPrefsViewModelFactory(userChatPrefsDao)
@@ -167,7 +180,7 @@ class MainViewModelFactory(private val sharedPreferences: SharedPreferences) :
 }
 
 
-@Database(entities = [UserChatPrefs::class], version = 1)
+@Database(entities = [UserChatPrefs::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userChatPrefsDao(): UserChatPrefsDao
 }

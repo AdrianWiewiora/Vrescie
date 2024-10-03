@@ -56,7 +56,7 @@ class UserChatPrefsViewModel( private val userChatPrefsDao: UserChatPrefsDao) : 
     }
 
     // Zmieniona funkcja, aby wstawiać lub aktualizować
-    fun savePreferences(selectedGenders: String, ageRange: ClosedRange<Float>) {
+    fun savePreferences(selectedGenders: String, ageRange: ClosedRange<Float>, isProfileVerified: Boolean, relationshipPreference: Boolean, maxDistance: Float) {
         viewModelScope.launch {
             val existingPrefs = withContext(Dispatchers.IO) {
                 userChatPrefsDao.getUserChatPrefsById(1) // Zmień na odpowiedni ID
@@ -66,7 +66,10 @@ class UserChatPrefsViewModel( private val userChatPrefsDao: UserChatPrefsDao) : 
                 id = 1, // Zmień na odpowiedni ID, który chcesz aktualizować
                 selectedGenders = selectedGenders,
                 ageStart = ageRange.start,
-                ageEnd = ageRange.endInclusive
+                ageEnd = ageRange.endInclusive,
+                isProfileVerified = isProfileVerified,
+                relationshipPreference = relationshipPreference,
+                maxDistance = maxDistance
             )
 
             if (existingPrefs != null) {

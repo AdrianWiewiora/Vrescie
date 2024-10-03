@@ -36,9 +36,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.GppBad
+import androidx.compose.material.icons.filled.GppGood
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SocialDistance
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -92,17 +98,19 @@ fun AnonymousChatConfigurationScreen(
                 longitude = location.longitude
             },
             onFailure = {
-                // Obsługa niepowodzenia
                 Log.e("Location", "Failed to get location")
             }
         )
     }
 
-    val (selectedGenders, setSelectedGenders) = remember { mutableStateOf("FM") }
-
-    val (ageRange, setAgeRange) = remember {mutableStateOf(18f..100f)}
+    val (selectedGenders, setSelectedGenders) = remember { mutableStateOf(allChatPrefs.firstOrNull()?.selectedGenders ?: "FM") }
+    val (ageRange, setAgeRange) = remember {mutableStateOf(allChatPrefs.firstOrNull()?.ageStart?.rangeTo(allChatPrefs.firstOrNull()?.ageEnd ?: 50f) ?: 18f..50f)}
     val minAge by remember { mutableStateOf(18f) }
-    val maxAge by remember { mutableStateOf(100f) }
+    val maxAge by remember { mutableStateOf(50f) }
+    val (isProfileVerified, setProfileVerified) = remember { mutableStateOf(allChatPrefs.firstOrNull()?.isProfileVerified ?: false) }
+    val (relationshipPreference, setRelationshipPreference) = remember { mutableStateOf(allChatPrefs.firstOrNull()?.relationshipPreference ?: false) }
+    val (maxDistance, setMaxDistance) = remember { mutableStateOf(allChatPrefs.firstOrNull()?.maxDistance ?: 10f) }
+
 
     // Odczyt danych z bazy
     LaunchedEffect(Unit) {
@@ -113,19 +121,36 @@ fun AnonymousChatConfigurationScreen(
         allChatPrefs.firstOrNull()?.let {
             setSelectedGenders(it.selectedGenders)
             setAgeRange(it.ageStart..it.ageEnd)
+            setProfileVerified(it.isProfileVerified)
+            setRelationshipPreference(it.relationshipPreference)
+            setMaxDistance(it.maxDistance)
         }
     }
 
 
-    val updatePreferences: (String, ClosedRange<Float>) -> Unit = { genders, range ->
-        userChatPrefsViewModel.savePreferences(genders, range)
+    val updatePreferences: (String, ClosedRange<Float>, Boolean, Boolean, Float) -> Unit = { genders, range, isVerified, relationship, distance ->
+        userChatPrefsViewModel.savePreferences(genders, range, isVerified, relationship, distance)
     }
 
+    fun updateGenderPreferences(newSelectedGenders: String) {
+        updatePreferences(newSelectedGenders, ageRange, isProfileVerified, relationshipPreference, maxDistance)
+    }
 
-    var isProfileVerified by remember { mutableStateOf(false) }
-    var relationshipPreference by remember { mutableStateOf(true) }
-    var maxDistance by remember { mutableStateOf(10f) }
+    fun updateAgeRangePreferences(newAgeRange: ClosedRange<Float>) {
+        updatePreferences(selectedGenders, newAgeRange, isProfileVerified, relationshipPreference, maxDistance)
+    }
 
+    fun updateProfileVerifiedPreferences(newIsProfileVerified: Boolean) {
+        updatePreferences(selectedGenders, ageRange, newIsProfileVerified, relationshipPreference, maxDistance)
+    }
+
+    fun updateRelationshipPreferences(newRelationshipPreference: Boolean) {
+        updatePreferences(selectedGenders, ageRange, isProfileVerified, newRelationshipPreference, maxDistance)
+    }
+
+    fun updateMaxDistancePreferences(newMaxDistance: Float) {
+        updatePreferences(selectedGenders, ageRange, isProfileVerified, relationshipPreference, newMaxDistance)
+    }
 
     Column(
         modifier = Modifier
@@ -134,95 +159,53 @@ fun AnonymousChatConfigurationScreen(
     ) {
 
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(dimensionResource(R.dimen.padding_medium))
             ) {
 
             GenderSelectionRow(
                 modifier = Modifier,
                 selectedGenders = selectedGenders,
                 setSelectedGenders = setSelectedGenders,
-                onPreferenceChange = updatePreferences, // Przekaż funkcję aktualizacji
-                ageRange = ageRange // Przekaż przedział wieku
+                updateGenderPreferences = ::updateGenderPreferences
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
 
             AgeSelectionRow(
                 ageRange = ageRange,
                 setAgeRange = setAgeRange,
                 minAge = minAge,
                 maxAge = maxAge,
-                onPreferenceChange = updatePreferences,
-                selectedGenders = selectedGenders,
+                updateAgeRangePreferences = ::updateAgeRangePreferences,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
 
-            Text(
-                text = "Profil:",
-                fontSize = 16.sp,
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(
-                    selected = isProfileVerified,
-                    onClick = { isProfileVerified = true },
-                    modifier = Modifier.padding(end = 0.dp)
-                )
-                Text(
-                    text = "Zweryfikowany",
-                    fontSize = 14.sp,
-                )
-                RadioButton(
-                    selected = !isProfileVerified,
-                    onClick = { isProfileVerified = false },
-                    modifier = Modifier.padding(start = 0.dp)
-                )
-                Text(
-                    text = "Nie zweryfikowany",
-                    fontSize = 14.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Relacja:",
-                fontSize = 16.sp
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(
-                    selected = relationshipPreference,
-                    onClick = { relationshipPreference = true },
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-                    text = "Stała"
-                )
-                RadioButton(
-                    selected = !relationshipPreference,
-                    onClick = { relationshipPreference = false },
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-                Text(
-                    text = "Krótka"
-                )
-            }
-
-
-            Text(
-                text = "Maksymalna odległość: ${maxDistance.roundToInt()} km",
-                fontSize = 16.sp
-            )
-            Slider(
-                value = maxDistance,
-                onValueChange = { maxDistance = it },
-                valueRange = 5f..150f,
-                steps = 28,
-                modifier = Modifier.fillMaxWidth()
+            ProfilePrefSelectionRow(
+                modifier = Modifier,
+                isProfileVerified = isProfileVerified,
+                setProfileVerified = setProfileVerified,
+                updateProfileVerifiedPreferences = ::updateProfileVerifiedPreferences
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
+
+            RelationPrefSelectionRow(
+                modifier = Modifier,
+                relationshipPreference = relationshipPreference,
+                setRelationshipPreference = setRelationshipPreference,
+                updateRelationshipPreferences = ::updateRelationshipPreferences
+            )
+
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
+
+            LocationPrefSelectionRow(
+                modifier = Modifier,
+                maxDistance = maxDistance,
+                setMaxDistance = setMaxDistance,
+                updateMaxDistancePreferences = ::updateMaxDistancePreferences
+            )
 
         }
 
@@ -296,8 +279,7 @@ fun GenderSelectionRow(
     modifier: Modifier,
     selectedGenders: String,
     setSelectedGenders: (String) -> Unit,
-    onPreferenceChange: (String, ClosedRange<Float>) -> Unit,
-    ageRange: ClosedRange<Float>
+    updateGenderPreferences: (String) -> Unit,
 ){
     Column(
         modifier = modifier,
@@ -318,7 +300,7 @@ fun GenderSelectionRow(
                         selectedGenders.replace("F", "")
                     }
                     setSelectedGenders(newGenders)
-                    onPreferenceChange(newGenders, ageRange)  // Wywołaj aktualizację
+                    updateGenderPreferences(newGenders)
                 },
                 modifier = Modifier
             )
@@ -344,7 +326,7 @@ fun GenderSelectionRow(
                         selectedGenders.replace("M", "")
                     }
                     setSelectedGenders(newGenders)
-                    onPreferenceChange(newGenders, ageRange)
+                    updateGenderPreferences(newGenders)
                 },
                 modifier = Modifier.padding(start = 12.dp)
             )
@@ -372,36 +354,38 @@ fun GenderSelectionRowPreview() {
         modifier = Modifier.fillMaxWidth(),
         selectedGenders = selectedGenders,
         setSelectedGenders = setSelectedGenders,
-        onPreferenceChange = { _, _ -> },
-        ageRange = 18f..100f
+        updateGenderPreferences = {  }
     )
 }
 
 @Composable
 fun AgeSelectionRow(
-    ageRange: ClosedFloatingPointRange<Float> = 18f..100f,
+    ageRange: ClosedFloatingPointRange<Float> = 18f..50f,
     setAgeRange: (ClosedFloatingPointRange<Float>) -> Unit = {},
     minAge: Float = 18f,
-    maxAge: Float = 100f,
-    onPreferenceChange: (String, ClosedRange<Float>) -> Unit, // Dodaj ten parametr
-    selectedGenders: String,
+    maxAge: Float = 50f,
+    updateAgeRangePreferences: (ClosedRange<Float>) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
     ) {
         Text(
-            text = "Przedział wiekowy: ${ageRange.start.toInt()} - ${ageRange.endInclusive.toInt()} lat",
+            text = "Przedział wiekowy: ${ageRange.start.toInt()} - ${ageRange.endInclusive.toInt()}${if (ageRange.endInclusive.toInt() == 50) "+" else ""} lat",
             style = MaterialTheme.typography.titleMedium
         )
         RangeSlider(
             value = ageRange,
             onValueChange = { newRange ->
                 setAgeRange(newRange)
-                onPreferenceChange(selectedGenders, newRange)
+                updateAgeRangePreferences(newRange)
             },
             valueRange = minAge..maxAge,
-            steps = 80,
+            steps = 31,
+            colors = SliderDefaults.colors(
+                activeTickColor = Color.Transparent,
+                inactiveTickColor = Color.Transparent
+            ),
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -417,20 +401,205 @@ fun AgeSelectionRow(
 @Preview(showBackground = true)
 @Composable
 fun AgeSelectionRowPreview() {
-    val (ageRange, setAgeRange) = remember { mutableStateOf(18f..100f) }
+    val (ageRange, setAgeRange) = remember { mutableStateOf(18f..50f) }
     val minAge by remember { mutableStateOf(26f) }
-    val maxAge by remember { mutableStateOf(58f) }
+    val maxAge by remember { mutableStateOf(39f) }
 
     AgeSelectionRow(
         ageRange,
         setAgeRange,
         minAge,
         maxAge,
-        onPreferenceChange = { _, _ -> },
-        "FM"
+        updateAgeRangePreferences = { },
     )
 
 }
+
+@Composable
+fun ProfilePrefSelectionRow(
+    modifier: Modifier,
+    isProfileVerified: Boolean,
+    setProfileVerified: (Boolean) -> Unit,
+    updateProfileVerifiedPreferences: (Boolean) -> Unit,
+){
+    Column(modifier = modifier) {
+        Text(
+            text = "Profil:",
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Column(modifier = Modifier.width(250.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                RadioButton(
+                    selected = isProfileVerified,
+                    onClick = { setProfileVerified(true); updateProfileVerifiedPreferences(true) },
+                    modifier = Modifier.padding(end = 0.dp)
+                )
+                Text(
+                    text = "Zweryfikowany",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Icon(
+                    imageVector = Icons.Filled.GppGood,
+                    contentDescription = "none",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(dimensionResource(R.dimen.icon_small_size))
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                RadioButton(
+                    selected = !isProfileVerified,
+                    onClick = { setProfileVerified(false); updateProfileVerifiedPreferences(false)  },
+                    modifier = Modifier.padding(start = 0.dp)
+                )
+                Text(
+                    text = "Nie zweryfikowany",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Icon(
+                    imageVector = Icons.Filled.GppBad,
+                    contentDescription = "none",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(dimensionResource(R.dimen.icon_small_size))
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfilePrefSelectionRowPreview() {
+    val (isProfileVerified, setProfileVerified) = remember { mutableStateOf(false) }
+    ProfilePrefSelectionRow(
+        modifier = Modifier.fillMaxWidth(),
+        isProfileVerified = isProfileVerified,
+        setProfileVerified = setProfileVerified,
+        updateProfileVerifiedPreferences = {  }
+    )
+}
+
+@Composable
+fun RelationPrefSelectionRow(
+    modifier: Modifier,
+    relationshipPreference: Boolean,
+    setRelationshipPreference: (Boolean) -> Unit,
+    updateRelationshipPreferences: (Boolean) -> Unit,
+){
+    Column(modifier = modifier) {
+        Text(
+            text = "Relacja:",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            RadioButton(
+                selected = relationshipPreference,
+                onClick = { setRelationshipPreference(true); updateRelationshipPreferences(true) },
+                modifier = Modifier.padding(start = dimensionResource(R.dimen.padding_small))
+            )
+            Text(
+                text = "Stała",
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Icon(
+                imageVector = Icons.Filled.Favorite,
+                contentDescription = "none",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+            )
+            RadioButton(
+                selected = !relationshipPreference,
+                onClick = { setRelationshipPreference(false); updateRelationshipPreferences(false)  },
+                modifier = Modifier.padding(start = dimensionResource(R.dimen.padding_medium))
+            )
+            Text(
+                text = "Krótka",
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Icon(
+                imageVector = Icons.Filled.LocalFireDepartment,
+                contentDescription = "none",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RelationPrefSelectionRowPreview() {
+    val (relationshipPreference, setRelationshipPreference) = remember { mutableStateOf(false) }
+
+    RelationPrefSelectionRow(
+        modifier = Modifier.fillMaxWidth(),
+        relationshipPreference = relationshipPreference,
+        setRelationshipPreference = setRelationshipPreference,
+        updateRelationshipPreferences = {  }
+    )
+}
+
+@Composable
+fun LocationPrefSelectionRow(
+    modifier: Modifier,
+    maxDistance: Float,
+    setMaxDistance: (Float) -> Unit,
+    updateMaxDistancePreferences: (Float) -> Unit,
+){
+    Column(modifier = modifier) {
+        Row (
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .width(300.dp)
+                .padding(bottom = dimensionResource(R.dimen.padding_small))
+        ) {
+            Text(
+                text = "Maksymalna odległość: ${maxDistance.roundToInt()} km",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+            )
+            Icon(
+                imageVector = Icons.Filled.SocialDistance,
+                contentDescription = "none",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(dimensionResource(R.dimen.icon_small_size))
+                    .padding(start = dimensionResource(R.dimen.padding_small))
+            )
+        }
+
+        Slider(
+            value = maxDistance,
+            onValueChange = { setMaxDistance(it); updateMaxDistancePreferences(it) },
+            valueRange = 5f..150f,
+            steps = 28,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LocationPrefSelectionRowPreview() {
+    val (maxDistance, setMaxDistance) = remember { mutableStateOf(10f) }
+    LocationPrefSelectionRow(
+        modifier = Modifier.fillMaxWidth(),
+        maxDistance = maxDistance,
+        setMaxDistance = setMaxDistance,
+        updateMaxDistancePreferences = {  }
+    )
+}
+
 
 // Funkcja do zapisywania danych użytkownika i preferencji do bazy danych
 private fun saveUserDataToDatabase(

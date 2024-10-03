@@ -260,8 +260,8 @@ fun PreviewWholeMenu() {
     val mockUserChatPrefsDao = object : UserChatPrefsDao {
         override suspend fun getAllUserChatPrefs(): List<UserChatPrefs> {
             return listOf(
-                UserChatPrefs(1, "Male", 18f, 30f),
-                UserChatPrefs(2, "Female", 25f, 35f)
+                UserChatPrefs(1, "Male", 18f, 30f, true, true, 10f),
+                UserChatPrefs(2, "Female", 25f, 35f, false, true, 20f)
             )
         }
 
@@ -271,7 +271,7 @@ fun PreviewWholeMenu() {
         }
 
         override suspend fun getUserChatPrefsById(id: Long): UserChatPrefs? {
-            return UserChatPrefs(id, "Other", 20f, 40f)
+            return UserChatPrefs(id, "Other", 20f, 40f, true, false, 20f)
         }
 
         override suspend fun update(userChatPrefs: UserChatPrefs) {}
