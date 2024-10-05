@@ -101,7 +101,7 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
             text = "Jeszcze nic tu nie ma :(\nPostaraj się o polubienia\ninnych użytkowników\nw anonimowym czacie aby\n pojawiły się tu konwersacje",
             fontSize = 26.sp,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(vertical = 40.dp, horizontal = 20.dp)
+            modifier = Modifier.padding(vertical = 40.dp, horizontal = 20.dp).fillMaxSize()
         )
     }
 }

@@ -16,6 +16,10 @@ open class ProfileViewModel : ViewModel() {
     val _userProfile = MutableLiveData<UserProfile>()
     val userProfile: LiveData<UserProfile> = _userProfile
 
+    // Nowy MutableLiveData dla profileConfigured
+    private val _isProfileConfigured = MutableLiveData<Boolean>()
+    val isProfileConfigured: LiveData<Boolean> = _isProfileConfigured
+
     init {
         loadUserProfile()
     }
@@ -30,14 +34,18 @@ open class ProfileViewModel : ViewModel() {
             userReference.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()) {
+                        // Pobieramy profil użytkownika
                         val age = snapshot.child("age").getValue(String::class.java)?.toIntOrNull() ?: 0
                         val email = snapshot.child("email").getValue(String::class.java) ?: ""
                         val gender = snapshot.child("gender").getValue(String::class.java) ?: ""
                         val joinTime = snapshot.child("join_time").getValue(Long::class.java) ?: 0
                         val name = snapshot.child("name").getValue(String::class.java) ?: ""
+                        val profileConfigured = snapshot.child("profileConfigured").getValue(Boolean::class.java) ?: false
 
+                        // Ustawiamy wartości
                         val userProfile = UserProfile(name, age, email, gender, joinTime.toString())
                         _userProfile.postValue(userProfile)
+                        _isProfileConfigured.postValue(profileConfigured) // Zaktualizuj _isProfileConfigured
                     }
                 }
 
@@ -47,5 +55,11 @@ open class ProfileViewModel : ViewModel() {
             })
         }
     }
+
+    // Metoda do pobierania wartości profileConfigured
+    fun isProfileConfigured(): Boolean {
+        return _isProfileConfigured.value ?: false
+    }
+
 }
 

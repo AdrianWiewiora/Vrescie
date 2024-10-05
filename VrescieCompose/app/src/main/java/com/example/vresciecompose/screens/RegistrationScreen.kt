@@ -64,18 +64,18 @@ fun RegistrationScreen(
 
     LaunchedEffect(errorMessage) {
         if (!errorMessage.isNullOrEmpty()) {
-            isErrorShown = true // Ustawienie isErrorShown na true, aby pokazać dialog
+            isErrorShown = true
         }
     }
 
     if (registrationSuccess) {
         AlertDialog(
-            onDismissRequest = { onClick(Navigation.Destinations.FIRST_CONFIGURATION)  },
+            onDismissRequest = { onClick(Navigation.Destinations.LOGIN)  },
             title = {
                 Text(text = "Zarejestrowałeś się")
             },
             text = {
-                Text(text = "Pamiętaj by potwierdzić konto poprzez w wiadomości wysłanej na podany adres e-mail")
+                Text(text = "Pamiętaj by potwierdzić konto poprzez klinięcie w link w wiadomości wysłanej na podany adres e-mail")
             },
             confirmButton = {
                 Button(onClick = {onClick(Navigation.Destinations.LOGIN) }) {

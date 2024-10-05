@@ -55,6 +55,10 @@ class GoogleAuthentication(
             userRef.child("email").setValue(userEmail)
             userRef.child("name").setValue(firstName)
 
+            if (isNewAccount) {
+                userRef.child("profileConfigured").setValue(false) // Ustawiamy na false
+            }
+
             SignInResult(
                 data = user?.run {
                     UserData(

@@ -1,8 +1,10 @@
 package com.example.vresciecompose.view_models
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -12,6 +14,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.database
 import kotlinx.coroutines.tasks.await
 
 class MainViewModel(private val sharedPreferences: SharedPreferences) : ViewModel() {
@@ -32,5 +35,4 @@ class MainViewModel(private val sharedPreferences: SharedPreferences) : ViewMode
     fun isFirstRun(): Boolean {
         return sharedPreferences.getBoolean("isFirstRun", true)
     }
-
 }

@@ -1,5 +1,6 @@
 package com.example.vresciecompose.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -43,7 +44,12 @@ fun LoginScreen(
     var email by rememberSaveable { mutableStateOf("") }
     var showErrorDialog by rememberSaveable { mutableStateOf(false) } // Flaga dialogu
     var errorMessage by rememberSaveable { mutableStateOf("") }
+    var isLoading by rememberSaveable { mutableStateOf(false) } // Flaga ładowania
 
+
+    BackHandler {
+        onClick(Navigation.Destinations.START)
+    }
 
     Column(
         modifier = Modifier
@@ -106,23 +112,50 @@ fun LoginScreen(
             FilledButton(
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
+                        errorMessage = "Proszę wprowadzić e-mail i hasło."
                         showErrorDialog = true
                     } else {
+                        isLoading = true // Ustawienie stanu ładowania
                         loginViewModel.signInWithEmail(email, password,
                             onSuccess = {
-                                onClick(Navigation.Destinations.MAIN_MENU+"/1")
+                                // Wywołanie checkFirstLogin po pomyślnym zalogowaniu
+                                val userId = loginViewModel.auth.currentUser?.uid
+                                if (userId != null) {
+                                    loginViewModel.checkFirstLogin(
+                                        onSuccess = { isProfileConfigured ->
+                                            isLoading = false // Wyłączenie stanu ładowania
+                                            if (isProfileConfigured) {
+                                                onClick(Navigation.Destinations.MAIN_MENU + "/1")
+                                            } else {
+                                                onClick(Navigation.Destinations.FIRST_CONFIGURATION)
+                                            }
+                                        },
+                                        onFailure = { error ->
+                                            isLoading = false
+                                            errorMessage = error
+                                            showErrorDialog = true
+                                        }
+                                    )
+
+                                } else {
+                                    isLoading = false
+                                    errorMessage = "Nie można uzyskać identyfikatora użytkownika."
+                                    showErrorDialog = true
+                                }
                             },
                             onFailure = { error ->
+                                isLoading = false
                                 errorMessage = error
                                 showErrorDialog = true
                             }
                         )
                     }
                 },
-                text = "Zaloguj się",
+                text = if (isLoading) "Ładowanie..." else "Zaloguj się", // Zmieniony tekst przycisku
                 modifier = Modifier
                     .padding(horizontal = 8.dp, vertical = 5.dp)
                     .fillMaxWidth(),
+                enabled = !isLoading
             )
 
             // Forgot password button

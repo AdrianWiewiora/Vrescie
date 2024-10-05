@@ -194,7 +194,9 @@ fun FirstConfigurationProfileScreen(
                 val age = ageState.value
                 val gender = genderState.value
 
-                configurationProfileViewModel.saveUserData(name, age, gender)
+                configurationProfileViewModel.saveUserData(name, age, gender) {
+                    configurationProfileViewModel.setProfileConfigured()
+                }
                 onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
             },
             text = "Kontynuuj",

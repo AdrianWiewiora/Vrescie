@@ -7,23 +7,20 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
-    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val database: FirebaseDatabase by lazy { FirebaseDatabase.getInstance() }
 
     fun signInWithEmail(email: String, password: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    if (user?.isEmailVerified == true) {
-                        onSuccess()
-                    } else {
-                        onFailure("E-mail nie został zweryfikowany. Sprawdź swoją skrzynkę pocztową.")
-                    }
+                    onSuccess() // Po zalogowaniu wywołaj onSuccess
                 } else {
                     val errorCode = (task.exception as? FirebaseAuthException)?.errorCode
                     val errorMessage = when (errorCode) {
@@ -35,6 +32,26 @@ class LoginViewModel : ViewModel() {
                 }
             }
     }
+
+    fun checkFirstLogin(onSuccess: (Boolean) -> Unit, onFailure: (String) -> Unit) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            onFailure("Użytkownik nie jest zalogowany.")
+            return
+        }
+
+        val userRef = database.getReference("user").child(userId)
+        userRef.child("profileConfigured").get()
+            .addOnSuccessListener { dataSnapshot ->
+                val profileConfigured = dataSnapshot.getValue(Boolean::class.java) ?: false
+                onSuccess(profileConfigured)
+            }
+            .addOnFailureListener { exception ->
+                onFailure("Nie udało się sprawdzić statusu logowania: ${exception.message}")
+            }
+    }
+
+
 }
 
 

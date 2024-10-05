@@ -28,7 +28,8 @@ fun FilledButton(
     text: String,
     icon: Int? = null,
     iconSize: Int? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
 
 
@@ -56,7 +57,8 @@ fun FilledButton(
                     fontWeight = FontWeight.Bold,
                 )
             }
-        }
+        },
+        enabled = enabled
     )
 }
 

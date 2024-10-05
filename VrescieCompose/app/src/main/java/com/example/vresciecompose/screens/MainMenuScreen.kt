@@ -39,9 +39,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.painterResource
 import androidx.core.app.ActivityOptionsCompat
 import com.example.vresciecompose.AppDatabase
+import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.data.UserChatPrefs
 import com.example.vresciecompose.data.UserChatPrefsDao
 import com.example.vresciecompose.ui.components.ExitConfirmationDialog
@@ -75,6 +79,16 @@ fun MainMenuScreen(
 
     BackHandler {
         showDialog.value = true
+    }
+
+    val isProfileConfigured by profileViewModel.isProfileConfigured.observeAsState(initial = true)
+    LaunchedEffect(isProfileConfigured) {
+        if (!isProfileConfigured) {
+            Log.d("MainMenuScreen", "Navigating to FIRST_CONFIGURATION because profile is not configured") // Loguje, że następuje przekierowanie
+            onClick(Navigation.Destinations.FIRST_CONFIGURATION)
+        } else {
+            Log.d("MainMenuScreen", "Profile is configured, no navigation needed")
+        }
     }
 
     WholeMenu(
