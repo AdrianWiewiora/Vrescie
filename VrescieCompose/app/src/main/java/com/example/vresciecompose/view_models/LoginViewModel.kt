@@ -18,25 +18,25 @@ class LoginViewModel : ViewModel() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    onSuccess()
+                    val user = auth.currentUser
+                    if (user?.isEmailVerified == true) {
+                        onSuccess()
+                    } else {
+                        onFailure("E-mail nie został zweryfikowany. Sprawdź swoją skrzynkę pocztową.")
+                    }
                 } else {
                     val errorCode = (task.exception as? FirebaseAuthException)?.errorCode
-                    Log.e("LoginViewModel", "Error code: $errorCode")
                     val errorMessage = when (errorCode) {
                         "ERROR_INVALID_CREDENTIAL" -> "Niepoprawne dane"
                         "ERROR_INVALID_EMAIL" -> "Nieprawidłowy format adresu email"
-                        else -> {
-                            "Wystąpił nieznany błąd"
-                        }
+                        else -> "Wystąpił nieznany błąd"
                     }
-                    Log.e("LoginViewModel", "Error message: $errorMessage")
                     onFailure(errorMessage)
                 }
             }
     }
-
-
 }
+
 
 
 

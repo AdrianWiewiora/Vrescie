@@ -23,12 +23,27 @@ class EMailAuthentication {
                     val userId = user?.uid ?: ""
                     val userEmail = user?.email ?: ""
 
-                    // Dodanie danych użytkownika do bazy danych
+                    // Dodanie użytkownika do bazy danych
                     val userRef = database.getReference("user").child(userId)
                     userRef.child("email").setValue(userEmail)
                         .addOnSuccessListener {
                             Log.d("EMailAuthentication", "User added to database")
-                            onSuccess()
+
+                            // Wyślij e-mail weryfikacyjny
+                            user?.sendEmailVerification()
+                                ?.addOnCompleteListener { emailTask ->
+                                    if (emailTask.isSuccessful) {
+                                        Log.d("EMailAuthentication", "Verification email sent")
+
+                                        // Wyloguj użytkownika zaraz po wysłaniu weryfikacji
+                                        auth.signOut()
+
+                                        onSuccess() // Wywołaj onSuccess, jeśli weryfikacja e-maila została wysłana
+                                    } else {
+                                        Log.e("EMailAuthentication", "Failed to send verification email: ${emailTask.exception?.message}")
+                                        onFailure("Failed to send verification email")
+                                    }
+                                }
                         }
                         .addOnFailureListener { exception ->
                             Log.e("EMailAuthentication", "Failed to add user to database: ${exception.message}")
@@ -43,10 +58,15 @@ class EMailAuthentication {
                         is FirebaseNetworkException -> "Network error. Please try again."
                         else -> "Registration failed. ${exception?.message}"
                     }
-                    Log.e("EMailAuthentication", "Registration failed: $errorMessage")
                     onFailure(errorMessage)
                 }
             }
     }
+
+    fun isEmailVerified(): Boolean {
+        val user = auth.currentUser
+        return user?.isEmailVerified == true
+    }
 }
+
 

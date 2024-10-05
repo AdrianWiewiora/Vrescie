@@ -78,7 +78,7 @@ fun RegistrationScreen(
                 Text(text = "Pamiętaj by potwierdzić konto poprzez w wiadomości wysłanej na podany adres e-mail")
             },
             confirmButton = {
-                Button(onClick = {onClick(Navigation.Destinations.FIRST_CONFIGURATION) }) {
+                Button(onClick = {onClick(Navigation.Destinations.LOGIN) }) {
                     Text("Ok")
                 }
             }

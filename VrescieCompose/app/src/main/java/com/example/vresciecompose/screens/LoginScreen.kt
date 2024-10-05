@@ -42,6 +42,8 @@ fun LoginScreen(
     var password by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var showErrorDialog by rememberSaveable { mutableStateOf(false) } // Flaga dialogu
+    var errorMessage by rememberSaveable { mutableStateOf("") }
+
 
     Column(
         modifier = Modifier
@@ -110,7 +112,8 @@ fun LoginScreen(
                             onSuccess = {
                                 onClick(Navigation.Destinations.MAIN_MENU+"/1")
                             },
-                            onFailure = {
+                            onFailure = { error ->
+                                errorMessage = error
                                 showErrorDialog = true
                             }
                         )
@@ -134,7 +137,11 @@ fun LoginScreen(
         }
 
         if (showErrorDialog) {
-            ErrorAlertDialog(onDismiss = { showErrorDialog = false })
+            ErrorAlertDialog(
+                onDismiss = { showErrorDialog = false },
+                text1 = "Błąd logowania",
+                text2 = errorMessage // Wyświetl wiadomość o błędzie (np. niezweryfikowany e-mail)
+            )
         }
     }
 }
