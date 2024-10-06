@@ -27,14 +27,8 @@ fun MessageList(
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 5.dp, vertical = 0.dp),
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(2.dp, Color.Black),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White,
-            contentColor = Color.Black
-        )
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp)
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()

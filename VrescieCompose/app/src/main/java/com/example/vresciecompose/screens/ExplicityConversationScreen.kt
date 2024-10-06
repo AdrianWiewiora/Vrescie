@@ -54,7 +54,16 @@ fun ExplicitConversationScreen(
 
     BackHandler {
         onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
-        viewModel.resetMessages()
+
+    }
+
+    DisposableEffect(Unit) {
+        Log.d("DisposableEffect", "Effect started1")  // Log przy inicjalizacji
+
+        onDispose {
+            Log.d("DisposableEffect", "Effect disposed1")  // Log przy wywołaniu onDispose
+            viewModel.resetMessages()
+        }
     }
 
     viewModel.setConversationIdExplicit(conversationID)

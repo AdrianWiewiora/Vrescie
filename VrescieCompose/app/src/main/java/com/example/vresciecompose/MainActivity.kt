@@ -31,7 +31,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.vresciecompose.authentication.GoogleAuthentication
 import com.example.vresciecompose.data.UserChatPrefs
 import com.example.vresciecompose.data.UserChatPrefsDao
-import com.example.vresciecompose.screens.removeUserFromFirebaseDatabase
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.ConversationViewModel

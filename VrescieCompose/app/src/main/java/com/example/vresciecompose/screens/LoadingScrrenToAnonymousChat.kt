@@ -1,5 +1,6 @@
 package com.example.vresciecompose.screens
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -22,10 +23,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import com.example.vresciecompose.Navigation
+import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -37,16 +40,24 @@ import java.util.TimerTask
 
 
 @Composable
-fun LoadingToAnonymousChatScreen(onClick: (String) -> Unit) {
+fun LoadingToAnonymousChatScreen(
+    onClick: (String) -> Unit,
+) {
+    Log.d("LoadingToAnonymousChatScreen", "LoadingToAnonymousChatScreen Composed")
+    val hasNavigated = remember { mutableStateOf(false) }
+
     val currentUser = FirebaseAuth.getInstance().currentUser
 
     // Dodajemy efekt do zapisu lastSeen co 10 sekund
     val timer = remember { Timer() }
 
     DisposableEffect(true) {
+        Log.d("DisposableEffect", "Effect started - Timer scheduled")
+
         val task = object : TimerTask() {
             override fun run() {
                 currentUser?.uid?.let { userId ->
+                    Log.d("DisposableEffect", "Updating lastSeen for userId: $userId")
                     updateUserLastSeen(userId)
                 }
             }
@@ -55,12 +66,16 @@ fun LoadingToAnonymousChatScreen(onClick: (String) -> Unit) {
         timer.schedule(task, 0, 10000)
 
         onDispose {
+            Log.d("DisposableEffect", "Effect disposed - Timer cancelled and user removed")
+
             timer.cancel()
             currentUser?.uid?.let { userId ->
+                Log.d("DisposableEffect", "Removing user from Firebase for userId: $userId")
                 removeUserFromFirebaseDatabase(userId)
             }
         }
     }
+
 
     // nasłuchiwanie nowych konwersacji dla zalogowanego użytkownika
     val conversationRef = Firebase.database.reference.child("conversations")
@@ -71,8 +86,10 @@ fun LoadingToAnonymousChatScreen(onClick: (String) -> Unit) {
             if (userId != null && conversationData != null && userId in (conversationData["members"] as? Map<*, *> ?: emptyMap<String, Any>())) {
                 val canConnected = conversationData["canConnected"] as? Boolean
                 val conversationID = snapshot.key
-                if (canConnected == true) {
+                if (canConnected == true && !hasNavigated.value) {
+                    Log.d("Navigation", "Navigate to new conversation")
                     onClick("${Navigation.Destinations.ANONYMOUS_CONVERSATION}/$conversationID")
+                    hasNavigated.value = true // Ustaw flagę, że nawigacja miała miejsce
                 }
             }
         }

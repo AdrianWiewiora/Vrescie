@@ -1,7 +1,6 @@
 package com.example.vresciecompose.screens
 
 import android.util.Log
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,9 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,23 +16,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AddReaction
+import androidx.compose.material.icons.filled.HighlightOff
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.MessageList
+import com.example.vresciecompose.ui.components.MessageType
+import com.example.vresciecompose.ui.components.SimpleAlertDialog
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
@@ -49,14 +54,16 @@ import com.google.firebase.database.ValueEventListener
 @Composable
 fun AnonymousConversationScreen(
     conversationID: String,
-    onClick: (String) -> Unit,
+    onNavigate: (String) -> Unit,
     viewModel: ConversationViewModel
 ) {
+    Log.d("AnonymousConversationScreen", "AnonymousConversationScreen Composed")
+
     // Pole tekstowe do wprowadzania wiadomości
-    var messageText by remember { mutableStateOf("") }
+    val (messageText, setMessageText) = remember { mutableStateOf("") }
     val showDialogLike = remember { mutableStateOf(false) }
     val showDialogLikeNotification = remember { mutableStateOf(false) }
-    val showDialog = remember { mutableStateOf(false) }
+    val showExitDialog = remember { mutableStateOf(false) }
     var conversationRef by remember { mutableStateOf<DatabaseReference?>(null) }
 
     // Zdefiniuj likeEventListener
@@ -69,7 +76,6 @@ fun AnonymousConversationScreen(
             conversationRef!!.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val likesCount = snapshot.childrenCount.toInt()
-
                     // Sprawdź, czy są dwa lajki
                     if (likesCount >= 2) {
                         showDialogLikeNotification.value = true
@@ -98,17 +104,28 @@ fun AnonymousConversationScreen(
     conversationRef!!.addChildEventListener(likeEventListener)
 
     BackHandler {
-        showDialog.value = true
+        showExitDialog.value = true
     }
 
-    if (showDialog.value) {
-        BackToMenuConfirmationDialog(
+    DisposableEffect(Unit) {
+        Log.d("DisposableEffect", "Effect started2")  // Log przy inicjalizacji
+
+        onDispose {
+            Log.d("DisposableEffect", "Effect disposed2")  // Log przy wywołaniu onDispose
+
+            conversationRef?.removeEventListener(likeEventListener)
+            viewModel.resetMessages()
+        }
+    }
+
+    if (showExitDialog.value) {
+        SimpleAlertDialog(
             onConfirm = {
                 // Pobranie aktualnie zalogowanego użytkownika
                 val currentUser = FirebaseAuth.getInstance().currentUser
                 val currentUserID = currentUser?.uid
 
-                showDialog.value = false
+                showExitDialog.value = false
                 // Aktualizacja wartości w Firebase Realtime Database
                 val database = FirebaseDatabase.getInstance()
                 val conversationRef2 = database.reference
@@ -120,28 +137,32 @@ fun AnonymousConversationScreen(
                 }
                 viewModel.sendMessage("Użytkownik się rozłączył", senderId = "system")
                 // Przejście do głównego menu
-                onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
+                onNavigate("${Navigation.Destinations.MAIN_MENU}/${1}")
             },
             onDismiss = {
-                showDialog.value = false
-            }
+                showExitDialog.value = false
+            },
+            text1 = "Potwierdź wyjście",
+            text2 = "Czy na pewno chcesz wyjść z konwersacji?"
         )
     }
 
     if (showDialogLike.value) {
-        ShowAddLikeConfirmationDialog(
+        SimpleAlertDialog(
             onConfirm = {
                 showDialogLike.value = false
                 addLike(conversationID)
             },
             onDismiss = {
                 showDialogLike.value = false
-            }
+            },
+            text1 = "Potwierdź polubienie",
+            text2 = "Czy na pewno chcesz polubić osobę z którą rozmawiasz?"
         )
     }
 
     if (showDialogLikeNotification.value) {
-        ShowLikeNotificationDialog(
+        SimpleAlertDialog(
             onConfirm = {
                 showDialogLikeNotification.value = false
 
@@ -159,21 +180,48 @@ fun AnonymousConversationScreen(
                 }
                 //viewModel.sendMessage("Początek jawnej konwersacji", senderId = "system")
 
-                onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
+                onNavigate("${Navigation.Destinations.MAIN_MENU}/${2}")
             },
             onDismiss = {
                 showDialogLikeNotification.value = false
-            }
+            },
+            text1 = "Brawo!!! Użytkownik cię polubił.",
+            text2 = "Czy chcesz opuścić konwersację by przejść do jawnej konwersacji?"
         )
     }
 
     viewModel.setConversationId(conversationID)
     val messages by viewModel.messages.collectAsState()
 
-    Column(
+    fun sendMessageToDb(message: String) {
+        viewModel.sendMessage(message)
+    }
+
+    AnonymousConversationColumn(
         modifier = Modifier
             .fillMaxSize()
             .imePadding(),
+        showExitDialog = showExitDialog,
+        showDialogLike = showDialogLike,
+        messages = messages,
+        messageText = messageText,
+        setMessageText = setMessageText,
+        sendMessageToDb = ::sendMessageToDb
+    )
+}
+
+@Composable
+fun AnonymousConversationColumn(
+    modifier: Modifier = Modifier,
+    showExitDialog: MutableState<Boolean> = remember { mutableStateOf(false) },
+    showDialogLike: MutableState<Boolean> = remember { mutableStateOf(false) },
+    messages: List<Pair<String, MessageType>> = emptyList(),
+    messageText: String = "",
+    setMessageText: (String) -> Unit = {},
+    sendMessageToDb: (String) -> Unit = {},
+){
+    Column(
+        modifier = modifier,
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(
@@ -198,20 +246,21 @@ fun AnonymousConversationScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.baseline_add_reaction_24),
+                    imageVector = Icons.Filled.AddReaction,
                     contentDescription = "Add Like",
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier
+                        .size(dimensionResource(R.dimen.image_medium_size))
                         .clickable {
                             showDialogLike.value = true
                         }
                 )
 
                 Icon(
-                    painter = painterResource(id = R.drawable.baseline_menu_24),
+                    imageVector = Icons.Filled.Menu,
                     contentDescription = "Menu",
                     modifier = Modifier
-                        .size(52.dp)
-                        .padding(end = 4.dp)
+                        .size(dimensionResource(R.dimen.image_medium_size))
+                        .padding(vertical = 5.dp)
                 )
             }
         }
@@ -219,134 +268,55 @@ fun AnonymousConversationScreen(
         MessageList(
             messages = messages,
             modifier = Modifier.weight(1f)
+                .padding(horizontal = 15.dp)
+                .padding(vertical = 0.dp),
         )
 
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 5.dp, vertical = 0.dp)
-                .padding(bottom = 3.dp),
+                .padding(horizontal = 5.dp, vertical = 0.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.baseline_highlight_off_24),
+                imageVector = Icons.Filled.HighlightOff,
                 contentDescription = "Cancel",
                 modifier = Modifier.size(55.dp)
                     .clickable {
-                        showDialog.value = true
+                        showExitDialog.value = true
                     }
             )
 
-            TextField(
+            OutlinedTextField(
                 value = messageText,
-                onValueChange = { messageText = it },
+                onValueChange = { setMessageText(it) },
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 5.dp),
-                textStyle = TextStyle(
-                    color = Color.Black,
-                    fontSize = 18.sp
-                ),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White,
-                    unfocusedLabelColor = Color.Black,
-                    focusedIndicatorColor = Color.Black,
-                    unfocusedIndicatorColor = Color.Black,
-                    cursorColor = Color.Black
-                ),
-                placeholder = { Text(text = "Wpisz wiadomość", color = Color.Black) },
+                    .padding(vertical = 3.dp)
+                    .weight(1f),
+                shape = RoundedCornerShape(25.dp),
+                textStyle = MaterialTheme.typography.bodyLarge,
+                placeholder = { Text(text = "Wpisz wiadomość", modifier = Modifier.padding(top = 5.dp)) },
+                singleLine = false,
                 maxLines = 5,
             )
 
             Icon(
-                painter = painterResource(id = R.drawable.baseline_send_24),
+                imageVector = Icons.AutoMirrored.Filled.Send,
                 contentDescription = "Send",
                 modifier = Modifier
                     .size(50.dp)
                     .clickable {
-                        messageText = messageText.trimEnd(' ', '\n')
-                        viewModel.sendMessage(messageText)
-                        messageText = ""
+                        setMessageText(messageText.trimEnd(' ', '\n'))
+                        sendMessageToDb(messageText)
+                        setMessageText("")
                     }
             )
         }
     }
 }
 
-@Composable
-fun BackToMenuConfirmationDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = "Potwierdź wyjście")
-        },
-        text = {
-            Text(text = "Czy na pewno chcesz wyjść z konwersacji?")
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onConfirm()
-                }
-            ) {
-                Text(text = "Tak")
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = {
-                    onDismiss()
-                }
-            ) {
-                Text(text = "Nie")
-            }
-        }
-    )
-}
-
-
-@Composable
-fun ShowAddLikeConfirmationDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = {
-            onDismiss()
-        },
-        title = {
-            Text(text = "Potwierdź polubienie")
-        },
-        text = {
-            Text(text = "Czy na pewno chcesz polubić osobę z którą rozmawiasz?")
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onConfirm()
-                }
-            ) {
-                Text(text = "Tak")
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = {
-                    onDismiss()
-                }
-            ) {
-                Text(text = "Nie")
-            }
-        }
-    )
-}
 
 fun addLike(conversationID : String) {
     val conversationRef = FirebaseDatabase.getInstance().reference
@@ -359,38 +329,12 @@ fun addLike(conversationID : String) {
     }
 }
 
+@Preview
 @Composable
-fun ShowLikeNotificationDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = {
-            onDismiss()
-        },
-        title = {
-            Text(text = "Brawo!!! Użytkownik cię polubił.")
-        },
-        text = {
-            Text(text = "Czy chcesz opuścić konwersację by przejść do jawnej konwersacji?")
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onConfirm()
-                }
-            ) {
-                Text(text = "Tak")
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = {
-                    onDismiss()
-                }
-            ) {
-                Text(text = "Nie")
-            }
-        }
+fun AnonymousConversationColumnPreview() {
+    AnonymousConversationColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding(),
     )
 }

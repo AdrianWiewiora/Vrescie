@@ -2,6 +2,7 @@ package com.example.vresciecompose
 
 import android.app.Activity.RESULT_OK
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -178,7 +179,7 @@ fun AppNavigation(
             val conversationID = backStackEntry.arguments?.getString("conversationID") ?: ""
             AnonymousConversationScreen(
                 conversationID = conversationID,
-                onClick = { route -> navController.navigate(route) },
+                onNavigate = { route -> navController.navigate(route); Log.d("Navigation3", "Dupa Composed"); Log.d("Navigation3", "Dupa $route") },
                 conversationViewModel
             )
         }
