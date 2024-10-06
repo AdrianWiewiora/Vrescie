@@ -61,5 +61,10 @@ open class ProfileViewModel : ViewModel() {
         return _isProfileConfigured.value ?: false
     }
 
+    // Nowa metoda do ustawiania wartości profileConfigured
+    fun setProfileConfigured(isConfigured: Boolean) {
+        _isProfileConfigured.value = isConfigured
+    }
+
 }
 

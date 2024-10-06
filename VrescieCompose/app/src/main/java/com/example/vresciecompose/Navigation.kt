@@ -150,7 +150,8 @@ fun AppNavigation(
         composable(Navigation.Destinations.FIRST_CONFIGURATION) {
             FirstConfigurationProfileScreen(
                 onClick = { navController.navigate(route = it) },
-                configurationProfileViewModel = configurationProfileViewModel
+                configurationProfileViewModel = configurationProfileViewModel,
+                profileViewModel = profileViewModel
             )
         }
         composable(Navigation.Destinations.REGISTRATION) {

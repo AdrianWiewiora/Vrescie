@@ -17,9 +17,8 @@ class ConfigurationProfileViewModel : ViewModel() {
         userRef.child("name").setValue(name)
         userRef.child("age").setValue(age)
         userRef.child("gender").setValue(gender)
-        userRef.child("join_time").setValue(ServerValue.TIMESTAMP) // Firebase timestamp for join time
+        userRef.child("join_time").setValue(ServerValue.TIMESTAMP)
 
-        // Po zapisaniu danych użytkownika, wywołaj onComplete
         onComplete()
     }
 
