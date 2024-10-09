@@ -157,7 +157,7 @@ fun TopRowMenu(modifier: Modifier, onClick: (String) -> Unit){
         ) {
             Icon(
                 imageVector = Icons.Filled.Settings,
-                contentDescription = stringResource(R.string.settings_pl),
+                contentDescription = stringResource(R.string.settings),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .size(dimensionResource(R.dimen.image_medium_size))
@@ -218,21 +218,21 @@ fun BottomMenu(
         modifier = modifier
     ) {
         MenuItem(
-            text = stringResource(id = R.string.v_czat_pl),
+            text = stringResource(id = R.string.v_czat),
             icon = Icons.Filled.AddComment,
             modifier = Modifier.weight(1f)
                 .clickable(onClick = { setCurrentFragment(1) }),
             color = if(currentFragment == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
         )
         MenuItem(
-            text = stringResource(id = R.string.chats_pl),
+            text = stringResource(id = R.string.chats),
             icon = Icons.Filled.MarkChatRead,
             modifier = Modifier.weight(1f)
                 .clickable(onClick = { setCurrentFragment(2) }),
             color = if(currentFragment == 2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
         )
         MenuItem(
-            text = stringResource(id = R.string.profile_pl),
+            text = stringResource(id = R.string.profile),
             icon = Icons.Filled.AccountCircle,
             modifier = Modifier
                 .weight(1f)
