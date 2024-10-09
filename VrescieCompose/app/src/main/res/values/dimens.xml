@@ -5,4 +5,9 @@
     <dimen name="image_medium_size">50dp</dimen>
     <dimen name="icon_settings_size">35dp</dimen>
     <dimen name="icon_small_size">40dp</dimen>
+
+    <dimen name="message_small_size">10sp</dimen>
+    <dimen name="message_normal_size">14sp</dimen>
+    <dimen name="message_big_size">18sp</dimen>
+    <dimen name="message_huge_size">22sp</dimen>
 </resources>

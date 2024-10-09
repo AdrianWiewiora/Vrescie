@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.Navigation
@@ -48,6 +50,7 @@ import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.MessageList
 import com.example.vresciecompose.ui.components.MessageType
 import com.example.vresciecompose.view_models.ConversationViewModel
+import com.example.vresciecompose.view_models.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -60,8 +63,19 @@ import com.google.firebase.database.ValueEventListener
 fun ExplicitConversationScreen(
     conversationID: String,
     onClick: (String) -> Unit,
-    viewModel: ConversationViewModel
+    viewModel: ConversationViewModel,
+    settingsViewModel: SettingsViewModel,
 ) {
+    val currentMessageSize by settingsViewModel.messageSizeFlow.observeAsState(1)
+    // Mapowanie rozmiarów czcionek na TextUnit
+    val messageFontSize = when (currentMessageSize) {
+        0 -> dimensionResource(id = R.dimen.message_small_size) // 10sp
+        1 -> dimensionResource(id = R.dimen.message_normal_size) // 14sp
+        2 -> dimensionResource(id = R.dimen.message_big_size) // 18sp
+        3 -> dimensionResource(id = R.dimen.message_huge_size) // 22sp
+        else -> dimensionResource(id = R.dimen.message_normal_size) // Domyślny rozmiar
+    }.value.sp // Konwersja na TextUnit
+
     // Pole tekstowe do wprowadzania wiadomości
     val (messageText, setMessageText) = remember { mutableStateOf("") }
 
@@ -92,7 +106,8 @@ fun ExplicitConversationScreen(
         messages = messages,
         messageText = messageText,
         setMessageText = setMessageText,
-        sendMessage = ::sendMessage
+        sendMessage = ::sendMessage,
+        messageFontSize = messageFontSize
     )
 
 
@@ -106,6 +121,7 @@ fun ExplicitConversationColumn(
     messageText: String = "",
     setMessageText: (String) -> Unit = {},
     sendMessage: (String) -> Unit = {},
+    messageFontSize: TextUnit = 14.sp
 ){
 
     Column(
@@ -158,6 +174,7 @@ fun ExplicitConversationColumn(
                 .weight(1f)
                 .padding(horizontal = 15.dp)
                 .padding(vertical = 0.dp),
+            messageFontSize = messageFontSize
         )
 
 

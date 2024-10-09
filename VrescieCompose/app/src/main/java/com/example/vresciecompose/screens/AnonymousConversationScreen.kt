@@ -36,14 +36,18 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.MessageList
 import com.example.vresciecompose.ui.components.MessageType
 import com.example.vresciecompose.ui.components.SimpleAlertDialog
 import com.example.vresciecompose.view_models.ConversationViewModel
+import com.example.vresciecompose.view_models.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -57,9 +61,20 @@ import com.google.firebase.database.ValueEventListener
 fun AnonymousConversationScreen(
     conversationID: String,
     onNavigate: (String) -> Unit,
-    viewModel: ConversationViewModel
+    viewModel: ConversationViewModel,
+    settingsViewModel: SettingsViewModel,
 ) {
     Log.d("AnonymousConversationScreen", "AnonymousConversationScreen Composed")
+
+    val currentMessageSize by settingsViewModel.messageSizeFlow.observeAsState(1)
+    // Mapowanie rozmiarów czcionek na TextUnit
+    val messageFontSize = when (currentMessageSize) {
+        0 -> dimensionResource(id = R.dimen.message_small_size) // 10sp
+        1 -> dimensionResource(id = R.dimen.message_normal_size) // 14sp
+        2 -> dimensionResource(id = R.dimen.message_big_size) // 18sp
+        3 -> dimensionResource(id = R.dimen.message_huge_size) // 22sp
+        else -> dimensionResource(id = R.dimen.message_normal_size) // Domyślny rozmiar
+    }.value.sp // Konwersja na TextUnit
 
     // Pole tekstowe do wprowadzania wiadomości
     val (messageText, setMessageText) = remember { mutableStateOf("") }
@@ -207,7 +222,8 @@ fun AnonymousConversationScreen(
         messages = messages,
         messageText = messageText,
         setMessageText = setMessageText,
-        sendMessageToDb = ::sendMessageToDb
+        sendMessageToDb = ::sendMessageToDb,
+        messageFontSize = messageFontSize
     )
 }
 
@@ -220,6 +236,7 @@ fun AnonymousConversationColumn(
     messageText: String = "",
     setMessageText: (String) -> Unit = {},
     sendMessageToDb: (String) -> Unit = {},
+    messageFontSize: TextUnit = 14.sp
 ){
     Column(
         modifier = modifier,
@@ -289,6 +306,7 @@ fun AnonymousConversationColumn(
             modifier = Modifier.weight(1f)
                 .padding(horizontal = 15.dp)
                 .padding(vertical = 0.dp),
+            messageFontSize = messageFontSize
         )
 
 

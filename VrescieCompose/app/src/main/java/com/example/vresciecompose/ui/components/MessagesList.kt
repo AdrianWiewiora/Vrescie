@@ -15,7 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.vresciecompose.view_models.SettingsViewModel
 
 enum class MessageType {
     Received, Sent, System
@@ -24,7 +27,8 @@ enum class MessageType {
 @Composable
 fun MessageList(
     messages: List<Pair<String, MessageType>>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    messageFontSize: TextUnit = 14.sp
 ) {
     Card(
         modifier = modifier
@@ -41,7 +45,7 @@ fun MessageList(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start
                         ) {
-                            ReceivedMessage(message)
+                            ReceivedMessage(message, messageFontSize)
                         }
                     }
                     MessageType.Sent -> {
@@ -49,7 +53,7 @@ fun MessageList(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
                         ) {
-                            SentMessage(message)
+                            SentMessage(message, messageFontSize)
                         }
                     }
                     MessageType.System -> {
@@ -57,7 +61,7 @@ fun MessageList(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            SystemMessage(message)
+                            SystemMessage(message, messageFontSize)
                         }
                     }
                 }
@@ -80,6 +84,7 @@ fun MessageListPreview() {
     MessageList(
         messages = messages,
         modifier = Modifier
-            .padding(16.dp)
+            .padding(16.dp),
+        messageFontSize = 14.sp
     )
 }

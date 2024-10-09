@@ -11,6 +11,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 
 data class Message(
     val senderId: String = "",
@@ -22,7 +24,7 @@ data class Message(
 
 
 @Composable
-fun ReceivedMessage(message: String) {
+fun ReceivedMessage(message: String, messageFontSize: TextUnit) {
     Card(
         modifier = Modifier.padding(8.dp)
             .padding(end = 25.dp),
@@ -34,13 +36,16 @@ fun ReceivedMessage(message: String) {
     ) {
         Text(
             text = message,
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .padding(vertical = 5.dp),
+            fontSize = messageFontSize
         )
     }
 }
 
 @Composable
-fun SentMessage(message: String) {
+fun SentMessage(message: String, messageFontSize: TextUnit) {
     Card(
         modifier = Modifier.padding(8.dp)
             .padding(start = 25.dp),
@@ -52,14 +57,17 @@ fun SentMessage(message: String) {
     ) {
         Text(
             text = message,
-            modifier = Modifier.padding(8.dp),
-            textAlign = TextAlign.End
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .padding(vertical = 5.dp),
+            textAlign = TextAlign.End,
+            fontSize = messageFontSize
         )
     }
 }
 
 @Composable
-fun SystemMessage(message: String) {
+fun SystemMessage(message: String, messageFontSize: TextUnit) {
     Card(
         modifier = Modifier.padding(8.dp),
         shape = RoundedCornerShape(20.dp),
@@ -70,8 +78,11 @@ fun SystemMessage(message: String) {
     ) {
         Text(
             text = message,
-            modifier = Modifier.padding(8.dp),
-            textAlign = TextAlign.Center
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .padding(vertical = 5.dp),
+            textAlign = TextAlign.Center,
+            fontSize = messageFontSize
         )
     }
 }

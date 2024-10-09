@@ -16,13 +16,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -43,11 +41,16 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
     onNavigate: (String) -> Unit
 ){
-
+    //Wygląd
     // Odczyt aktualnego motywu
     val currentTheme by settingsViewModel.getCurrentTheme().observeAsState(0) // 0 = domyślny
     fun saveThemeVM(theme: Int){
         settingsViewModel.saveTheme(theme)
+    }
+    //Odczyt aktualnej wielkości czcionki wiadomości
+    val currentMessageSize by settingsViewModel.getCurrentMessageSize().observeAsState(1)
+    fun saveMessageSizeVM(size: Int){
+        settingsViewModel.saveMessageSize(size)
     }
 
     Settings(
@@ -55,7 +58,9 @@ fun SettingsScreen(
             .fillMaxSize(),
         onNavigate = onNavigate,
         currentTheme = currentTheme,
-        saveThemeVM = ::saveThemeVM
+        saveThemeVM = ::saveThemeVM,
+        currentMessageSize = currentMessageSize,
+        saveMessageSizeVM = ::saveMessageSizeVM
     )
 }
 
@@ -65,7 +70,9 @@ fun Settings(
     modifier: Modifier,
     onNavigate: (String) -> Unit,
     currentTheme: Int,
-    saveThemeVM: (Int) -> Unit
+    saveThemeVM: (Int) -> Unit,
+    currentMessageSize: Int = 1,
+    saveMessageSizeVM: (Int) -> Unit
 ){
     Column(
         modifier = modifier
@@ -90,7 +97,9 @@ fun Settings(
                 .padding(top = 5.dp, bottom = 8.dp)
                 .fillMaxSize(),
             saveThemeVM,
-            currentTheme
+            currentTheme,
+            currentMessageSize,
+            saveMessageSizeVM
         )
     }
 }
@@ -99,7 +108,9 @@ fun Settings(
 fun SettingsContent(
     modifier: Modifier,
     saveThemeVM: (Int) -> Unit,
-    currentTheme: Int
+    currentTheme: Int,
+    currentMessageSize: Int,
+    saveMessageSizeVM: (Int) -> Unit
 ){
     val (currentContent, setCurrentContent) = remember { mutableStateOf("settingsList") }
 
@@ -135,7 +146,9 @@ fun SettingsContent(
                         .padding(16.dp),
                     setCurrentContent,
                     saveThemeVM,
-                    currentTheme
+                    currentTheme,
+                    currentMessageSize,
+                    saveMessageSizeVM
                 )
             }
 
@@ -173,10 +186,13 @@ fun AppearanceSettings(
     modifier: Modifier = Modifier,
     setCurrentContent: (String) -> Unit,
     saveThemeVM: (Int) -> Unit,
-    currentTheme: Int
+    currentTheme: Int,
+    currentMessageSize: Int = 1,
+    saveMessageSizeVM: (Int) -> Unit
 ){
     // Zmienna sterująca widocznością AlertDialog
-    var showDialog by remember { mutableStateOf(false) }
+    var showDialogTheme by remember { mutableStateOf(false) }
+    var showDialogMessageSize by remember { mutableStateOf(false) }
     BackHandler {
         setCurrentContent("settingsList")
     }
@@ -189,13 +205,14 @@ fun AppearanceSettings(
             text = "Motyw",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier
-                .clickable { showDialog = true }
+                .clickable { showDialogTheme = true }
                 .padding(bottom = dimensionResource(R.dimen.padding_medium))
         )
         Text(
             text = "Rozmiar czcionki dla wiadomości",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier
+                .clickable { showDialogMessageSize = true }
                 .padding(bottom = dimensionResource(R.dimen.padding_medium))
         )
         Text(
@@ -204,10 +221,10 @@ fun AppearanceSettings(
             modifier = Modifier
         )
 
-        // Wyświetlenie AlertDialog jeśli showDialog jest true
-        if (showDialog) {
+        // Theme Dialog
+        if (showDialogTheme) {
             AlertDialog(
-                onDismissRequest = { showDialog = false },
+                onDismissRequest = { showDialogTheme = false },
                 title = { Text(text = "Motyw") },
                 text = {
                     Column {
@@ -216,7 +233,7 @@ fun AppearanceSettings(
                                 selected =  currentTheme == 0,
                                 onClick = {
                                     saveThemeVM(0)
-                                    showDialog = false
+                                    showDialogTheme = false
                                 }
                             )
                             Text(text = "Domyślny systemowy")
@@ -226,7 +243,7 @@ fun AppearanceSettings(
                                 selected =  currentTheme == 1,
                                 onClick = {
                                     saveThemeVM(1)
-                                    showDialog = false
+                                    showDialogTheme = false
                                 }
                             )
                             Text(text = "Jasny")
@@ -236,7 +253,7 @@ fun AppearanceSettings(
                                 selected = currentTheme == 2,
                                 onClick = {
                                     saveThemeVM(2)
-                                    showDialog = false
+                                    showDialogTheme = false
                                 }
                             )
                             Text(text = "Ciemny")
@@ -246,7 +263,7 @@ fun AppearanceSettings(
                                 selected = currentTheme == 3,
                                 onClick = {
                                     saveThemeVM(3)
-                                    showDialog = false
+                                    showDialogTheme = false
                                 }
                             )
                             Text(text = "Wysoki kontrast - Ciemny")
@@ -256,10 +273,63 @@ fun AppearanceSettings(
                                 selected = currentTheme == 4,
                                 onClick = {
                                     saveThemeVM(4)
-                                    showDialog = false
+                                    showDialogTheme = false
                                 }
                             )
                             Text(text = "Wysoki kontrast - Jasny")
+                        }
+                    }
+                },
+                confirmButton = {},
+            )
+        }
+
+        // MessageSize Dialog
+        if (showDialogMessageSize) {
+            AlertDialog(
+                onDismissRequest = { showDialogMessageSize = false },
+                title = { Text(text = "Motyw") },
+                text = {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected =  currentMessageSize == 0,
+                                onClick = {
+                                    saveMessageSizeVM(0)
+                                    showDialogMessageSize = false
+                                }
+                            )
+                            Text(text = "Mały")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected =  currentMessageSize == 1,
+                                onClick = {
+                                    saveMessageSizeVM(1)
+                                    showDialogMessageSize = false
+                                }
+                            )
+                            Text(text = "Normalny")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = currentMessageSize == 2,
+                                onClick = {
+                                    saveMessageSizeVM(2)
+                                    showDialogMessageSize = false
+                                }
+                            )
+                            Text(text = "Duży")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = currentMessageSize == 3,
+                                onClick = {
+                                    saveMessageSizeVM(3)
+                                    showDialogMessageSize = false
+                                }
+                            )
+                            Text(text = "Bardzo duży")
                         }
                     }
                 },
@@ -279,6 +349,8 @@ fun SettingsAppearancePreview(){
         setCurrentContent = {},
         saveThemeVM = {},
         currentTheme = 0,
+        currentMessageSize = 1,
+        saveMessageSizeVM = {}
     )
 }
 
@@ -290,6 +362,8 @@ fun SettingsPreview(){
         onNavigate = {},
         saveThemeVM = {},
         currentTheme = 0,
+        currentMessageSize = 1,
+        saveMessageSizeVM = {}
     )
 }
 

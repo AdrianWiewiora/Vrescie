@@ -12,6 +12,7 @@ class SettingsViewModel(
 ) : ViewModel() {
 
     val themeFlow = repository.themeFlow.asLiveData()
+    val messageSizeFlow = repository.messageSizeFlow.asLiveData()
 
     fun saveTheme(theme: Int) {
         viewModelScope.launch {
@@ -21,5 +22,15 @@ class SettingsViewModel(
 
     fun getCurrentTheme(): LiveData<Int> {
         return themeFlow
+    }
+
+    fun saveMessageSize(size: Int) {
+        viewModelScope.launch {
+            repository.saveMessageSize(size)
+        }
+    }
+
+    fun getCurrentMessageSize(): LiveData<Int> {
+        return messageSizeFlow
     }
 }

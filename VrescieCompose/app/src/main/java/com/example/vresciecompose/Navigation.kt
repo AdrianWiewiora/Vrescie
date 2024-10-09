@@ -190,7 +190,8 @@ fun AppNavigation(
             AnonymousConversationScreen(
                 conversationID = conversationID,
                 onNavigate = { route -> navController.navigate(route); Log.d("Navigation3", "Dupa Composed"); Log.d("Navigation3", "Dupa $route") },
-                conversationViewModel
+                conversationViewModel,
+                settingsViewModel = settingsViewModel
             )
         }
         composable(Navigation.Destinations.EXPLICIT_CONVERSATION + "/{conversationID}",
@@ -200,7 +201,8 @@ fun AppNavigation(
             ExplicitConversationScreen(
                 conversationID = conversationID,
                 onClick = { route -> navController.navigate(route) },
-                conversationViewModel
+                conversationViewModel,
+                settingsViewModel = settingsViewModel
             )
         }
 
