@@ -14,6 +14,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 enum class MessageType {
@@ -65,3 +66,20 @@ fun MessageList(
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun MessageListPreview() {
+    val messages = listOf(
+        "Hello, how are you?" to MessageType.Received,
+        "I'm doing great, thanks!" to MessageType.Sent,
+        "System message: User joined the chat" to MessageType.System,
+        "What about you?" to MessageType.Received,
+        "I'm fine too, thank you!" to MessageType.Sent
+    )
+
+    MessageList(
+        messages = messages,
+        modifier = Modifier
+            .padding(16.dp)
+    )
+}

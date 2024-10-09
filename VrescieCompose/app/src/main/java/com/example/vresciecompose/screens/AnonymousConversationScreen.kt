@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.AddReaction
 import androidx.compose.material.icons.filled.HighlightOff
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.DisposableEffect
@@ -199,8 +201,7 @@ fun AnonymousConversationScreen(
 
     AnonymousConversationColumn(
         modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
+            .fillMaxSize(),
         showExitDialog = showExitDialog,
         showDialogLike = showDialogLike,
         messages = messages,
@@ -226,8 +227,7 @@ fun AnonymousConversationColumn(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 2.dp, vertical = 2.dp),
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -235,33 +235,52 @@ fun AnonymousConversationColumn(
                 painter = painterResource(id = R.drawable.logotype_vreescie_svg),
                 contentDescription = "logotyp",
                 modifier = Modifier
-                    .padding(horizontal = 5.dp)
                     .size(width = 198.dp, height = 47.dp)
+                    .padding(2.dp)
             )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 0.dp, vertical = 1.dp),
+                    .padding(horizontal = 0.dp, vertical = 0.dp),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Filled.AddReaction,
-                    contentDescription = "Add Like",
+                IconButton(
+                    onClick = {
+                        showDialogLike.value = true
+                    },
                     modifier = Modifier
+                        .padding(end = 5.dp)
                         .size(dimensionResource(R.dimen.image_medium_size))
-                        .clickable {
-                            showDialogLike.value = true
-                        }
-                )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.AddReaction,
+                        contentDescription = "Add Like",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(dimensionResource(R.dimen.image_medium_size))
+                            .padding(vertical = 4.dp)
 
-                Icon(
-                    imageVector = Icons.Filled.Menu,
-                    contentDescription = "Menu",
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+
+                    },
                     modifier = Modifier
                         .size(dimensionResource(R.dimen.image_medium_size))
-                        .padding(vertical = 5.dp)
-                )
+                        .padding(end = 5.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Menu,
+                        contentDescription = "Menu",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(dimensionResource(R.dimen.image_medium_size))
+
+                    )
+                }
             }
         }
 
@@ -276,43 +295,57 @@ fun AnonymousConversationColumn(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(60.dp)
                 .padding(horizontal = 5.dp, vertical = 0.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Filled.HighlightOff,
-                contentDescription = "Cancel",
-                modifier = Modifier.size(55.dp)
-                    .clickable {
-                        showExitDialog.value = true
-                    }
-            )
+            IconButton(
+                onClick = {
+                    showExitDialog.value = true
+                },
+                modifier = Modifier
+                    .size(55.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.HighlightOff,
+                    contentDescription = "Cancel",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(55.dp)
+                )
+            }
 
             OutlinedTextField(
                 value = messageText,
                 onValueChange = { setMessageText(it) },
                 modifier = Modifier
-                    .padding(vertical = 3.dp)
+                    .padding(vertical = 5.dp)
                     .weight(1f),
                 shape = RoundedCornerShape(25.dp),
-                textStyle = MaterialTheme.typography.bodyLarge,
-                placeholder = { Text(text = "Wpisz wiadomość", modifier = Modifier.padding(top = 5.dp)) },
+                textStyle = MaterialTheme.typography.bodyMedium,
+                placeholder = { Text(text = "Wpisz wiadomość", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 0.dp)) },
                 singleLine = false,
                 maxLines = 5,
             )
 
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = "Send",
+            IconButton(
+                onClick = {
+                    setMessageText(messageText.trimEnd(' ', '\n'))
+                    sendMessageToDb(messageText)
+                    setMessageText("")
+                },
                 modifier = Modifier
                     .size(50.dp)
-                    .clickable {
-                        setMessageText(messageText.trimEnd(' ', '\n'))
-                        sendMessageToDb(messageText)
-                        setMessageText("")
-                    }
-            )
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(50.dp)
+                )
+            }
         }
     }
 }

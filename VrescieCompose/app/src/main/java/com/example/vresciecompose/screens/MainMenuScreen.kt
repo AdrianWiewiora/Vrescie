@@ -140,7 +140,8 @@ fun WholeMenu(
 fun TopRowMenu(modifier: Modifier){
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
             painter = painterResource(id = R.drawable.logotype_vreescie_svg),
@@ -152,14 +153,14 @@ fun TopRowMenu(modifier: Modifier){
         IconButton(
             onClick = {},
             modifier = Modifier
-                .size(dimensionResource(R.dimen.icon_settings_size))
+                .size(dimensionResource(R.dimen.image_medium_size))
         ) {
             Icon(
                 imageVector = Icons.Filled.Settings,
                 contentDescription = stringResource(R.string.settings_pl),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .size(dimensionResource(R.dimen.icon_settings_size))
+                    .size(dimensionResource(R.dimen.image_medium_size))
             )
         }
     }

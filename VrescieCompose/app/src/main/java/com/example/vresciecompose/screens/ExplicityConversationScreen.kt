@@ -13,7 +13,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -27,13 +36,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.MessageList
+import com.example.vresciecompose.ui.components.MessageType
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
@@ -50,11 +63,10 @@ fun ExplicitConversationScreen(
     viewModel: ConversationViewModel
 ) {
     // Pole tekstowe do wprowadzania wiadomości
-    var messageText by remember { mutableStateOf("") }
+    val (messageText, setMessageText) = remember { mutableStateOf("") }
 
     BackHandler {
         onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
-
     }
 
     DisposableEffect(Unit) {
@@ -69,16 +81,40 @@ fun ExplicitConversationScreen(
     viewModel.setConversationIdExplicit(conversationID)
     val messages by viewModel.messages.collectAsState()
 
-    Column(
+    fun sendMessage(message: String) {
+        viewModel.sendMessageExp(message)
+    }
+
+
+    ExplicitConversationColumn(
         modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
+            .fillMaxSize(),
+        messages = messages,
+        messageText = messageText,
+        setMessageText = setMessageText,
+        sendMessage = ::sendMessage
+    )
+
+
+}
+
+
+@Composable
+fun ExplicitConversationColumn(
+    modifier: Modifier = Modifier,
+    messages: List<Pair<String, MessageType>> = emptyList(),
+    messageText: String = "",
+    setMessageText: (String) -> Unit = {},
+    sendMessage: (String) -> Unit = {},
+){
+
+    Column(
+        modifier = modifier,
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 2.dp, vertical = 2.dp),
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -86,29 +122,42 @@ fun ExplicitConversationScreen(
                 painter = painterResource(id = R.drawable.logotype_vreescie_svg),
                 contentDescription = "logotyp",
                 modifier = Modifier
-                    .padding(horizontal = 5.dp)
                     .size(width = 198.dp, height = 47.dp)
+                    .padding(2.dp)
             )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 0.dp, vertical = 1.dp),
+                    .padding(horizontal = 0.dp, vertical = 0.dp),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_menu_24),
-                    contentDescription = "Menu",
+                IconButton(
+                    onClick = {
+
+                    },
                     modifier = Modifier
-                        .size(52.dp)
-                        .padding(end = 4.dp)
-                )
+                        .size(dimensionResource(R.dimen.image_medium_size))
+                        .padding(end = 5.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Menu,
+                        contentDescription = "Menu",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(dimensionResource(R.dimen.image_medium_size))
+
+                    )
+                }
             }
         }
 
         MessageList(
             messages = messages,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 15.dp)
+                .padding(vertical = 0.dp),
         )
 
 
@@ -121,40 +170,43 @@ fun ExplicitConversationScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            TextField(
+            OutlinedTextField(
                 value = messageText,
-                onValueChange = { messageText = it },
+                onValueChange = { setMessageText(it) },
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 10.dp),
-                textStyle = TextStyle(
-                    color = Color.Black,
-                    fontSize = 18.sp
-                ),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White,
-                    unfocusedLabelColor = Color.Black,
-                    focusedIndicatorColor = Color.Black,
-                    unfocusedIndicatorColor = Color.Black,
-                    cursorColor = Color.Black
-                ),
-                placeholder = { Text(text = "Wpisz wiadomość", color = Color.Black) },
+                    .padding(vertical = 5.dp)
+                    .padding(start = 10.dp)
+                    .weight(1f),
+                shape = RoundedCornerShape(25.dp),
+                textStyle = MaterialTheme.typography.bodyMedium,
+                placeholder = { Text(text = "Wpisz wiadomość", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 0.dp)) },
+                singleLine = false,
                 maxLines = 5,
             )
 
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_send_24),
-                contentDescription = "Send",
+            IconButton(
+                onClick = {
+                    setMessageText(messageText.trimEnd(' ', '\n'))
+                    sendMessage(messageText)
+                    setMessageText("")
+                },
                 modifier = Modifier
                     .size(50.dp)
-                    .clickable {
-                        messageText = messageText.trimEnd(' ', '\n')
-                        viewModel.sendMessageExp(messageText)
-                        messageText = ""
-                    }
-            )
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(50.dp)
+                )
+            }
         }
     }
+}
 
+@Preview
+@Composable
+fun ExplicitConversationColumnPreview() {
+    ExplicitConversationColumn()
 }
