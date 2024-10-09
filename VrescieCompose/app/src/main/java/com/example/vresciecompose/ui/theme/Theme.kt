@@ -273,6 +273,8 @@ fun VrescieComposeTheme(
     val darkTheme = when (currentTheme) {
         1 -> false // Jasny
         2 -> true  // Ciemny
+        3 -> true  // Wysoki kontrast - Ciemny
+        4 -> false // Wysoki kontrast - Jasny
         else -> isSystemInDarkTheme() // Systemowy
     }
 
@@ -281,7 +283,8 @@ fun VrescieComposeTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
+        currentTheme == 3 -> highContrastDarkColorScheme // Wysoki kontrast - Ciemny
+        currentTheme == 4 -> highContrastLightColorScheme // Wysoki kontrast - Jasny
         darkTheme -> darkScheme
         else -> lightScheme
     }

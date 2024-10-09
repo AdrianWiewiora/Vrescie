@@ -241,6 +241,26 @@ fun AppearanceSettings(
                             )
                             Text(text = "Ciemny")
                         }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = currentTheme == 3,
+                                onClick = {
+                                    saveThemeVM(3)
+                                    showDialog = false
+                                }
+                            )
+                            Text(text = "Wysoki kontrast - Ciemny")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = currentTheme == 4,
+                                onClick = {
+                                    saveThemeVM(4)
+                                    showDialog = false
+                                }
+                            )
+                            Text(text = "Wysoki kontrast - Jasny")
+                        }
                     }
                 },
                 confirmButton = {},

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.map
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 object ThemePreferenceKeys {
-    val THEME_KEY = intPreferencesKey("theme") // 0 = System, 1 = Jasny, 2 = Ciemny
+    val THEME_KEY = intPreferencesKey("theme") // 0 = System, 1 = Jasny, 2 = Ciemny, 3 = Ciemny Wysoki kontrast, 4 - Jasny Wysoki kontrast
 }
 
 class SettingsRepository(private val dataStore: DataStore<Preferences>) {
