@@ -114,7 +114,7 @@ fun WholeMenu(
     userChatPrefsViewModel: UserChatPrefsViewModel
 ){
     Column(modifier = modifier) {
-        TopRowMenu(modifier = Modifier.fillMaxWidth())
+        TopRowMenu(modifier = Modifier.fillMaxWidth(), onClick)
 
         MiddleCard(
             modifier = Modifier
@@ -137,7 +137,7 @@ fun WholeMenu(
 }
 
 @Composable
-fun TopRowMenu(modifier: Modifier){
+fun TopRowMenu(modifier: Modifier, onClick: (String) -> Unit){
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -151,7 +151,7 @@ fun TopRowMenu(modifier: Modifier){
                 .padding(2.dp)
         )
         IconButton(
-            onClick = {},
+            onClick = {onClick(Navigation.Destinations.SETTINGS)},
             modifier = Modifier
                 .size(dimensionResource(R.dimen.image_medium_size))
         ) {
@@ -285,7 +285,7 @@ fun PreviewWholeMenu() {
             TODO("Not yet implemented")
         }
 
-        override suspend fun getUserChatPrefsById(id: Long): UserChatPrefs? {
+        override suspend fun getUserChatPrefsById(id: Long): UserChatPrefs {
             return UserChatPrefs(id, "Other", 20f, 40f, true, false, 20f)
         }
 
@@ -318,6 +318,6 @@ fun BottomMenuPreview() {
 @Preview
 @Composable
 fun TopMenuPreview() {
-    TopRowMenu(modifier = Modifier.fillMaxWidth())
+    TopRowMenu(modifier = Modifier.fillMaxWidth(), onClick = {})
 }
 

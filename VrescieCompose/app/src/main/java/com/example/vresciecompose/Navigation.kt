@@ -29,6 +29,7 @@ import com.example.vresciecompose.screens.LoadingToAnonymousChatScreen
 import com.example.vresciecompose.screens.LoginScreen
 import com.example.vresciecompose.screens.MainMenuScreen
 import com.example.vresciecompose.screens.RegistrationScreen
+import com.example.vresciecompose.screens.SettingsScreen
 import com.example.vresciecompose.screens.StartScreen
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.ConversationViewModel
@@ -36,6 +37,7 @@ import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
+import com.example.vresciecompose.view_models.SettingsViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import kotlinx.coroutines.launch
 
@@ -52,6 +54,7 @@ object Navigation {
         const val LOADING_SCREEN_TO_V_CHAT = "loading_screen_to_v_chat"
         const val ANONYMOUS_CONVERSATION = "anonymous_conversation"
         const val EXPLICIT_CONVERSATION = "explicit_conversation"
+        const val SETTINGS = "settings"
     }
 }
 
@@ -70,9 +73,16 @@ fun AppNavigation(
     requestPermissionLauncher: ActivityResultLauncher<String>,
     conversationViewModel: ConversationViewModel,
     database: AppDatabase,
-    userChatPrefsViewModel: UserChatPrefsViewModel
+    userChatPrefsViewModel: UserChatPrefsViewModel,
+    settingsViewModel: SettingsViewModel
     ) {
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(Navigation.Destinations.SETTINGS) {
+            SettingsScreen(
+                settingsViewModel = settingsViewModel,
+                onNavigate = { route -> navController.navigate(route) },
+            )
+        }
         composable(Navigation.Destinations.MAIN_MENU + "/{defaultFragment}",
             arguments = listOf(navArgument("defaultFragment") { type = NavType.StringType })
         ) { backStackEntry ->

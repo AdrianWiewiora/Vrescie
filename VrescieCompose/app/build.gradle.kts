@@ -102,4 +102,8 @@ dependencies {
     ksp("androidx.room:room-compiler:$room_version")
     // optional - Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$room_version")
+
+    //Datastore to settings
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
 }

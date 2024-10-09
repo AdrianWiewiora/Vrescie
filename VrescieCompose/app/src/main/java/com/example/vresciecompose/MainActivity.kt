@@ -39,6 +39,7 @@ import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.MainViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import com.example.vresciecompose.view_models.RegistrationViewModel
+import com.example.vresciecompose.view_models.SettingsViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.android.gms.auth.api.identity.Identity
 
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
     private lateinit var conversationViewModel: ConversationViewModel
+    private lateinit var settingsViewModel: SettingsViewModel
 
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(getSharedPreferences("MyPrefs", Context.MODE_PRIVATE))
@@ -83,6 +85,15 @@ class MainActivity : ComponentActivity() {
 //            }
 //        }
 
+        // Inicjalizacja DataStore
+        val dataStore = applicationContext.dataStore
+        // Inicjalizacja SettingsRepository
+        val settingsRepository = SettingsRepository(dataStore)
+        // Utworzenie ViewModel przy użyciu ViewModelFactory
+        settingsViewModel = ViewModelProvider(
+            this,
+            SettingsViewModelFactory(settingsRepository)
+        )[SettingsViewModel::class.java]
 
         // Inicjalizacja bazy danych
         database = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "my-database").addMigrations().build()
@@ -125,7 +136,7 @@ class MainActivity : ComponentActivity() {
                 else -> Navigation.Destinations.START
             }
             setContent {
-                VrescieComposeTheme {
+                VrescieComposeTheme(settingsViewModel = settingsViewModel) {
                     Surface(
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -146,6 +157,7 @@ class MainActivity : ComponentActivity() {
                                 conversationViewModel,
                                 database = database,
                                 userChatPrefsViewModel,
+                                settingsViewModel = settingsViewModel
                             )
                         }
                     }
@@ -184,6 +196,18 @@ class UserChatPrefsViewModelFactory(private val userChatPrefsDao: UserChatPrefsD
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(UserChatPrefsViewModel::class.java)) {
             return UserChatPrefsViewModel(userChatPrefsDao) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+class SettingsViewModelFactory(
+    private val repository: SettingsRepository
+) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
+            return SettingsViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
