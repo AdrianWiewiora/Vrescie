@@ -196,7 +196,7 @@ fun ExplicitConversationColumn(
                     .weight(1f),
                 shape = RoundedCornerShape(25.dp),
                 textStyle = MaterialTheme.typography.bodyMedium,
-                placeholder = { Text(text = "Wpisz wiadomość", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 0.dp)) },
+                placeholder = { Text(text = stringResource(R.string.enter_message), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 0.dp)) },
                 singleLine = false,
                 maxLines = 5,
             )

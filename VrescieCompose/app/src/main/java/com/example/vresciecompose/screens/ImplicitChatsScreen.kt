@@ -29,11 +29,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.Navigation
+import com.example.vresciecompose.R
 import com.example.vresciecompose.data.Conversation
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -98,10 +100,12 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
         ImplicitChats(conversationList, onItemClick, lastMessageMap)
     } else {
         Text(
-            text = "Jeszcze nic tu nie ma :(\nPostaraj się o polubienia\ninnych użytkowników\nw anonimowym czacie aby\n pojawiły się tu konwersacje",
+            text = stringResource(R.string.nothing_here_yet),
             fontSize = 26.sp,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(vertical = 40.dp, horizontal = 20.dp).fillMaxSize()
+            modifier = Modifier
+                .padding(vertical = 40.dp, horizontal = 20.dp)
+                .fillMaxSize()
         )
     }
 }

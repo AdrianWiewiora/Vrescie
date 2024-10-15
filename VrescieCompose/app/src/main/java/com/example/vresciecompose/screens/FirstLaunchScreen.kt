@@ -1,5 +1,6 @@
 package com.example.vresciecompose.screens
 
+import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -23,12 +24,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import java.util.Locale
 
 @Composable
 fun FirstLaunchScreen(onClose:()-> Unit ) {
-    val textArray = remember { arrayOf("Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi") }
+
+    val text1 = stringResource(R.string.finally_str)
+    val text2 = stringResource(R.string.new_connections)
+    val text3 = stringResource(R.string.new_friends)
+    val text4 = stringResource(R.string.new_love)
+    val text5 = stringResource(R.string.happy)
+    // Sprawdzenie, czy aktualna lokalizacja to polski
+    val isPolishLocale = Locale.getDefault().language == "pl"
+    val textArray = remember {
+        if (isPolishLocale) {
+            arrayOf(text1, text2, text3, text4, text5) // bez pustego elementu
+        } else {
+            arrayOf("", text1, text2, text3, text4, text5) // z pustym elementem
+        }
+    }
     val timerDuration = 3000L
     val totalDuration = timerDuration * textArray.size
     var currentStep by remember { mutableIntStateOf(0) }
@@ -130,7 +147,7 @@ fun FirstLaunchPreview() {
         modifier = Modifier.fillMaxSize(),
         alphaText = remember { Animatable(1f) }, // Ustaw animację tekstu na 1 (widoczna)
         alphaImage = remember { Animatable(1f) }, // Ustaw animację obrazu na 1 (widoczna)
-        textArray = arrayOf("Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi"),
+        textArray = arrayOf(" ","Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi"),
         currentStep = 0 // Pierwszy tekst z listy
     )
 }

@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.res.stringResource
 import com.example.vresciecompose.ui.components.FilledButton
 import com.example.vresciecompose.ui.components.OutlinedButton
 import androidx.compose.ui.text.style.TextAlign
@@ -47,7 +48,6 @@ fun StartScreen(
 
     BackHandler {
         showDialog = true
-        Log.d("Dupa", "Dupcia")
     }
 
     if (showDialog) {
@@ -96,7 +96,7 @@ fun StartScreenColumn(
             onClick = {
                 onClick(Navigation.Destinations.LOGIN)
             },
-            text = "Zaloguj się",
+            text = stringResource(R.string.log_in),
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 5.dp)
                 .fillMaxWidth(),
@@ -106,14 +106,14 @@ fun StartScreenColumn(
             onClick = {
                 onClick(Navigation.Destinations.REGISTRATION)
             },
-            text = "Zarejestruj się",
+            text = stringResource(R.string.register),
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 5.dp)
                 .fillMaxWidth(),
         )
 
         Text(
-            text = "lub",
+            text = stringResource(R.string.or),
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier
                 .padding(vertical = 10.dp)
@@ -121,7 +121,7 @@ fun StartScreenColumn(
 
         FilledButton(
             onClick = onSignInClick,
-            text = "Kontynuuj z Google",
+            text = stringResource(R.string.continue_with_google),
             icon = R.drawable.google_svgrepo_com,
             iconSize = 28,
             modifier = Modifier
@@ -132,7 +132,7 @@ fun StartScreenColumn(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Nigdy nie udostępniamy nic bez twojej zgody",
+            text = stringResource(R.string.we_never_share_wyc),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -141,7 +141,7 @@ fun StartScreenColumn(
         )
 
         Text(
-            text = "Rejestrując się potwierdasz, że akceptujesz nasz Regulamin. Dowiedz się, jak przetwarzamy Twoje dane z Polityki prywatności",
+            text = stringResource(R.string.info_privacy_policy),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier

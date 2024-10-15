@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -72,10 +73,10 @@ fun RegistrationScreen(
         AlertDialog(
             onDismissRequest = { onClick(Navigation.Destinations.LOGIN)  },
             title = {
-                Text(text = "Zarejestrowałeś się")
+                Text(text = stringResource(R.string.you_have_registered))
             },
             text = {
-                Text(text = "Pamiętaj by potwierdzić konto poprzez klinięcie w link w wiadomości wysłanej na podany adres e-mail")
+                Text(text = stringResource(R.string.remember_to_confirm_your_account))
             },
             confirmButton = {
                 Button(onClick = {onClick(Navigation.Destinations.LOGIN) }) {
@@ -89,8 +90,8 @@ fun RegistrationScreen(
     if (isErrorShown) {
         ErrorAlertDialog(
             onDismiss = { isErrorShown = false }, // Zamykanie dialogu
-            text1 = "Błąd rejestracji",
-            text2 = errorMessage ?: "Wystąpił nieznany błąd"
+            text1 = stringResource(R.string.registration_error),
+            text2 = errorMessage ?: stringResource(R.string.an_unknown_error_occurred)
         )
     }
 
@@ -104,12 +105,12 @@ fun RegistrationScreen(
             contentDescription = "Vrescie Logo",
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp,90.dp,10.dp, 130.dp)
+                .padding(10.dp, 90.dp, 10.dp, 130.dp)
                 .wrapContentHeight(align = Alignment.CenterVertically)
         )
 
         Text(
-            text = "Podaj swój e-mail i hasło",
+            text = stringResource(R.string.enter_your_email_and_password),
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -132,7 +133,7 @@ fun RegistrationScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text(text = "Hasło") },
+            label = { Text(text = stringResource(R.string.password)) },
             singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
@@ -157,7 +158,7 @@ fun RegistrationScreen(
         OutlinedTextField(
             value = repeatPassword,
             onValueChange = { repeatPassword = it },
-            label = { Text(text = "Powtórz hasło") },
+            label = { Text(text = stringResource(R.string.repeat_password)) },
             singleLine = true,
             visualTransformation = if (repeatPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
@@ -183,7 +184,7 @@ fun RegistrationScreen(
             onClick = {
                 registrationViewModel.registerWithEmail(email, password, repeatPassword)
             },
-            text = "Zarejestruj się",
+            text = stringResource(R.string.sign_up),
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 5.dp)
                 .fillMaxWidth(),

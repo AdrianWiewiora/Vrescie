@@ -1,15 +1,9 @@
 package com.example.vresciecompose.screens
 
 import LocalContext
-import ProvideContext
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -23,48 +17,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.GppBad
 import androidx.compose.material.icons.filled.GppGood
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Male
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SocialDistance
-import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.RadioButtonColors
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.Observer
-import com.example.vresciecompose.AppDatabase
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
-import com.example.vresciecompose.data.UserChatPrefs
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.android.gms.location.LocationServices
@@ -236,7 +211,7 @@ fun AnonymousChatConfigurationScreen(
                             Log.e(TAG, "Failed to get location")
                             Toast.makeText(
                                 context,
-                                "Problem z pobraniem lokalizacji",
+                                context.getString(R.string.problem_with_determining_the_location),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -265,7 +240,7 @@ fun AnonymousChatConfigurationScreen(
             )
         ) {
             Text(
-                text = "LOSUJ",
+                text = stringResource(R.string.draw),
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -286,7 +261,7 @@ fun GenderSelectionRow(
     )
     {
         Text(
-            text = "Płeć:",
+            text = stringResource(R.string.gender) +":",
             style = MaterialTheme.typography.titleMedium,
         )
 
@@ -305,7 +280,7 @@ fun GenderSelectionRow(
                 modifier = Modifier
             )
             Text(
-                text = "Kobieta",
+                text = stringResource(R.string.woman),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier
             )
@@ -331,7 +306,7 @@ fun GenderSelectionRow(
                 modifier = Modifier.padding(start = 12.dp)
             )
             Text(
-                text = "Mężczyzna",
+                text = stringResource(R.string.man),
                 style = MaterialTheme.typography.bodyLarge,
             )
             Icon(
@@ -346,7 +321,7 @@ fun GenderSelectionRow(
 
 }
 
-@Preview(showBackground = true)
+@Preview()
 @Composable
 fun GenderSelectionRowPreview() {
     val (selectedGenders, setSelectedGenders) = remember { mutableStateOf("FM") }
@@ -371,7 +346,12 @@ fun AgeSelectionRow(
         modifier = modifier,
     ) {
         Text(
-            text = "Przedział wiekowy: ${ageRange.start.toInt()} - ${ageRange.endInclusive.toInt()}${if (ageRange.endInclusive.toInt() == 50) "+" else ""} lat",
+            text = stringResource(
+                R.string.age_range_years,
+                ageRange.start.toInt(),
+                ageRange.endInclusive.toInt(),
+                if (ageRange.endInclusive.toInt() == 50) "+" else ""
+            ),
             style = MaterialTheme.typography.titleMedium
         )
         RangeSlider(
@@ -398,7 +378,7 @@ fun AgeSelectionRow(
 
 }
 
-@Preview(showBackground = true)
+@Preview()
 @Composable
 fun AgeSelectionRowPreview() {
     val (ageRange, setAgeRange) = remember { mutableStateOf(18f..50f) }
@@ -424,7 +404,7 @@ fun ProfilePrefSelectionRow(
 ){
     Column(modifier = modifier) {
         Text(
-            text = "Profil:",
+            text = stringResource(R.string.profile_ac),
             style = MaterialTheme.typography.titleMedium,
         )
         Column(modifier = Modifier.width(250.dp)) {
@@ -439,7 +419,7 @@ fun ProfilePrefSelectionRow(
                     modifier = Modifier.padding(end = 0.dp)
                 )
                 Text(
-                    text = "Zweryfikowany",
+                    text = stringResource(R.string.verified),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Icon(
@@ -461,7 +441,7 @@ fun ProfilePrefSelectionRow(
                     modifier = Modifier.padding(start = 0.dp)
                 )
                 Text(
-                    text = "Nie zweryfikowany",
+                    text = stringResource(R.string.unverified),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Icon(
@@ -476,7 +456,7 @@ fun ProfilePrefSelectionRow(
     }
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
 fun ProfilePrefSelectionRowPreview() {
     val (isProfileVerified, setProfileVerified) = remember { mutableStateOf(false) }
@@ -497,7 +477,7 @@ fun RelationPrefSelectionRow(
 ){
     Column(modifier = modifier) {
         Text(
-            text = "Relacja:",
+            text = stringResource(R.string.relation),
             style = MaterialTheme.typography.titleMedium
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -507,7 +487,7 @@ fun RelationPrefSelectionRow(
                 modifier = Modifier.padding(start = dimensionResource(R.dimen.padding_small))
             )
             Text(
-                text = "Stała",
+                text = stringResource(R.string.long_term),
                 style = MaterialTheme.typography.bodyLarge,
             )
             Icon(
@@ -522,7 +502,7 @@ fun RelationPrefSelectionRow(
                 modifier = Modifier.padding(start = dimensionResource(R.dimen.padding_medium))
             )
             Text(
-                text = "Krótka",
+                text = stringResource(R.string.short_rel),
                 style = MaterialTheme.typography.bodyLarge,
             )
             Icon(
@@ -535,7 +515,7 @@ fun RelationPrefSelectionRow(
     }
 }
 
-@Preview(showBackground = true)
+@Preview()
 @Composable
 fun RelationPrefSelectionRowPreview() {
     val (relationshipPreference, setRelationshipPreference) = remember { mutableStateOf(false) }
@@ -564,7 +544,7 @@ fun LocationPrefSelectionRow(
                 .padding(bottom = dimensionResource(R.dimen.padding_small))
         ) {
             Text(
-                text = "Maksymalna odległość: ${maxDistance.roundToInt()} km",
+                text = stringResource(R.string.maximum_distance_km, maxDistance.roundToInt()),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
             )
@@ -588,7 +568,7 @@ fun LocationPrefSelectionRow(
     }
 }
 
-@Preview(showBackground = true)
+@Preview()
 @Composable
 fun LocationPrefSelectionRowPreview() {
     val (maxDistance, setMaxDistance) = remember { mutableStateOf(10f) }

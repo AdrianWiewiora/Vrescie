@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -104,7 +105,7 @@ fun FirstConfigurationStage(
         )
 
         Text(
-            text = "Konfiguracja twojego profilu",
+            text = stringResource(R.string.configuring_your_profile),
             modifier = Modifier.padding(bottom = 20.dp, top = 90.dp),
             style = MaterialTheme.typography.titleLarge,
         )
@@ -112,7 +113,7 @@ fun FirstConfigurationStage(
         OutlinedTextField(
             value = nameState.value,
             onValueChange = { nameState.value = it },
-            label = { Text(text = "Podaj swoje imię") },
+            label = { Text(text = stringResource(R.string.enter_your_name)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(25.dp),
@@ -122,7 +123,7 @@ fun FirstConfigurationStage(
         OutlinedTextField(
             value = ageState.value,
             onValueChange = { ageState.value = it },
-            label = { Text(text = "Podaj swoj wiek") },
+            label = { Text(text = stringResource(R.string.enter_your_age)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(25.dp),
@@ -130,7 +131,7 @@ fun FirstConfigurationStage(
         )
 
         Text(
-            text = "Wybierz swoją płeć",
+            text = stringResource(R.string.select_your_gender),
             modifier = Modifier
                 .padding(bottom = 10.dp)
                 .padding(top = 30.dp),
@@ -150,7 +151,7 @@ fun FirstConfigurationStage(
                     onClick = { genderState.value = "male" }
                 )
                 Text(
-                    text = "Mężczyzna",
+                    text = stringResource(R.string.man),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -161,7 +162,7 @@ fun FirstConfigurationStage(
                     onClick = { genderState.value = "female" }
                 )
                 Text(
-                    text = "Kobieta",
+                    text = stringResource(R.string.woman),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -173,7 +174,7 @@ fun FirstConfigurationStage(
                     enabled = false
                 )
                 Text(
-                    text = "Inna",
+                    text = stringResource(R.string.other_gender),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -182,7 +183,7 @@ fun FirstConfigurationStage(
         }
         FilledButton(
             onClick = {sendData() },
-            text = "Kontynuuj",
+            text = stringResource(R.string.continue_string),
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 5.dp)
                 .fillMaxWidth(),

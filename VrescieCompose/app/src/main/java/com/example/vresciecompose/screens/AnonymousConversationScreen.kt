@@ -38,6 +38,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -135,6 +136,7 @@ fun AnonymousConversationScreen(
         }
     }
 
+    val userDisconnectedMessage = stringResource(R.string.user_disconnected)
     if (showExitDialog.value) {
         SimpleAlertDialog(
             onConfirm = {
@@ -152,15 +154,16 @@ fun AnonymousConversationScreen(
                 if (currentUserID != null) {
                     conversationRef2.child("members").child(currentUserID).setValue(false)
                 }
-                viewModel.sendMessage("Użytkownik się rozłączył", senderId = "system")
+
+                viewModel.sendMessage(userDisconnectedMessage, senderId = "system")
                 // Przejście do głównego menu
                 onNavigate("${Navigation.Destinations.MAIN_MENU}/${1}")
             },
             onDismiss = {
                 showExitDialog.value = false
             },
-            text1 = "Potwierdź wyjście",
-            text2 = "Czy na pewno chcesz wyjść z konwersacji?"
+            text1 = stringResource(R.string.confirm_exit),
+            text2 = stringResource(R.string.are_you_sure_you_want_to_leave_the_conversation)
         )
     }
 
@@ -173,8 +176,8 @@ fun AnonymousConversationScreen(
             onDismiss = {
                 showDialogLike.value = false
             },
-            text1 = "Potwierdź polubienie",
-            text2 = "Czy na pewno chcesz polubić osobę z którą rozmawiasz?"
+            text1 = stringResource(R.string.confirm_like),
+            text2 = stringResource(R.string.are_you_sure_want_to_like_the_person)
         )
     }
 
@@ -202,8 +205,8 @@ fun AnonymousConversationScreen(
             onDismiss = {
                 showDialogLikeNotification.value = false
             },
-            text1 = "Brawo!!! Użytkownik cię polubił.",
-            text2 = "Czy chcesz opuścić konwersację by przejść do jawnej konwersacji?"
+            text1 = stringResource(R.string.bravo_user_liked_you),
+            text2 = stringResource(R.string.would_you_like_to_go_public_conversation)
         )
     }
 
@@ -303,7 +306,8 @@ fun AnonymousConversationColumn(
 
         MessageList(
             messages = messages,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
                 .padding(horizontal = 15.dp)
                 .padding(vertical = 0.dp),
             messageFontSize = messageFontSize
@@ -342,7 +346,9 @@ fun AnonymousConversationColumn(
                     .weight(1f),
                 shape = RoundedCornerShape(25.dp),
                 textStyle = MaterialTheme.typography.bodyMedium,
-                placeholder = { Text(text = "Wpisz wiadomość", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 0.dp)) },
+                placeholder = {
+                    Text(text = stringResource(R.string.enter_message), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 0.dp))
+                },
                 singleLine = false,
                 maxLines = 5,
             )

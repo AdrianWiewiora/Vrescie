@@ -1,7 +1,73 @@
 <resources>
     <string name="app_name">Vrescie</string>
     <string name="v_czat">V-chat</string>
+
+    <!--  Main Menu -->
     <string name="chats">Conversations</string>
     <string name="profile">Profile</string>
     <string name="settings">Settings</string>
+    <!--  Start Screen -->
+    <string name="log_in">Log in</string>
+    <string name="register">Register</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="we_never_share_wyc">We never share anything without your consent</string>
+    <string name="info_privacy_policy">By registering, you confirm that you accept our Terms and Conditions. Find out how we process your data from the Privacy Policy\"</string>
+    <!--  AnonymousChatConfigurationScreen -->
+    <string name="profile_ac">Profile:</string>
+    <string name="problem_with_determining_the_location">Problem with determining the location</string>
+    <string name="draw">DRAW</string>
+    <string name="gender">Gender</string>
+    <string name="woman">Woman</string>
+    <string name="man">Man</string>
+    <string name="age_range_years">Age range: %1$s - %2$s%3$s years</string>
+    <string name="verified">Verified</string>
+    <string name="unverified">Unverified</string>
+    <string name="relation">Relation:</string>
+    <string name="long_term">Long-term</string>
+    <string name="short_rel">Short</string>
+    <string name="maximum_distance_km">Maximum distance: %1$s km</string>
+    <string name="user_disconnected">User disconnected</string>
+    <string name="confirm_exit">Confirm exit</string>
+    <string name="are_you_sure_you_want_to_leave_the_conversation">Are you sure you want to leave the conversation?</string>
+    <string name="confirm_like">Confirm like</string>
+    <string name="are_you_sure_want_to_like_the_person">Are you sure you want to like the person you\'re talking to?</string>
+    <string name="bravo_user_liked_you">Bravo!!! User liked you.</string>
+    <string name="would_you_like_to_go_public_conversation">Would you like to leave the conversation to go to the public conversation?</string>
+    <string name="enter_message">Enter message</string>
+    <!--  FirstConfigurationProfileScreen -->
+    <string name="configuring_your_profile">Configuring your profile</string>
+    <string name="enter_your_name">Enter your name</string>
+    <string name="enter_your_age">Enter your age</string>
+    <string name="select_your_gender">Select your gender</string>
+    <string name="other_gender">Other gender</string>
+    <string name="continue_string">Continue</string>
+    <!--  FirstLaunchScreen -->
+    <string name="finally_str">Finally</string>
+    <string name="new_friends">New friends</string>
+    <string name="new_connections">New connections</string>
+    <string name="new_love">New love</string>
+    <string name="happy">Happy</string>
+    <string name="or">or</string>
+    <!--  ImplicitChatsScreen and LoadingScreenImageAndCard-->
+    <string name="nothing_here_yet">Nothing here yet :(\nTry to get likes\nfrom other users\nin the  v-chat so that\n conversations appear here</string>
+    <string name="wait_we_are_looking">Czekaj!!!\n\nTrwa szukanie osoby odpowiedniej dla twoich preferencji</string>
+    <!--  LoginScreen-->
+    <string name="password">Password</string>
+    <string name="please_enter_your_email_and_password">Please enter your email and password.</string>
+    <string name="unable_to_obtain_user_id">Unable to obtain user ID.</string>
+    <string name="loading">Loading…</string>
+    <string name="forgot_my_password">I forgot my password</string>
+    <string name="login_error">Login error</string>
+    <!--  RegistrationScreen and ProfileScreen-->
+    <string name="loading_data">Loading data</string>
+    <string name="name">Name</string>
+    <string name="age">Age</string>
+    <string name="join_date">Join Date</string>
+    <string name="you_have_registered">You have registered</string>
+    <string name="remember_to_confirm_your_account">Remember to confirm your account by clicking on the link in the message sent to the provided email address</string>
+    <string name="registration_error">Registration error</string>
+    <string name="an_unknown_error_occurred">An unknown error occurred</string>
+    <string name="enter_your_email_and_password">Enter your email and password</string>
+    <string name="repeat_password">Repeat password</string>
+    <string name="sign_up">Sign in</string>
 </resources>

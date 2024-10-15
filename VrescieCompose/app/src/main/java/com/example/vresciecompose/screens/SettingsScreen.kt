@@ -215,11 +215,6 @@ fun AppearanceSettings(
                 .clickable { showDialogMessageSize = true }
                 .padding(bottom = dimensionResource(R.dimen.padding_medium))
         )
-        Text(
-            text = "Język",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier
-        )
 
         // Theme Dialog
         if (showDialogTheme) {

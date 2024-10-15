@@ -20,9 +20,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.vresciecompose.R
 import com.example.vresciecompose.authentication.UserProfile
 import com.example.vresciecompose.view_models.ProfileViewModel
 import kotlinx.coroutines.delay
@@ -68,7 +70,7 @@ fun ProfileScreen() {
                     exit = fadeOut()
                 ) {
                     Text(
-                        text = "Ładowanie danych",
+                        text = stringResource(R.string.loading_data),
                         modifier = Modifier.padding(16.dp)
                     )
                 }
@@ -83,11 +85,11 @@ fun ProfileContent(userProfile: UserProfile) {
         modifier = Modifier.padding(16.dp)
     ) {
         item {
-            UserInfoRow("Imię", userProfile.name)
-            UserInfoRow("Wiek", userProfile.age.toString())
+            UserInfoRow(stringResource(R.string.name), userProfile.name)
+            UserInfoRow(stringResource(R.string.age), userProfile.age.toString())
             UserInfoRow("Email", userProfile.email)
-            UserInfoRow("Płeć", userProfile.gender)
-            UserInfoRow("Data dołączenia", formatDate(userProfile.joinDate))
+            UserInfoRow(stringResource(R.string.gender), userProfile.gender)
+            UserInfoRow(stringResource(R.string.join_date), formatDate(userProfile.joinDate))
         }
     }
 }

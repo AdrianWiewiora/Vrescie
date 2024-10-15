@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import com.example.vresciecompose.Navigation
+import com.example.vresciecompose.R
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
@@ -152,7 +153,7 @@ fun LoadingScreenImageAndCard(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text ="Czekaj!!!\n\nTrwa szukanie osoby odpowiedniej dla twoich preferencji" ,
+                    text = stringResource(R.string.wait_we_are_looking) ,
                     modifier = Modifier
                         .padding(horizontal = 30.dp),
                     textAlign = TextAlign.Center,
@@ -168,8 +169,8 @@ fun LoadingScreenImageAndCard(
 fun LoadingScreenPreview() {
     LoadingScreenImageAndCard(
         modifier = Modifier
-        .fillMaxSize()
-        .padding(horizontal = 15.dp)
-        .padding(vertical = 0.dp),
+            .fillMaxSize()
+            .padding(horizontal = 15.dp)
+            .padding(vertical = 0.dp),
     )
 }

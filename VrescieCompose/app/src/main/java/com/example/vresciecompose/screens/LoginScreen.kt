@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -85,7 +86,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text(text = "Hasło") },
+                label = { Text(text = stringResource(R.string.password)) },
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier
@@ -107,12 +108,13 @@ fun LoginScreen(
                     }
                 }
             )
-
+            val errorMessageStr = stringResource(R.string.please_enter_your_email_and_password)
+            val errorMessageStr2 = stringResource(R.string.unable_to_obtain_user_id)
             // Login button
             FilledButton(
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
-                        errorMessage = "Proszę wprowadzić e-mail i hasło."
+                        errorMessage = errorMessageStr
                         showErrorDialog = true
                     } else {
                         isLoading = true // Ustawienie stanu ładowania
@@ -139,7 +141,7 @@ fun LoginScreen(
 
                                 } else {
                                     isLoading = false
-                                    errorMessage = "Nie można uzyskać identyfikatora użytkownika."
+                                    errorMessage = errorMessageStr2
                                     showErrorDialog = true
                                 }
                             },
@@ -151,7 +153,7 @@ fun LoginScreen(
                         )
                     }
                 },
-                text = if (isLoading) "Ładowanie..." else "Zaloguj się", // Zmieniony tekst przycisku
+                text = if (isLoading) stringResource(R.string.loading) else stringResource(R.string.log_in), // Zmieniony tekst przycisku
                 modifier = Modifier
                     .padding(horizontal = 8.dp, vertical = 5.dp)
                     .fillMaxWidth(),
@@ -161,7 +163,7 @@ fun LoginScreen(
             // Forgot password button
             OutlinedButton(
                 onClick = { /*TODO*/ },
-                text = "Nie pamiętam hasła",
+                text = stringResource(R.string.forgot_my_password),
                 modifier = Modifier
                     .padding(horizontal = 8.dp, vertical = 5.dp)
                     .fillMaxWidth(),
@@ -172,7 +174,7 @@ fun LoginScreen(
         if (showErrorDialog) {
             ErrorAlertDialog(
                 onDismiss = { showErrorDialog = false },
-                text1 = "Błąd logowania",
+                text1 = stringResource(R.string.login_error),
                 text2 = errorMessage // Wyświetl wiadomość o błędzie (np. niezweryfikowany e-mail)
             )
         }
