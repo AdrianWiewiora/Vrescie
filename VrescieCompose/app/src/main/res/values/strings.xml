@@ -41,6 +41,7 @@
     <string name="select_your_gender">Select your gender</string>
     <string name="other_gender">Other gender</string>
     <string name="continue_string">Continue</string>
+    <string name="add_your_photo">Add your photo</string>
     <!--  FirstLaunchScreen -->
     <string name="finally_str">Finally</string>
     <string name="new_friends">New friends</string>
@@ -70,4 +71,5 @@
     <string name="enter_your_email_and_password">Enter your email and password</string>
     <string name="repeat_password">Repeat password</string>
     <string name="sign_up">Sign in</string>
+
 </resources>

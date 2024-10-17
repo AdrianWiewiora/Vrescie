@@ -106,4 +106,7 @@ dependencies {
     //Datastore to settings
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
+    // Camera
+    implementation("com.google.accompanist:accompanist-permissions:0.28.0")
+    implementation("io.coil-kt:coil-compose:2.2.2")
 }

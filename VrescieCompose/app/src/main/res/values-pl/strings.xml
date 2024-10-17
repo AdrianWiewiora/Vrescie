@@ -17,7 +17,7 @@
     <string name="profile_ac">Profil:</string>
     <string name="problem_with_determining_the_location">Problem z ustaleniem lokalizacji</string>
     <string name="draw">LOSUJ</string>
-    <string name="gender">Płeć:</string>
+    <string name="gender">Płeć</string>
     <string name="woman">Kobieta</string>
     <string name="man">Mężczyzna</string>
     <string name="age_range_years">Przedział wiekowy: %1$s - %2$s%3$s lat</string>
@@ -43,6 +43,7 @@
     <string name="select_your_gender">Wybierz swoją płeć</string>
     <string name="other_gender">Inna</string>
     <string name="continue_string">Continue</string>
+    <string name="add_your_photo">Dodaj swoje zdjęcie</string>
     <!--  FirstLaunchScreen -->
     <string name="finally_str"> </string>
     <string name="new_friends">Nowi przyjaciele</string>
@@ -72,5 +73,6 @@
     <string name="enter_your_email_and_password">Podaj swój e-mail i hasło</string>
     <string name="repeat_password">Powtórz hasło</string>
     <string name="sign_up">Zarejestruj się</string>
+
 
 </resources>
