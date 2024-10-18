@@ -2,8 +2,11 @@ package com.example.vresciecompose.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,8 +17,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,20 +28,26 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.data.Conversation
+import com.example.vresciecompose.data.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -66,6 +77,8 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
                         val participants = conversationSnapshot.child("members")
                         val secondParticipant = participants.children.find { it.key != currentUser?.uid }
                         val secondParticipantName = secondParticipant?.value as? String ?: ""
+                        // Pobierz ID drugiego uczestnika konwersacji
+                        val secondParticipantId = participants.children.find { it.key != currentUser?.uid }?.key ?: ""
 
                         // Pobierz ostatnią wiadomość
                         val lastMessage = conversationSnapshot.child("messages")
@@ -73,7 +86,7 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
                             .firstOrNull()?.child("text")?.value?.toString() ?: ""
 
                         // Stwórz obiekt Conversation i dodaj go do listy
-                        val conversation = Conversation(id = conversationSnapshot.key ?: "", name = secondParticipantName)
+                        val conversation = Conversation(id = conversationSnapshot.key ?: "", name = secondParticipantName, secondParticipantId = secondParticipantId)
                         conversationList.add(conversation)
                         lastMessageMap[conversationSnapshot.key ?: ""] = lastMessage
                     }
@@ -134,6 +147,27 @@ fun ImplicitChats(
 
 @Composable
 fun ConversationItem(conversation: Conversation, lastMessage: String, onItemClick: (Conversation) -> Unit) {
+    val secondUserProfile = remember { mutableStateOf<UserProfile?>(null) }
+
+    // Pobierz dane użytkownika po ID
+    LaunchedEffect(conversation.secondParticipantId) {
+        val database = FirebaseDatabase.getInstance()
+        val userRef = database.getReference("user/${conversation.secondParticipantId}")
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val name = snapshot.child("name").getValue(String::class.java) ?: ""
+                    val profileImageUrl = snapshot.child("photoUrl").getValue(String::class.java) ?: ""
+                    secondUserProfile.value = UserProfile(name = name, profileImageUrl = profileImageUrl)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Obsłuż błąd
+            }
+        })
+    }
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -144,21 +178,48 @@ fun ConversationItem(conversation: Conversation, lastMessage: String, onItemClic
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
         )
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = conversation.name,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = lastMessage,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            // Wyświetl zdjęcie jeśli jest dostępne
+            if (secondUserProfile.value?.profileImageUrl?.isNotEmpty() == true) {
+                Image(
+                    painter = rememberAsyncImagePainter(secondUserProfile.value!!.profileImageUrl),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, Color.Gray, CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // Placeholder na wypadek braku zdjęcia
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color.LightGray)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
+                Text(
+                    text = conversation.name,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = lastMessage,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }
+
 
 
 @Preview(showBackground = true)

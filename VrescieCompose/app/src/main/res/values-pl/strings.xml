@@ -53,9 +53,9 @@
     <string name="or">lub</string>
     <!--  ImplicitChatsScreen and LoadingScreenImageAndCard-->
     <string name="nothing_here_yet">Jeszcze nic tu nie ma :(\nPostaraj się o polubienia\ninnych użytkowników\nw anonimowym czacie aby\npojawiły się tu konwersacje</string>
-    <string name="wait_we_are_looking">Wait!!!\n\nWe are looking for someone who fits your preferences</string>
+    <string name="wait_we_are_looking">Czekaj!!!\n\nSzukamy osoby odpowiedniej dla twoich preferncji</string>
     <!--  LoginScreen-->
-    <string name="password">Password</string>
+    <string name="password">Hasło</string>
     <string name="please_enter_your_email_and_password">Proszę wprowadzić e-mail i hasło.</string>
     <string name="unable_to_obtain_user_id">Nie można uzyskać identyfikatora użytkownika.</string>
     <string name="loading">Ładowanie…</string>

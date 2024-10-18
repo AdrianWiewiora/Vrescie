@@ -1,4 +1,4 @@
-package com.example.vresciecompose.authentication
+package com.example.vresciecompose.data
 
 
 data class SignInResult(
@@ -18,5 +18,6 @@ data class UserProfile(
     val age: Int = 0,
     val email: String = "",
     val gender: String = "",
-    val joinDate: String = ""
+    val joinDate: String = "",
+    val profileImageUrl: String = ""
 )

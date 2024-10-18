@@ -10,7 +10,7 @@ class ConfigurationProfileViewModel : ViewModel() {
     private val database = Firebase.database
     private val auth = Firebase.auth
 
-    fun saveUserData(name: String, age: String, gender: String, onComplete: () -> Unit) {
+    fun saveUserData(name: String, age: String, gender: String, photoUrl: String?, onComplete: () -> Unit) {
         val userId = auth.currentUser?.uid ?: return
         val userRef = database.getReference("user").child(userId)
 
@@ -19,8 +19,14 @@ class ConfigurationProfileViewModel : ViewModel() {
         userRef.child("gender").setValue(gender)
         userRef.child("join_time").setValue(ServerValue.TIMESTAMP)
 
+        // Zapisz URL zdjęcia, jeśli jest dostępny
+        photoUrl?.let {
+            userRef.child("photoUrl").setValue(it)
+        }
+
         onComplete()
     }
+
 
     fun setProfileConfigured() {
         val userId = auth.currentUser?.uid ?: return

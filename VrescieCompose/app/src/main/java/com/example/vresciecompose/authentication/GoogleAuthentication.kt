@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import com.example.vresciecompose.R
+import com.example.vresciecompose.data.SignInResult
+import com.example.vresciecompose.data.UserData
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.BeginSignInRequest.GoogleIdTokenRequestOptions
 import com.google.android.gms.auth.api.identity.SignInClient

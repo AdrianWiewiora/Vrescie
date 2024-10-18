@@ -3,7 +3,7 @@ package com.example.vresciecompose.view_models
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.vresciecompose.authentication.UserProfile
+import com.example.vresciecompose.data.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
@@ -43,7 +43,9 @@ open class ProfileViewModel : ViewModel() {
                         val profileConfigured = snapshot.child("profileConfigured").getValue(Boolean::class.java) ?: false
 
                         // Ustawiamy wartości
-                        val userProfile = UserProfile(name, age, email, gender, joinTime.toString())
+                        val profileImageUrl = snapshot.child("photoUrl").getValue(String::class.java) ?: ""
+                        val userProfile = UserProfile(name, age, email, gender, joinTime.toString(), profileImageUrl)
+
                         _userProfile.postValue(userProfile)
                         _isProfileConfigured.postValue(profileConfigured) // Zaktualizuj _isProfileConfigured
                     }

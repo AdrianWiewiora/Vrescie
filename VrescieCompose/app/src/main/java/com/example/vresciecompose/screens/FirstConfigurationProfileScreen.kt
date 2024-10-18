@@ -50,6 +50,13 @@ import androidx.core.content.ContextCompat
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import android.Manifest
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.provider.MediaStore
+import android.util.Log
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import java.io.ByteArrayOutputStream
 
 @Composable
 fun FirstConfigurationProfileScreen(
@@ -78,17 +85,58 @@ fun FirstConfigurationProfileScreen(
         showDialog.value = true
     }
 
-    fun sendData() {
+    fun sendData(context: Context, selectedImageUri: Uri?) {
         val name = nameState.value
         val age = ageState.value
         val gender = genderState.value
 
-        configurationProfileViewModel.saveUserData(name, age, gender) {
-            configurationProfileViewModel.setProfileConfigured()
+        // Sprawdzenie, czy jest wybrane zdjęcie
+        selectedImageUri?.let { uri ->
+            Log.d("ImageUri", "Selected image URI: $uri")
+            val storage = FirebaseStorage.getInstance()
+            val storageRef: StorageReference = storage.reference
+
+            // Unikalna nazwa pliku (możesz zmodyfikować w zależności od potrzeb)
+            val fileName = "images/${System.currentTimeMillis()}.jpg"
+            val imageRef = storageRef.child(fileName)
+
+            // Wczytaj obraz jako bajty
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            val baos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+            val data = baos.toByteArray()
+
+            // Przesyłanie do Firebase
+            val uploadTask = imageRef.putBytes(data)
+            uploadTask.addOnSuccessListener {
+                // Po pomyślnym przesłaniu uzyskaj URL
+                imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                    // Możesz zapisać URL zdjęcia w bazie danych użytkownika
+                    Log.d("Firebase", "Uploaded Image URL: $downloadUri")
+
+                    // Zapisz dane użytkownika, w tym URL zdjęcia
+                    configurationProfileViewModel.saveUserData(name, age, gender, downloadUri.toString()) {
+                        configurationProfileViewModel.setProfileConfigured()
+                    }
+                    profileViewModel.setProfileConfigured(true)
+                    onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
+                }
+            }.addOnFailureListener { exception ->
+                Log.e("Firebase", "Upload failed", exception)
+                // Obsługa błędu przesyłania
+            }
+        } ?: run {
+            // Jeśli nie ma zdjęcia, przejdź dalej bez uploadu
+            configurationProfileViewModel.saveUserData(name, age, gender, null) {
+                configurationProfileViewModel.setProfileConfigured()
+            }
+            profileViewModel.setProfileConfigured(true)
+            onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
         }
-        profileViewModel.setProfileConfigured(true)
-        onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
     }
+
+
 
     when (numberOfConfigurationStage.value) {
         1 -> FirstConfigurationStage(
@@ -98,7 +146,6 @@ fun FirstConfigurationProfileScreen(
             nameState,
             ageState,
             genderState,
-            sendData = ::sendData,
             numberOfConfigurationStage
         )
         2 -> SecondConfigurationStage(
@@ -117,7 +164,6 @@ fun FirstConfigurationStage(
     nameState: MutableState<String> = remember { mutableStateOf("") },
     ageState: MutableState<String> = remember { mutableStateOf("") },
     genderState: MutableState<String> = remember { mutableStateOf("") },
-    sendData: () -> Unit,
     numberOfConfigurationStage: MutableState<Int> = remember { mutableStateOf(1) }
 ){
     Column(
@@ -226,7 +272,7 @@ fun FirstConfigurationStage(
 @Composable
 fun SecondConfigurationStage(
     modifier: Modifier = Modifier,
-    sendData: () -> Unit,
+    sendData: (Context, Uri?) -> Unit,
 ){
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val selectedBitmap = remember { mutableStateOf<Bitmap?>(null) }
@@ -333,8 +379,7 @@ fun SecondConfigurationStage(
                     modifier = Modifier
                         .size(200.dp)
                         .clip(CircleShape)
-                        .border(2.dp, Color.Gray, CircleShape)
-                        .padding(10.dp),
+                        .border(2.dp, Color.Gray, CircleShape),
                     contentScale = ContentScale.Crop
                 )
             }
@@ -350,8 +395,7 @@ fun SecondConfigurationStage(
                     modifier = Modifier
                         .size(200.dp)
                         .clip(CircleShape)
-                        .border(2.dp, Color.Gray, CircleShape)
-                        .padding(10.dp),
+                        .border(2.dp, Color.Gray, CircleShape),
                     contentScale = ContentScale.Crop
                 )
             }
@@ -361,7 +405,7 @@ fun SecondConfigurationStage(
 
         FilledButton(
             onClick = {
-                sendData()
+                sendData(context, selectedImageUri.value)
             },
             text = stringResource(R.string.continue_string),
             modifier = Modifier
@@ -383,18 +427,24 @@ fun PreviewFirstConfigurationStage() {
     FirstConfigurationStage(
         nameState = nameState,
         ageState = ageState,
-        genderState = genderState,
-        sendData = {}
+        genderState = genderState
     )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewSecondConfigurationStage() {
+    // Dummy context for preview
+    val context = LocalContext.current
+    val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
+    val selectedBitmap = remember { mutableStateOf<Bitmap?>(null) }
 
-
+    // Dummy sendData function
+    fun dummySendData(context: Context, uri: Uri?) {
+    }
 
     SecondConfigurationStage(
-        sendData = {}
+        modifier = Modifier.fillMaxSize(),
+        sendData = ::dummySendData
     )
 }
