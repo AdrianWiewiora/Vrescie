@@ -54,6 +54,15 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.provider.MediaStore
 import android.util.Log
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntSize
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import java.io.ByteArrayOutputStream
@@ -85,18 +94,18 @@ fun FirstConfigurationProfileScreen(
         showDialog.value = true
     }
 
-    fun sendData(context: Context, selectedImageUri: Uri?) {
+    fun sendData(context: Context, selectedImageUri: Uri?, selectedBitmap: Bitmap?) {
         val name = nameState.value
         val age = ageState.value
         val gender = genderState.value
 
-        // Sprawdzenie, czy jest wybrane zdjęcie
+        // Sprawdzenie, czy jest wybrane zdjęcie z URI
         selectedImageUri?.let { uri ->
             Log.d("ImageUri", "Selected image URI: $uri")
             val storage = FirebaseStorage.getInstance()
             val storageRef: StorageReference = storage.reference
 
-            // Unikalna nazwa pliku (możesz zmodyfikować w zależności od potrzeb)
+            // Unikalna nazwa pliku
             val fileName = "images/${System.currentTimeMillis()}.jpg"
             val imageRef = storageRef.child(fileName)
 
@@ -112,8 +121,40 @@ fun FirstConfigurationProfileScreen(
             uploadTask.addOnSuccessListener {
                 // Po pomyślnym przesłaniu uzyskaj URL
                 imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                    // Możesz zapisać URL zdjęcia w bazie danych użytkownika
                     Log.d("Firebase", "Uploaded Image URL: $downloadUri")
+
+                    // Zapisz dane użytkownika, w tym URL zdjęcia
+                    configurationProfileViewModel.saveUserData(name, age, gender, downloadUri.toString()) {
+                        configurationProfileViewModel.setProfileConfigured()
+                    }
+                    profileViewModel.setProfileConfigured(true)
+                    onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
+                }
+            }.addOnFailureListener { exception ->
+                Log.e("Firebase", "Upload failed", exception)
+                // Obsługa błędu przesyłania
+            }
+        } ?: selectedBitmap?.let { bitmap ->
+            // Jeśli jest wybrane zdjęcie z Bitmapy
+            Log.d("Bitmap", "Selected Bitmap")
+            val storage = FirebaseStorage.getInstance()
+            val storageRef: StorageReference = storage.reference
+
+            // Unikalna nazwa pliku
+            val fileName = "images/${System.currentTimeMillis()}.jpg"
+            val imageRef = storageRef.child(fileName)
+
+            // Wczytaj bitmapę jako bajty
+            val baos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+            val data = baos.toByteArray()
+
+            // Przesyłanie do Firebase
+            val uploadTask = imageRef.putBytes(data)
+            uploadTask.addOnSuccessListener {
+                // Po pomyślnym przesłaniu uzyskaj URL
+                imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                    Log.d("Firebase", "Uploaded Bitmap URL: $downloadUri")
 
                     // Zapisz dane użytkownika, w tym URL zdjęcia
                     configurationProfileViewModel.saveUserData(name, age, gender, downloadUri.toString()) {
@@ -135,6 +176,7 @@ fun FirstConfigurationProfileScreen(
             onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
         }
     }
+
 
 
 
@@ -272,7 +314,7 @@ fun FirstConfigurationStage(
 @Composable
 fun SecondConfigurationStage(
     modifier: Modifier = Modifier,
-    sendData: (Context, Uri?) -> Unit,
+    sendData: (Context, Uri?, Bitmap?) -> Unit,
 ){
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val selectedBitmap = remember { mutableStateOf<Bitmap?>(null) }
@@ -368,52 +410,120 @@ fun SecondConfigurationStage(
         // Wyświetlanie obrazu: albo `Uri` z galerii, albo `Bitmap` z aparatu
         when {
             selectedImageUri.value != null -> {
-                // Wyświetl obraz z Uri
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(LocalContext.current)
-                            .data(selectedImageUri.value)
-                            .build()
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(200.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.Gray, CircleShape),
-                    contentScale = ContentScale.Crop
+                ZoomableImage(
+                    imageUri = selectedImageUri.value!!,
+                    modifier = Modifier.size(200.dp)
                 )
             }
             selectedBitmap.value != null -> {
-                // Wyświetl obraz z Bitmap (z aparatu)
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(LocalContext.current)
-                            .data(selectedBitmap.value)
-                            .build()
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(200.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.Gray, CircleShape),
-                    contentScale = ContentScale.Crop
+                ZoomableImage(
+                    bitmap = selectedBitmap.value!!,
+                    modifier = Modifier.size(200.dp)
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        val isLoading = remember { mutableStateOf(false) }
+
         FilledButton(
             onClick = {
-                sendData(context, selectedImageUri.value)
+                isLoading.value = true // Ustawienie stanu na "loading"
+                sendData(context, selectedImageUri.value, selectedBitmap.value)
             },
-            text = stringResource(R.string.continue_string),
+            text = if (isLoading.value) "Loading..." else stringResource(R.string.continue_string),
+            enabled = !isLoading.value, // Wyłączenie przycisku, gdy stan "loading"
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 5.dp)
                 .fillMaxWidth(),
         )
+
     }
 }
+
+@Composable
+fun ZoomableImage(
+    imageUri: Uri? = null,
+    bitmap: Bitmap? = null,
+    modifier: Modifier = Modifier,
+    maxZoom: Float = 3f
+) {
+    var scale by remember { mutableStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    var imageSize by remember { mutableStateOf(IntSize.Zero) }
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
+
+    Box(
+        modifier = modifier
+            .clip(CircleShape) // Przycięcie do kształtu koła
+            .border(2.dp, Color.Gray, CircleShape) // Dodanie ramki
+            .background(Color.LightGray) // Kolor tła (gdyby coś nie wypełniło)
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    scale = (scale * zoom).coerceIn(1f, maxZoom)
+
+                    // Obliczanie rozmiarów po skalowaniu
+                    val scaledWidth = imageSize.width * scale
+                    val scaledHeight = imageSize.height * scale
+
+                    // Ograniczenia przesunięć: w zależności od rozmiarów obrazu i kontenera
+                    val maxX = ((scaledWidth - containerSize.width) / 2).coerceAtLeast(0f)
+                    val maxY = ((scaledHeight - containerSize.height) / 2).coerceAtLeast(0f)
+
+                    // Nowe przesunięcie z ograniczeniami
+                    val newOffsetX = (offset.x + pan.x * scale).coerceIn(-maxX, maxX)
+                    val newOffsetY = (offset.y + pan.y * scale).coerceIn(-maxY, maxY)
+
+                    offset = Offset(newOffsetX, newOffsetY)
+                }
+            }
+            .onGloballyPositioned { layoutCoordinates ->
+                containerSize = layoutCoordinates.size // Pobieramy rozmiar kontenera
+            }
+    ) {
+        if (imageUri != null) {
+            Image(
+                painter = rememberAsyncImagePainter(
+                    ImageRequest.Builder(LocalContext.current)
+                        .data(imageUri)
+                        .build()
+                ),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize() // Obraz wypełnia cały kontener
+                    .graphicsLayer(
+                        scaleX = scale,
+                        scaleY = scale,
+                        translationX = offset.x,
+                        translationY = offset.y
+                    )
+                    .onGloballyPositioned { coordinates ->
+                        imageSize = coordinates.size // Pobieramy rozmiar obrazu
+                    },
+                contentScale = ContentScale.Crop // Przycięcie obrazu do koła, bez pustych przestrzeni
+            )
+        } else if (bitmap != null) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize() // Obraz wypełnia cały kontener
+                    .graphicsLayer(
+                        scaleX = scale,
+                        scaleY = scale,
+                        translationX = offset.x,
+                        translationY = offset.y
+                    )
+                    .onGloballyPositioned { coordinates ->
+                        imageSize = coordinates.size // Pobieramy rozmiar obrazu
+                    },
+                contentScale = ContentScale.Crop // Przycięcie obrazu do koła, bez pustych przestrzeni
+            )
+        }
+    }
+}
+
 
 
 @Preview(showBackground = true)
@@ -440,7 +550,7 @@ fun PreviewSecondConfigurationStage() {
     val selectedBitmap = remember { mutableStateOf<Bitmap?>(null) }
 
     // Dummy sendData function
-    fun dummySendData(context: Context, uri: Uri?) {
+    fun dummySendData(context: Context, uri: Uri?, bitmap: Bitmap?) {
     }
 
     SecondConfigurationStage(
