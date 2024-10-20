@@ -60,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
@@ -452,7 +453,6 @@ fun ZoomableImage(
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     var imageSize by remember { mutableStateOf(IntSize.Zero) }
-    var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
     Box(
         modifier = modifier
@@ -463,66 +463,52 @@ fun ZoomableImage(
                 detectTransformGestures { _, pan, zoom, _ ->
                     scale = (scale * zoom).coerceIn(1f, maxZoom)
 
-                    // Obliczanie rozmiarów po skalowaniu
+                    // Ograniczenia przesunięć: w zależności od rozmiarów obrazu
                     val scaledWidth = imageSize.width * scale
                     val scaledHeight = imageSize.height * scale
-
-                    // Ograniczenia przesunięć: w zależności od rozmiarów obrazu i kontenera
-                    val maxX = ((scaledWidth - containerSize.width) / 2).coerceAtLeast(0f)
-                    val maxY = ((scaledHeight - containerSize.height) / 2).coerceAtLeast(0f)
+                    val maxX = (scaledWidth - size.width).coerceAtLeast(0f) / 2
+                    val maxY = (scaledHeight - size.height).coerceAtLeast(0f) / 2
 
                     // Nowe przesunięcie z ograniczeniami
-                    val newOffsetX = (offset.x + pan.x * scale).coerceIn(-maxX, maxX)
-                    val newOffsetY = (offset.y + pan.y * scale).coerceIn(-maxY, maxY)
-
-                    offset = Offset(newOffsetX, newOffsetY)
+                    offset = Offset(
+                        (offset.x + pan.x * scale).coerceIn(-maxX, maxX),
+                        (offset.y + pan.y * scale).coerceIn(-maxY, maxY)
+                    )
                 }
             }
             .onGloballyPositioned { layoutCoordinates ->
-                containerSize = layoutCoordinates.size // Pobieramy rozmiar kontenera
+                // Ustalanie rozmiaru obrazu tylko raz
+                imageSize = layoutCoordinates.size
             }
     ) {
-        if (imageUri != null) {
-            Image(
-                painter = rememberAsyncImagePainter(
-                    ImageRequest.Builder(LocalContext.current)
-                        .data(imageUri)
-                        .build()
-                ),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize() // Obraz wypełnia cały kontener
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offset.x,
-                        translationY = offset.y
-                    )
-                    .onGloballyPositioned { coordinates ->
-                        imageSize = coordinates.size // Pobieramy rozmiar obrazu
-                    },
-                contentScale = ContentScale.Crop // Przycięcie obrazu do koła, bez pustych przestrzeni
+        // Wspólna logika renderowania obrazu
+        val painter = when {
+            imageUri != null -> rememberAsyncImagePainter(
+                ImageRequest.Builder(LocalContext.current)
+                    .data(imageUri)
+                    .build()
             )
-        } else if (bitmap != null) {
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize() // Obraz wypełnia cały kontener
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offset.x,
-                        translationY = offset.y
-                    )
-                    .onGloballyPositioned { coordinates ->
-                        imageSize = coordinates.size // Pobieramy rozmiar obrazu
-                    },
-                contentScale = ContentScale.Crop // Przycięcie obrazu do koła, bez pustych przestrzeni
-            )
+            bitmap != null -> BitmapPainter(bitmap.asImageBitmap())
+            else -> return@Box // Jeśli nie ma obrazu, nie renderuj nic
         }
+
+        Image(
+            painter = painter,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offset.x,
+                    translationY = offset.y
+                ),
+            contentScale = ContentScale.Fit // Użyj Fit, aby obraz był w pełni widoczny
+        )
     }
 }
+
+
 
 
 
