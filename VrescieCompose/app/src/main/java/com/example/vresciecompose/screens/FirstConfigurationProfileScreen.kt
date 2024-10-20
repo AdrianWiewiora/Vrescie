@@ -53,6 +53,8 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
@@ -94,7 +96,7 @@ fun FirstConfigurationProfileScreen(
         )
     }
     BackHandler {
-        if (numberOfConfigurationStage.value == 1) showDialog.value = true
+        showDialog.value = true
     }
 
     fun sendData(context: Context, selectedImageUri: Uri?) {
@@ -284,7 +286,7 @@ fun FirstConfigurationStage(
 fun SecondConfigurationStage(
     modifier: Modifier = Modifier,
     sendData: (Context, Uri?) -> Unit,
-){
+) {
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val cameraPermissionGranted = remember { mutableStateOf(false) }
 
@@ -292,12 +294,14 @@ fun SecondConfigurationStage(
     // Przygotowanie zmiennej do URI
     val photoUri = remember { mutableStateOf<Uri?>(null) }
 
+    // Stany do skali i przesunięcia
+    val scale = remember { mutableStateOf(1f) }
+    val offset = remember { mutableStateOf(Offset.Zero) }
+
     // Launcher do wyboru obrazu z galerii
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        selectedImageUri.value = uri
-    }
+    ) { uri: Uri? -> selectedImageUri.value = uri }
 
     // Launcher do robienia zdjęcia
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -305,7 +309,7 @@ fun SecondConfigurationStage(
     ) { isSuccess: Boolean ->
         if (isSuccess) {
             Log.d("Camera", "Zdjęcie zrobione: ${photoUri.value}")
-            selectedImageUri.value = photoUri.value // Przypisanie URI do selectedImageUri
+            selectedImageUri.value = photoUri.value
         } else {
             Log.e("Camera", "Nie udało się zrobić zdjęcia.")
         }
@@ -317,16 +321,75 @@ fun SecondConfigurationStage(
     ) { isGranted: Boolean ->
         cameraPermissionGranted.value = isGranted
         if (isGranted && photoUri.value != null) {
-            cameraLauncher.launch(photoUri.value!!) // Uruchomienie aparatu po przyznaniu uprawnienia
-        } else {
-            // Obsługa przypadku, gdy użytkownik odrzucił uprawnienie
-            // Możesz wyświetlić odpowiedni komunikat lub zachować domyślne działanie
+            cameraLauncher.launch(photoUri.value!!)
         }
     }
 
-    fun savePhotoToGallery(){
+    fun savePhotoToGallery() {
+        selectedImageUri.value?.let { uri ->
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val originalBitmap = BitmapFactory.decodeStream(inputStream)
 
+            Log.d("SavePhoto", "Current scale: ${scale.value}")
+            Log.d("SavePhoto", "Current offset: ${offset.value}")
+
+            if (originalBitmap != null) {
+                // Sprawdzenie i obrócenie bitmapy w zależności od orientacji
+                val orientation = getOrientation(context, uri)
+                val bitmap = rotateBitmap(originalBitmap, orientation)
+
+                // Logowanie wymiarów oryginalnej bitmapy
+                Log.d("SavePhoto", "Original Bitmap Size: ${bitmap.width}x${bitmap.height}")
+
+                // Ustalanie maksymalnego rozmiaru przycięcia
+                val targetSize = (bitmap.width.coerceAtMost(bitmap.height) / scale.value).toInt()
+                Log.d("SavePhoto", "Calculated Target Size: $targetSize")
+
+                // Obliczamy środek bitmapy
+                val centerX = (bitmap.width / 2).toInt()
+                val centerY = (bitmap.height / 2).toInt()
+
+                // Obliczamy x i y z uwzględnieniem przesunięcia
+                val x = (centerX - (targetSize / 2) - (offset.value.x / scale.value)).toInt()
+                val y = (centerY - (targetSize / 2) - (offset.value.y / scale.value)).toInt()
+
+                // Logowanie wartości x i y przed przycinaniem
+                Log.d("SavePhoto", "Calculated Crop Position: x=$x, y=$y")
+
+                // Upewniamy się, że wartości x i y są w odpowiednich granicach
+                val validX = x.coerceIn(0, bitmap.width - targetSize)
+                val validY = y.coerceIn(0, bitmap.height - targetSize)
+
+                // Logowanie wartości po korekcji
+                Log.d("SavePhoto", "Valid Crop Position: validX=$validX, validY=$validY")
+
+                // Tworzenie bitmapy wyciętej
+                val croppedBitmap = Bitmap.createBitmap(bitmap, validX, validY, targetSize, targetSize)
+
+                // Zapis do galerii
+                val savedUri = MediaStore.Images.Media.insertImage(
+                    context.contentResolver,
+                    croppedBitmap,
+                    "Cropped Image ${System.currentTimeMillis()}",
+                    null
+                )
+
+                if (savedUri != null) {
+                    Log.d("SavePhoto", "Image successfully saved to gallery: $savedUri")
+                } else {
+                    Log.e("SavePhoto", "Failed to save image")
+                }
+            } else {
+                Log.e("SavePhoto", "Failed to decode image from URI")
+            }
+        } ?: run {
+            Log.e("SavePhoto", "No image selected")
+        }
     }
+
+
+
+
 
     Column(
         modifier = modifier,
@@ -367,13 +430,12 @@ fun SecondConfigurationStage(
         // Przycisk do robienia zdjęcia
         FilledButton(
             onClick = {
-                photoUri.value = createImageUri(context) // Stworzenie URI przed uruchomieniem aparatu
+                photoUri.value = createImageUri(context)
                 when {
                     ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
-                        cameraLauncher.launch(photoUri.value!!) // Uruchomienie aparatu bez żądania uprawnienia
+                        cameraLauncher.launch(photoUri.value!!)
                     }
                     else -> {
-                        // Poproś o uprawnienie do aparatu, jeśli nie jest przyznane
                         requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     }
                 }
@@ -386,11 +448,14 @@ fun SecondConfigurationStage(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
-        ZoomableImage(
-            imageUri = selectedImageUri.value,
-            modifier = Modifier.size(200.dp)
-        )
+        if (selectedImageUri.value != null) {
+            ZoomableImage(
+                imageUri = selectedImageUri.value,
+                modifier = Modifier.size(200.dp),
+                currentScale = scale,
+                currentOffset = offset
+            )
+        }
 
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -409,16 +474,43 @@ fun SecondConfigurationStage(
 
         FilledButton(
             onClick = {
-                isLoading.value = true // Ustawienie stanu na "loading"
+                isLoading.value = true
                 sendData(context, selectedImageUri.value)
             },
             text = if (isLoading.value) "Loading..." else stringResource(R.string.continue_string),
-            enabled = !isLoading.value, // Wyłączenie przycisku, gdy stan "loading"
+            enabled = !isLoading.value,
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 5.dp)
                 .fillMaxWidth(),
         )
+    }
+}
 
+// Funkcja do uzyskania orientacji obrazu
+fun getOrientation(context: Context, uri: Uri): Int {
+    val exif = ExifInterface(context.contentResolver.openInputStream(uri)!!)
+    return exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+}
+
+// Funkcja do obrotu bitmapy
+fun rotateBitmap(bitmap: Bitmap, orientation: Int): Bitmap {
+    return when (orientation) {
+        ExifInterface.ORIENTATION_ROTATE_90 -> {
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, Matrix().apply {
+                postRotate(90f)
+            }, true)
+        }
+        ExifInterface.ORIENTATION_ROTATE_180 -> {
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, Matrix().apply {
+                postRotate(180f)
+            }, true)
+        }
+        ExifInterface.ORIENTATION_ROTATE_270 -> {
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, Matrix().apply {
+                postRotate(270f)
+            }, true)
+        }
+        else -> bitmap // Bez obrotu
     }
 }
 
@@ -436,10 +528,10 @@ private fun createImageUri(context: Context): Uri {
 fun ZoomableImage(
     imageUri: Uri? = null,
     modifier: Modifier = Modifier,
-    maxZoom: Float = 3f
+    maxZoom: Float = 3f,
+    currentScale: MutableState<Float>, // Przekazywanie mutable state dla skali
+    currentOffset: MutableState<Offset> // Przekazywanie mutable state dla przesunięcia
 ) {
-    var scale by remember { mutableStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
     var imageSize by remember { mutableStateOf(IntSize.Zero) }
 
     Box(
@@ -449,23 +541,21 @@ fun ZoomableImage(
             .background(Color.LightGray) // Kolor tła (gdyby coś nie wypełniło)
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, zoom, _ ->
-                    scale = (scale * zoom).coerceIn(1f, maxZoom)
+                    currentScale.value = (currentScale.value * zoom).coerceIn(1f, maxZoom)
 
-                    // Ograniczenia przesunięć: w zależności od rozmiarów obrazu
-                    val scaledWidth = imageSize.width * scale
-                    val scaledHeight = imageSize.height * scale
+                    // Ograniczenia przesunięć
+                    val scaledWidth = imageSize.width * currentScale.value
+                    val scaledHeight = imageSize.height * currentScale.value
                     val maxX = (scaledWidth - size.width).coerceAtLeast(0f) / 2
                     val maxY = (scaledHeight - size.height).coerceAtLeast(0f) / 2
 
-                    // Nowe przesunięcie z ograniczeniami
-                    offset = Offset(
-                        (offset.x + pan.x * scale).coerceIn(-maxX, maxX),
-                        (offset.y + pan.y * scale).coerceIn(-maxY, maxY)
+                    currentOffset.value = Offset(
+                        (currentOffset.value.x + pan.x * currentScale.value).coerceIn(-maxX, maxX),
+                        (currentOffset.value.y + pan.y * currentScale.value).coerceIn(-maxY, maxY)
                     )
                 }
             }
             .onGloballyPositioned { layoutCoordinates ->
-                // Ustalanie rozmiaru obrazu tylko raz
                 imageSize = layoutCoordinates.size
             }
     ) {
@@ -486,15 +576,16 @@ fun ZoomableImage(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer(
-                    scaleX = scale,
-                    scaleY = scale,
-                    translationX = offset.x,
-                    translationY = offset.y
+                    scaleX = currentScale.value,
+                    scaleY = currentScale.value,
+                    translationX = currentOffset.value.x,
+                    translationY = currentOffset.value.y
                 ),
             contentScale = ContentScale.Fit // Użyj Fit, aby obraz był w pełni widoczny
         )
     }
 }
+
 
 
 
