@@ -53,6 +53,7 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.os.Environment
@@ -65,6 +66,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
@@ -341,30 +343,58 @@ fun SecondConfigurationStage(
                 // Logowanie wymiarów oryginalnej bitmapy
                 Log.d("SavePhoto", "Original Bitmap Size: ${bitmap.width}x${bitmap.height}")
 
+                // Ustalanie docelowego rozmiaru
+                val maxDimension = maxOf(bitmap.width, bitmap.height)
+                val squareBitmap = Bitmap.createBitmap(maxDimension, maxDimension, Bitmap.Config.ARGB_8888)
+
+                // Tworzenie białego tła
+                val canvas = Canvas(squareBitmap)
+                canvas.drawColor(Color.White.toArgb())
+
+                // Obliczamy położenie oryginalnej bitmapy na białym tle
+                val left = (maxDimension - bitmap.width) / 2
+                val top = (maxDimension - bitmap.height) / 2
+
+                // Rysowanie oryginalnej bitmapy na białym tle
+                canvas.drawBitmap(bitmap, left.toFloat(), top.toFloat(), null)
+
+                // Logowanie wymiarów nowej bitmapy
+                Log.d("SavePhoto", "Square Bitmap Size: ${squareBitmap.width}x${squareBitmap.height}")
+
                 // Ustalanie maksymalnego rozmiaru przycięcia
-                val targetSize = (bitmap.width.coerceAtMost(bitmap.height) / scale.value).toInt()
+                val targetSize = (maxDimension / scale.value).toInt()
                 Log.d("SavePhoto", "Calculated Target Size: $targetSize")
 
-                // Obliczamy środek bitmapy
-                val centerX = (bitmap.width / 2).toInt()
-                val centerY = (bitmap.height / 2).toInt()
 
-                // Obliczamy x i y z uwzględnieniem przesunięcia
-                val x = (centerX - (targetSize / 2) - (offset.value.x / scale.value)).toInt()
-                val y = (centerY - (targetSize / 2) - (offset.value.y / scale.value)).toInt()
+                //Moje
+                val newOffsetValueProportion = maxDimension/1100
+
+                // Obliczamy środek bitmapy
+                val centerX = (squareBitmap.width / 2).toInt()
+                val centerY = (squareBitmap.height / 2).toInt()
+
+                //val x = (centerX - ((targetSize / 2) - offset.value.x)*newOffsetValueProportion).toInt()
+                //val y = (centerY - ((targetSize / 2) - offset.value.y)*newOffsetValueProportion).toInt()
+
+                val x = if(offset.value.x > 0) (centerX - (targetSize / 2) - (offset.value.x * scale.value)).toInt()
+                else (centerX + (targetSize / 2) - (offset.value.x * scale.value)).toInt()
+
+                val y = if(offset.value.y > 0) (centerY - (targetSize / 2) - (offset.value.y * scale.value)).toInt()
+                else (centerY + (targetSize / 2) - (offset.value.y * scale.value)).toInt()
 
                 // Logowanie wartości x i y przed przycinaniem
                 Log.d("SavePhoto", "Calculated Crop Position: x=$x, y=$y")
 
                 // Upewniamy się, że wartości x i y są w odpowiednich granicach
-                val validX = x.coerceIn(0, bitmap.width - targetSize)
-                val validY = y.coerceIn(0, bitmap.height - targetSize)
+                val validX = x.coerceIn(0, squareBitmap.width - targetSize)
+                val validY = y.coerceIn(0, squareBitmap.height - targetSize)
 
                 // Logowanie wartości po korekcji
                 Log.d("SavePhoto", "Valid Crop Position: validX=$validX, validY=$validY")
 
                 // Tworzenie bitmapy wyciętej
-                val croppedBitmap = Bitmap.createBitmap(bitmap, validX, validY, targetSize, targetSize)
+                //val croppedBitmap = Bitmap.createBitmap(squareBitmap, validX, validY, targetSize, targetSize)
+                val croppedBitmap = Bitmap.createBitmap(squareBitmap, validX, validY, targetSize, targetSize)
 
                 // Zapis do galerii
                 val savedUri = MediaStore.Images.Media.insertImage(
@@ -386,8 +416,6 @@ fun SecondConfigurationStage(
             Log.e("SavePhoto", "No image selected")
         }
     }
-
-
 
 
 
@@ -453,7 +481,8 @@ fun SecondConfigurationStage(
                 imageUri = selectedImageUri.value,
                 modifier = Modifier.size(200.dp),
                 currentScale = scale,
-                currentOffset = offset
+                currentOffset = offset,
+                context = context
             )
         }
 
@@ -530,9 +559,38 @@ fun ZoomableImage(
     modifier: Modifier = Modifier,
     maxZoom: Float = 3f,
     currentScale: MutableState<Float>, // Przekazywanie mutable state dla skali
-    currentOffset: MutableState<Offset> // Przekazywanie mutable state dla przesunięcia
+    currentOffset: MutableState<Offset>, // Przekazywanie mutable state dla przesunięcia
+    context: Context
 ) {
     var imageSize by remember { mutableStateOf(IntSize.Zero) }
+
+    // Bitmapa kwadratowa z białym tłem, aby dodać paski do obrazu
+    val squareBitmap = remember(imageUri) {
+        imageUri?.let { uri ->
+            // Otwórz strumień URI i zdekoduj bitmapę
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val originalBitmap = BitmapFactory.decodeStream(inputStream)
+
+            // Jeśli bitmapa istnieje, utwórz kwadratową wersję z białymi paskami
+            if (originalBitmap != null) {
+                val maxDimension = maxOf(originalBitmap.width, originalBitmap.height)
+                val squareBitmap = Bitmap.createBitmap(maxDimension, maxDimension, Bitmap.Config.ARGB_8888)
+
+                // Stworzenie płótna z białym tłem
+                val canvas = Canvas(squareBitmap)
+                canvas.drawColor(Color.White.toArgb())
+
+                // Wycentrowanie oryginalnej bitmapy na kwadratowym tle
+                val left = (maxDimension - originalBitmap.width) / 2
+                val top = (maxDimension - originalBitmap.height) / 2
+                canvas.drawBitmap(originalBitmap, left.toFloat(), top.toFloat(), null)
+
+                squareBitmap // Zwróć kwadratową bitmapę
+            } else {
+                null
+            }
+        }
+    }
 
     Box(
         modifier = modifier
@@ -553,36 +611,30 @@ fun ZoomableImage(
                         (currentOffset.value.x + pan.x * currentScale.value).coerceIn(-maxX, maxX),
                         (currentOffset.value.y + pan.y * currentScale.value).coerceIn(-maxY, maxY)
                     )
+                    Log.d("ZoomableImage", "Scale: ${currentScale.value}, Offset: ${currentOffset.value}")
+
                 }
             }
             .onGloballyPositioned { layoutCoordinates ->
                 imageSize = layoutCoordinates.size
             }
     ) {
-        // Wspólna logika renderowania obrazu
-        val painter = when {
-            imageUri != null -> rememberAsyncImagePainter(
-                ImageRequest.Builder(LocalContext.current)
-                    .data(imageUri)
-                    .size(1024, 1024)
-                    .build()
+        // Renderowanie kwadratowej bitmapy
+        squareBitmap?.let { bitmap ->
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer(
+                        scaleX = currentScale.value,
+                        scaleY = currentScale.value,
+                        translationX = currentOffset.value.x,
+                        translationY = currentOffset.value.y
+                    ),
+                contentScale = ContentScale.Fit // Dopasuj obraz do widoku
             )
-            else -> return@Box // Jeśli nie ma obrazu, nie renderuj nic
         }
-
-        Image(
-            painter = painter,
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer(
-                    scaleX = currentScale.value,
-                    scaleY = currentScale.value,
-                    translationX = currentOffset.value.x,
-                    translationY = currentOffset.value.y
-                ),
-            contentScale = ContentScale.Fit // Użyj Fit, aby obraz był w pełni widoczny
-        )
     }
 }
 
