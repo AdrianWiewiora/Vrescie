@@ -50,8 +50,10 @@ import androidx.core.content.ContextCompat
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import android.Manifest
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -92,10 +94,10 @@ fun FirstConfigurationProfileScreen(
         )
     }
     BackHandler {
-        showDialog.value = true
+        if (numberOfConfigurationStage.value == 1) showDialog.value = true
     }
 
-    fun sendData(context: Context, selectedImageUri: Uri?, selectedBitmap: Bitmap?) {
+    fun sendData(context: Context, selectedImageUri: Uri?) {
         val name = nameState.value
         val age = ageState.value
         val gender = genderState.value
@@ -123,39 +125,6 @@ fun FirstConfigurationProfileScreen(
                 // Po pomyślnym przesłaniu uzyskaj URL
                 imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
                     Log.d("Firebase", "Uploaded Image URL: $downloadUri")
-
-                    // Zapisz dane użytkownika, w tym URL zdjęcia
-                    configurationProfileViewModel.saveUserData(name, age, gender, downloadUri.toString()) {
-                        configurationProfileViewModel.setProfileConfigured()
-                    }
-                    profileViewModel.setProfileConfigured(true)
-                    onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
-                }
-            }.addOnFailureListener { exception ->
-                Log.e("Firebase", "Upload failed", exception)
-                // Obsługa błędu przesyłania
-            }
-        } ?: selectedBitmap?.let { bitmap ->
-            // Jeśli jest wybrane zdjęcie z Bitmapy
-            Log.d("Bitmap", "Selected Bitmap")
-            val storage = FirebaseStorage.getInstance()
-            val storageRef: StorageReference = storage.reference
-
-            // Unikalna nazwa pliku
-            val fileName = "images/${System.currentTimeMillis()}.jpg"
-            val imageRef = storageRef.child(fileName)
-
-            // Wczytaj bitmapę jako bajty
-            val baos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-            val data = baos.toByteArray()
-
-            // Przesyłanie do Firebase
-            val uploadTask = imageRef.putBytes(data)
-            uploadTask.addOnSuccessListener {
-                // Po pomyślnym przesłaniu uzyskaj URL
-                imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                    Log.d("Firebase", "Uploaded Bitmap URL: $downloadUri")
 
                     // Zapisz dane użytkownika, w tym URL zdjęcia
                     configurationProfileViewModel.saveUserData(name, age, gender, downloadUri.toString()) {
@@ -302,7 +271,6 @@ fun FirstConfigurationStage(
         FilledButton(
             onClick = {
                 numberOfConfigurationStage.value = 2
-                //sendData()
             },
             text = stringResource(R.string.continue_string),
             modifier = Modifier
@@ -315,13 +283,14 @@ fun FirstConfigurationStage(
 @Composable
 fun SecondConfigurationStage(
     modifier: Modifier = Modifier,
-    sendData: (Context, Uri?, Bitmap?) -> Unit,
+    sendData: (Context, Uri?) -> Unit,
 ){
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
-    val selectedBitmap = remember { mutableStateOf<Bitmap?>(null) }
     val cameraPermissionGranted = remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    // Przygotowanie zmiennej do URI
+    val photoUri = remember { mutableStateOf<Uri?>(null) }
 
     // Launcher do wyboru obrazu z galerii
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -332,9 +301,14 @@ fun SecondConfigurationStage(
 
     // Launcher do robienia zdjęcia
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
-        selectedBitmap.value = bitmap
+        contract = ActivityResultContracts.TakePicture()
+    ) { isSuccess: Boolean ->
+        if (isSuccess) {
+            Log.d("Camera", "Zdjęcie zrobione: ${photoUri.value}")
+            selectedImageUri.value = photoUri.value // Przypisanie URI do selectedImageUri
+        } else {
+            Log.e("Camera", "Nie udało się zrobić zdjęcia.")
+        }
     }
 
     // Launcher do żądania uprawnień do aparatu
@@ -342,12 +316,16 @@ fun SecondConfigurationStage(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         cameraPermissionGranted.value = isGranted
-        if (isGranted) {
-            cameraLauncher.launch(null) // Uruchomienie aparatu po przyznaniu uprawnienia
+        if (isGranted && photoUri.value != null) {
+            cameraLauncher.launch(photoUri.value!!) // Uruchomienie aparatu po przyznaniu uprawnienia
         } else {
             // Obsługa przypadku, gdy użytkownik odrzucił uprawnienie
             // Możesz wyświetlić odpowiedni komunikat lub zachować domyślne działanie
         }
+    }
+
+    fun savePhotoToGallery(){
+
     }
 
     Column(
@@ -389,10 +367,10 @@ fun SecondConfigurationStage(
         // Przycisk do robienia zdjęcia
         FilledButton(
             onClick = {
-                // Sprawdzenie, czy uprawnienie do aparatu jest już przyznane
-                when (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)) {
-                    PackageManager.PERMISSION_GRANTED -> {
-                        cameraLauncher.launch(null) // Uprawnienie już jest przyznane
+                photoUri.value = createImageUri(context) // Stworzenie URI przed uruchomieniem aparatu
+                when {
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
+                        cameraLauncher.launch(photoUri.value!!) // Uruchomienie aparatu bez żądania uprawnienia
                     }
                     else -> {
                         // Poproś o uprawnienie do aparatu, jeśli nie jest przyznane
@@ -408,30 +386,31 @@ fun SecondConfigurationStage(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Wyświetlanie obrazu: albo `Uri` z galerii, albo `Bitmap` z aparatu
-        when {
-            selectedImageUri.value != null -> {
-                ZoomableImage(
-                    imageUri = selectedImageUri.value!!,
-                    modifier = Modifier.size(200.dp)
-                )
-            }
-            selectedBitmap.value != null -> {
-                ZoomableImage(
-                    bitmap = selectedBitmap.value!!,
-                    modifier = Modifier.size(200.dp)
-                )
-            }
-        }
+
+        ZoomableImage(
+            imageUri = selectedImageUri.value,
+            modifier = Modifier.size(200.dp)
+        )
+
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        FilledButton(
+            onClick = {
+                savePhotoToGallery()
+            },
+            text = "Test save...",
+            modifier = Modifier
+                .padding(horizontal = 8.dp, vertical = 5.dp)
+                .fillMaxWidth(),
+        )
 
         val isLoading = remember { mutableStateOf(false) }
 
         FilledButton(
             onClick = {
                 isLoading.value = true // Ustawienie stanu na "loading"
-                sendData(context, selectedImageUri.value, selectedBitmap.value)
+                sendData(context, selectedImageUri.value)
             },
             text = if (isLoading.value) "Loading..." else stringResource(R.string.continue_string),
             enabled = !isLoading.value, // Wyłączenie przycisku, gdy stan "loading"
@@ -443,10 +422,19 @@ fun SecondConfigurationStage(
     }
 }
 
+// Funkcja do tworzenia URI do zapisu zdjęcia
+private fun createImageUri(context: Context): Uri {
+    val contentValues = ContentValues().apply {
+        put(MediaStore.Images.Media.DISPLAY_NAME, "Photo_${System.currentTimeMillis()}.jpg")
+        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+        put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+    }
+    return context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)!!
+}
+
 @Composable
 fun ZoomableImage(
     imageUri: Uri? = null,
-    bitmap: Bitmap? = null,
     modifier: Modifier = Modifier,
     maxZoom: Float = 3f
 ) {
@@ -457,7 +445,7 @@ fun ZoomableImage(
     Box(
         modifier = modifier
             .clip(CircleShape) // Przycięcie do kształtu koła
-            .border(2.dp, Color.Gray, CircleShape) // Dodanie ramki
+            .border(2.dp, Color.Transparent, CircleShape) // Dodanie ramki
             .background(Color.LightGray) // Kolor tła (gdyby coś nie wypełniło)
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, zoom, _ ->
@@ -486,9 +474,9 @@ fun ZoomableImage(
             imageUri != null -> rememberAsyncImagePainter(
                 ImageRequest.Builder(LocalContext.current)
                     .data(imageUri)
+                    .size(1024, 1024)
                     .build()
             )
-            bitmap != null -> BitmapPainter(bitmap.asImageBitmap())
             else -> return@Box // Jeśli nie ma obrazu, nie renderuj nic
         }
 
@@ -507,7 +495,6 @@ fun ZoomableImage(
         )
     }
 }
-
 
 
 
@@ -533,10 +520,9 @@ fun PreviewSecondConfigurationStage() {
     // Dummy context for preview
     val context = LocalContext.current
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
-    val selectedBitmap = remember { mutableStateOf<Bitmap?>(null) }
 
     // Dummy sendData function
-    fun dummySendData(context: Context, uri: Uri?, bitmap: Bitmap?) {
+    fun dummySendData(context: Context, uri: Uri?) {
     }
 
     SecondConfigurationStage(
