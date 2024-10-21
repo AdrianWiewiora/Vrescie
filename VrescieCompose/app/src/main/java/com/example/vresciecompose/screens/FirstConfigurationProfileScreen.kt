@@ -327,8 +327,8 @@ fun SecondConfigurationStage(
         }
     }
 
-    fun savePhotoToGallery() {
-        selectedImageUri.value?.let { uri ->
+    fun savePhotoToGallery(): Uri? {
+        return selectedImageUri.value?.let { uri ->
             val inputStream = context.contentResolver.openInputStream(uri)
             val originalBitmap = BitmapFactory.decodeStream(inputStream)
 
@@ -336,67 +336,42 @@ fun SecondConfigurationStage(
             Log.d("SavePhoto", "Current offset: ${offset.value}")
 
             if (originalBitmap != null) {
-                // Sprawdzenie i obrócenie bitmapy w zależności od orientacji
                 val orientation = getOrientation(context, uri)
                 val bitmap = rotateBitmap(originalBitmap, orientation)
 
-                // Logowanie wymiarów oryginalnej bitmapy
                 Log.d("SavePhoto", "Original Bitmap Size: ${bitmap.width}x${bitmap.height}")
 
-                // Ustalanie docelowego rozmiaru
                 val maxDimension = maxOf(bitmap.width, bitmap.height)
                 val squareBitmap = Bitmap.createBitmap(maxDimension, maxDimension, Bitmap.Config.ARGB_8888)
 
-                // Tworzenie białego tła
                 val canvas = Canvas(squareBitmap)
                 canvas.drawColor(Color.White.toArgb())
 
-                // Obliczamy położenie oryginalnej bitmapy na białym tle
                 val left = (maxDimension - bitmap.width) / 2
                 val top = (maxDimension - bitmap.height) / 2
 
-                // Rysowanie oryginalnej bitmapy na białym tle
                 canvas.drawBitmap(bitmap, left.toFloat(), top.toFloat(), null)
 
-                // Logowanie wymiarów nowej bitmapy
                 Log.d("SavePhoto", "Square Bitmap Size: ${squareBitmap.width}x${squareBitmap.height}")
 
-                // Ustalanie maksymalnego rozmiaru przycięcia
                 val targetSize = (maxDimension / scale.value).toInt()
                 Log.d("SavePhoto", "Calculated Target Size: $targetSize")
 
-
-                //Moje
-                val newOffsetValueProportion = maxDimension/1100
-
-                // Obliczamy środek bitmapy
                 val centerX = (squareBitmap.width / 2).toInt()
                 val centerY = (squareBitmap.height / 2).toInt()
 
-                //val x = (centerX - ((targetSize / 2) - offset.value.x)*newOffsetValueProportion).toInt()
-                //val y = (centerY - ((targetSize / 2) - offset.value.y)*newOffsetValueProportion).toInt()
+                val x = (centerX - (targetSize / 2) - (offset.value.x * scale.value)).toInt()
+                val y = (centerY - (targetSize / 2) - (offset.value.y * scale.value)).toInt()
 
-                val x = if(offset.value.x > 0) (centerX - (targetSize / 2) - (offset.value.x * scale.value)).toInt()
-                else (centerX + (targetSize / 2) - (offset.value.x * scale.value)).toInt()
-
-                val y = if(offset.value.y > 0) (centerY - (targetSize / 2) - (offset.value.y * scale.value)).toInt()
-                else (centerY + (targetSize / 2) - (offset.value.y * scale.value)).toInt()
-
-                // Logowanie wartości x i y przed przycinaniem
                 Log.d("SavePhoto", "Calculated Crop Position: x=$x, y=$y")
 
-                // Upewniamy się, że wartości x i y są w odpowiednich granicach
                 val validX = x.coerceIn(0, squareBitmap.width - targetSize)
                 val validY = y.coerceIn(0, squareBitmap.height - targetSize)
 
-                // Logowanie wartości po korekcji
                 Log.d("SavePhoto", "Valid Crop Position: validX=$validX, validY=$validY")
 
-                // Tworzenie bitmapy wyciętej
-                //val croppedBitmap = Bitmap.createBitmap(squareBitmap, validX, validY, targetSize, targetSize)
                 val croppedBitmap = Bitmap.createBitmap(squareBitmap, validX, validY, targetSize, targetSize)
 
-                // Zapis do galerii
                 val savedUri = MediaStore.Images.Media.insertImage(
                     context.contentResolver,
                     croppedBitmap,
@@ -406,14 +381,14 @@ fun SecondConfigurationStage(
 
                 if (savedUri != null) {
                     Log.d("SavePhoto", "Image successfully saved to gallery: $savedUri")
+                    return Uri.parse(savedUri) // Zwracamy zapisane URI
                 } else {
                     Log.e("SavePhoto", "Failed to save image")
                 }
             } else {
                 Log.e("SavePhoto", "Failed to decode image from URI")
             }
-        } ?: run {
-            Log.e("SavePhoto", "No image selected")
+            null // Zwracamy null, jeśli coś poszło nie tak
         }
     }
 
@@ -504,7 +479,16 @@ fun SecondConfigurationStage(
         FilledButton(
             onClick = {
                 isLoading.value = true
-                sendData(context, selectedImageUri.value)
+
+                // Wywołanie funkcji zapisywania i obsługa jej wyniku
+                val savedUri = savePhotoToGallery()
+                if (savedUri != null) {
+                    sendData(context, savedUri) // Przekazanie URI zapisanego zdjęcia
+                } else {
+                    Log.e("SavePhoto", "Failed to save photo")
+                }
+
+                isLoading.value = false // Zakończenie operacji
             },
             text = if (isLoading.value) "Loading..." else stringResource(R.string.continue_string),
             enabled = !isLoading.value,
@@ -512,6 +496,7 @@ fun SecondConfigurationStage(
                 .padding(horizontal = 8.dp, vertical = 5.dp)
                 .fillMaxWidth(),
         )
+
     }
 }
 
@@ -564,29 +549,39 @@ fun ZoomableImage(
 ) {
     var imageSize by remember { mutableStateOf(IntSize.Zero) }
 
-    // Bitmapa kwadratowa z białym tłem, aby dodać paski do obrazu
     val squareBitmap = remember(imageUri) {
         imageUri?.let { uri ->
-            // Otwórz strumień URI i zdekoduj bitmapę
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val originalBitmap = BitmapFactory.decodeStream(inputStream)
+            try {
+                // Otwórz strumień URI i zdekoduj bitmapę
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val originalBitmap = BitmapFactory.decodeStream(inputStream)
 
-            // Jeśli bitmapa istnieje, utwórz kwadratową wersję z białymi paskami
-            if (originalBitmap != null) {
-                val maxDimension = maxOf(originalBitmap.width, originalBitmap.height)
-                val squareBitmap = Bitmap.createBitmap(maxDimension, maxDimension, Bitmap.Config.ARGB_8888)
+                // Pobierz orientację obrazu
+                val orientation = getOrientation(context, uri)
 
-                // Stworzenie płótna z białym tłem
-                val canvas = Canvas(squareBitmap)
-                canvas.drawColor(Color.White.toArgb())
+                // Obróć bitmapę zgodnie z orientacją
+                val bitmap = rotateBitmap(originalBitmap, orientation)
 
-                // Wycentrowanie oryginalnej bitmapy na kwadratowym tle
-                val left = (maxDimension - originalBitmap.width) / 2
-                val top = (maxDimension - originalBitmap.height) / 2
-                canvas.drawBitmap(originalBitmap, left.toFloat(), top.toFloat(), null)
+                // Jeśli bitmapa istnieje, utwórz kwadratową wersję z białymi paskami
+                if (bitmap != null) {
+                    val maxDimension = maxOf(bitmap.width, bitmap.height)
+                    val squareBitmap = Bitmap.createBitmap(maxDimension, maxDimension, Bitmap.Config.ARGB_8888)
 
-                squareBitmap // Zwróć kwadratową bitmapę
-            } else {
+                    // Stworzenie płótna z białym tłem
+                    val canvas = Canvas(squareBitmap)
+                    canvas.drawColor(Color.White.toArgb())
+
+                    // Wycentrowanie bitmapy na kwadratowym tle
+                    val left = (maxDimension - bitmap.width) / 2
+                    val top = (maxDimension - bitmap.height) / 2
+                    canvas.drawBitmap(bitmap, left.toFloat(), top.toFloat(), null)
+
+                    squareBitmap // Zwróć kwadratową bitmapę
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
                 null
             }
         }
