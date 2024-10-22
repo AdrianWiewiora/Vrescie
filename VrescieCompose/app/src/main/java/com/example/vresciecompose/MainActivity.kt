@@ -29,6 +29,10 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.vresciecompose.authentication.GoogleAuthentication
+import com.example.vresciecompose.data.ConversationDao
+import com.example.vresciecompose.data.ConversationEntity
+import com.example.vresciecompose.data.MessageDao
+import com.example.vresciecompose.data.MessageEntity
 import com.example.vresciecompose.data.UserChatPrefs
 import com.example.vresciecompose.data.UserChatPrefsDao
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
@@ -82,6 +86,21 @@ class MainActivity : ComponentActivity() {
 //                database.execSQL("ALTER TABLE UserChatPrefs ADD COLUMN isProfileVerified INTEGER NOT NULL DEFAULT 0")
 //                database.execSQL("ALTER TABLE UserChatPrefs ADD COLUMN relationshipPreference INTEGER NOT NULL DEFAULT 0")
 //                database.execSQL("ALTER TABLE UserChatPrefs ADD COLUMN maxDistance REAL NOT NULL DEFAULT 0")
+//            }
+//        }
+
+//        val MIGRATION_2_3 = object : Migration(2, 3) {
+//            override fun migrate(database: SupportSQLiteDatabase) {
+//                // Usuwamy istniejącą tabelę conversations, jeśli istnieje
+//                database.execSQL("DROP TABLE IF EXISTS conversations")
+//                // Usuwamy istniejącą tabelę messages, jeśli istnieje
+//                database.execSQL("DROP TABLE IF EXISTS messages")
+//
+//                // Tworzymy nową tabelę conversations
+//                database.execSQL("CREATE TABLE IF NOT EXISTS `conversations` (`localConversationId` TEXT NOT NULL, `firebaseConversationId` TEXT NOT NULL, `memberId` TEXT NOT NULL, PRIMARY KEY(`localConversationId`))")
+//
+//                // Tworzymy nową tabelę messages z kluczem obcym do conversations
+//                database.execSQL("CREATE TABLE IF NOT EXISTS `messages` (`id` TEXT NOT NULL, `messageId` TEXT NOT NULL, `senderId` TEXT NOT NULL, `text` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `messageSeen` INTEGER NOT NULL, `localConversationId` TEXT NOT NULL, FOREIGN KEY(localConversationId) REFERENCES conversations(localConversationId) ON DELETE CASCADE, PRIMARY KEY(`id`))")
 //            }
 //        }
 
@@ -187,10 +206,13 @@ class MainViewModelFactory(private val sharedPreferences: SharedPreferences) :
 }
 
 
-@Database(entities = [UserChatPrefs::class], version = 2)
+@Database(entities = [UserChatPrefs::class, ConversationEntity::class, MessageEntity::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userChatPrefsDao(): UserChatPrefsDao
+    abstract fun conversationDao(): ConversationDao
+    abstract fun messageDao(): MessageDao
 }
+
 
 class UserChatPrefsViewModelFactory(private val userChatPrefsDao: UserChatPrefsDao) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
