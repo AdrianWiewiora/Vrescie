@@ -46,7 +46,7 @@ fun ReceivedMessage(message: String, messageFontSize: TextUnit) {
 }
 
 @Composable
-fun SentMessage(message: String, isSeen: Boolean, messageFontSize: TextUnit) {
+fun SentMessage(message: String, isSeen: Boolean, showIcon: Boolean, messageFontSize: TextUnit) {
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -60,21 +60,22 @@ fun SentMessage(message: String, isSeen: Boolean, messageFontSize: TextUnit) {
         Row(
             verticalAlignment = Alignment.CenterVertically // Wyrównanie ikony i tekstu w pionie
         ) {
-            // Ikona statusu wyświetlenia wiadomości
-            Icon(
-                imageVector = if (isSeen) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                contentDescription = if (isSeen) "Message seen" else "Message not seen",
-                tint = MaterialTheme.colorScheme.surface,
-                modifier = Modifier
-                    .size(25.dp) // Rozmiar ikony
-                    .padding(start = 8.dp, end = 3.dp) // Odstęp między ikoną a tekstem
-            )
+            if (showIcon) {
+                Icon(
+                    imageVector = if (isSeen) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                    contentDescription = if (isSeen) "Message seen" else "Message not seen",
+                    tint = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier
+                        .size(25.dp)
+                        .padding(start = 8.dp, end = 3.dp)
+                )
+            }
 
             // Tekst wiadomości
             Text(
                 text = message,
                 modifier = Modifier
-                    .padding(end = 8.dp)
+                    .padding(end = 8.dp, start = if (showIcon) 0.dp else 8.dp)
                     .padding(vertical = 5.dp),
                 textAlign = TextAlign.End,
                 fontSize = messageFontSize
