@@ -3,6 +3,7 @@ package com.example.vresciecompose.ui.components
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,14 +43,14 @@ fun MessageList(
     messageFontSize: TextUnit = 14.sp
 ) {
     val listState = rememberLazyListState()
-    val hasScrolled = remember { mutableStateOf(false) } // Stan, aby śledzić, czy przewinięto
+    val hasScrolled = remember { mutableStateOf(false) }
 
     // Przewijanie na dół tylko przy pierwszym uruchomieniu
     LaunchedEffect(messages) {
         if (messages.isNotEmpty() && !hasScrolled.value) {
             Log.d("MessageList", "Scrolling to the last item on initialization")
-            listState.animateScrollToItem(messages.size - 1) // Przewijamy do ostatniego elementu
-            hasScrolled.value = true // Ustawiamy, że przewinięto
+            listState.animateScrollToItem(messages.size - 1)
+            hasScrolled.value = true
         }
     }
 
@@ -62,17 +63,29 @@ fun MessageList(
             state = listState
         ) {
             itemsIndexed(messages) { index, (message, type) ->
+                val paddingValues = getMessagePadding(index, messages) // Ustal padding dla wiadomości
+
                 when (type.type) {
                     MessageType.Type.Received -> {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                            ReceivedMessage(message, messageFontSize)
+                            ReceivedMessage(
+                                modifier = Modifier.padding(paddingValues).padding(horizontal = 8.dp),
+                                message,
+                                messageFontSize
+                            )
                         }
                     }
                     MessageType.Type.Sent -> {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                             val isSeen = type.isSeen
                             val showIcon = isLastInGroup(index, messages)
-                            SentMessage(message, isSeen, showIcon, messageFontSize)
+                            SentMessage(
+                                modifier = Modifier.padding(paddingValues).padding(horizontal = 8.dp),
+                                message,
+                                isSeen,
+                                showIcon,
+                                messageFontSize
+                            )
                         }
                     }
                     MessageType.Type.System -> {
@@ -94,12 +107,13 @@ fun MessageList(
                 // Przewijamy, jeśli ostatnia wiadomość jest typu Sent lub System
                 if (lastMessageType == MessageType.Type.Sent || lastMessageType == MessageType.Type.System) {
                     Log.d("MessageList", "Scrolling to the last item")
-                    listState.animateScrollToItem(messages.size - 1) // Przewijamy do ostatniego elementu
+                    listState.animateScrollToItem(messages.size - 1)
                 }
             }
         }
     }
 }
+
 
 fun isLastInGroup(index: Int, messages: List<Pair<String, MessageType>>): Boolean {
     // Sprawdzamy tylko wiadomości typu Sent
@@ -111,17 +125,35 @@ fun isLastInGroup(index: Int, messages: List<Pair<String, MessageType>>): Boolea
     return index == messages.size - 1 || messages[index + 1].second.type != currentMessageType
 }
 
+fun getMessagePadding(index: Int, messages: List<Pair<String, MessageType>>): PaddingValues {
+    val currentType = messages[index].second.type
+    val isFirstMessage = index == 0
+    val isLastMessage = index == messages.size - 1
+
+    val topPadding = if (!isFirstMessage && messages[index - 1].second.type == currentType) 1.dp else 8.dp
+    val bottomPadding = if (!isLastMessage && messages[index + 1].second.type == currentType) 1.dp else 8.dp
+
+    return PaddingValues(top = topPadding, bottom = bottomPadding)
+}
+
 
 
 @Preview(showBackground = true)
 @Composable
 fun MessageListPreview() {
     val messages = listOf(
-        "Hello, how are you?" to MessageType(MessageType.Type.Received, isSeen = false),
-        "I'm doing great, thanks!" to MessageType(MessageType.Type.Sent, isSeen = false),
-        "System message: User joined the chat" to MessageType(MessageType.Type.System),
+        "Hello, how are you?" to MessageType(MessageType.Type.Received, isSeen = true),
+        "Hello, how are you?" to MessageType(MessageType.Type.Received, isSeen = true),
+        "I'm doing great, thanks!" to MessageType(MessageType.Type.Sent, isSeen = true),
+        "What about you?" to MessageType(MessageType.Type.Received, isSeen = true),
+        "What about you?" to MessageType(MessageType.Type.Received, isSeen = true),
         "What about you?" to MessageType(MessageType.Type.Received, isSeen = true), // Przykład wiadomości widzianej
-        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true)
+        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true),
+        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true),
+        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true),
+        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = false),
+        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = false),
+        "System message: User exit the chat" to MessageType(MessageType.Type.System),
     )
 
     MessageList(

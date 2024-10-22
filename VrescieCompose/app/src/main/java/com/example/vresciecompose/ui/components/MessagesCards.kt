@@ -25,9 +25,9 @@ import androidx.compose.ui.unit.sp
 
 
 @Composable
-fun ReceivedMessage(message: String, messageFontSize: TextUnit) {
+fun ReceivedMessage(modifier: Modifier, message: String, messageFontSize: TextUnit) {
     Card(
-        modifier = Modifier.padding(8.dp)
+        modifier = modifier
             .padding(end = 25.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
@@ -46,10 +46,9 @@ fun ReceivedMessage(message: String, messageFontSize: TextUnit) {
 }
 
 @Composable
-fun SentMessage(message: String, isSeen: Boolean, showIcon: Boolean, messageFontSize: TextUnit) {
+fun SentMessage(modifier: Modifier, message: String, isSeen: Boolean, showIcon: Boolean, messageFontSize: TextUnit) {
     Card(
-        modifier = Modifier
-            .padding(8.dp)
+        modifier = modifier
             .padding(start = 25.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
