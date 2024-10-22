@@ -42,6 +42,8 @@
     <string name="other_gender">Other gender</string>
     <string name="continue_string">Continue</string>
     <string name="add_your_photo">Add your photo</string>
+    <string name="take_a_photo">Take a Photo</string>
+    <string name="choose_from_gallery">Choose from Gallery</string>
     <!--  FirstLaunchScreen -->
     <string name="finally_str">Finally</string>
     <string name="new_friends">New friends</string>

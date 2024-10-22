@@ -42,8 +42,10 @@
     <string name="enter_your_age">Podaj swoj wiek</string>
     <string name="select_your_gender">Wybierz swoją płeć</string>
     <string name="other_gender">Inna</string>
-    <string name="continue_string">Continue</string>
+    <string name="continue_string">Kontynuuj</string>
     <string name="add_your_photo">Dodaj swoje zdjęcie</string>
+    <string name="take_a_photo">Zrób zdjęcie</string>
+    <string name="choose_from_gallery">Wybierz zdjęcie z galerii</string>
     <!--  FirstLaunchScreen -->
     <string name="finally_str"> </string>
     <string name="new_friends">Nowi przyjaciele</string>

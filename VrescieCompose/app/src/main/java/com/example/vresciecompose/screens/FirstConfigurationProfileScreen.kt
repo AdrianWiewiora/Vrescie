@@ -55,7 +55,7 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Matrix
-import android.media.ExifInterface
+import androidx. exifinterface. media. ExifInterface
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
@@ -424,7 +424,7 @@ fun SecondConfigurationStage(
             onClick = {
                 galleryLauncher.launch("image/*")
             },
-            text = "Choose from Gallery",
+            text = stringResource(R.string.choose_from_gallery),
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 5.dp)
                 .fillMaxWidth(),
@@ -443,7 +443,7 @@ fun SecondConfigurationStage(
                     }
                 }
             },
-            text = "Take a Photo",
+            text = stringResource(R.string.take_a_photo),
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 5.dp)
                 .fillMaxWidth(),
@@ -464,16 +464,6 @@ fun SecondConfigurationStage(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        FilledButton(
-            onClick = {
-                savePhotoToGallery()
-            },
-            text = "Test save...",
-            modifier = Modifier
-                .padding(horizontal = 8.dp, vertical = 5.dp)
-                .fillMaxWidth(),
-        )
-
         val isLoading = remember { mutableStateOf(false) }
 
         FilledButton(
@@ -486,11 +476,10 @@ fun SecondConfigurationStage(
                     sendData(context, savedUri) // Przekazanie URI zapisanego zdjęcia
                 } else {
                     Log.e("SavePhoto", "Failed to save photo")
+                    isLoading.value = false // Zakończenie operacji
                 }
-
-                isLoading.value = false // Zakończenie operacji
             },
-            text = if (isLoading.value) "Loading..." else stringResource(R.string.continue_string),
+            text = if (isLoading.value) stringResource(R.string.loading) else stringResource(R.string.continue_string),
             enabled = !isLoading.value,
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 5.dp)
@@ -606,7 +595,10 @@ fun ZoomableImage(
                         (currentOffset.value.x + pan.x * currentScale.value).coerceIn(-maxX, maxX),
                         (currentOffset.value.y + pan.y * currentScale.value).coerceIn(-maxY, maxY)
                     )
-                    Log.d("ZoomableImage", "Scale: ${currentScale.value}, Offset: ${currentOffset.value}")
+                    Log.d(
+                        "ZoomableImage",
+                        "Scale: ${currentScale.value}, Offset: ${currentOffset.value}"
+                    )
 
                 }
             }
