@@ -63,7 +63,7 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
     val currentUser = FirebaseAuth.getInstance().currentUser
     val database = FirebaseDatabase.getInstance()
     val conversationRef = database.getReference("/explicit_conversations")
-
+    val stringYou = stringResource(R.string.you)
     // Listener dla zmian w bazie danych
     val conversationListener = remember {
         object : ValueEventListener {
@@ -80,12 +80,23 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
                         // Pobierz ID drugiego uczestnika konwersacji
                         val secondParticipantId = participants.children.find { it.key != currentUser?.uid }?.key ?: ""
 
-                        // Pobierz ostatnią wiadomość
-                        val lastMessage = conversationSnapshot.child("messages")
+                        // Pobierz ostatnią wiadomość oraz nadawcę tej wiadomości
+                        val lastMessageSnapshot = conversationSnapshot.child("messages")
                             .children.sortedByDescending { it.child("timestamp").value as? Long }
-                            .firstOrNull()?.child("text")?.value?.toString() ?: ""
+                            .firstOrNull()
 
-                        // Stwórz obiekt Conversation i dodaj go do listy
+                        val lastMessageText = lastMessageSnapshot?.child("text")?.value?.toString() ?: ""
+                        val senderId = lastMessageSnapshot?.child("senderId")?.value?.toString() ?: ""
+
+
+                        // Dodaje "Ty:" jeśli nadawcą jest bieżący użytkownik
+                        val lastMessage = if (senderId == currentUser?.uid) {
+                            "$stringYou$lastMessageText"
+                        } else {
+                            lastMessageText
+                        }
+
+                        // Twworzy obiekt Conversation i dodaj go do listy
                         val conversation = Conversation(id = conversationSnapshot.key ?: "", name = secondParticipantName, secondParticipantId = secondParticipantId)
                         conversationList.add(conversation)
                         lastMessageMap[conversationSnapshot.key ?: ""] = lastMessage
@@ -179,7 +190,7 @@ fun ConversationItem(conversation: Conversation, lastMessage: String, onItemClic
         )
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Wyświetl zdjęcie jeśli jest dostępne
@@ -188,7 +199,7 @@ fun ConversationItem(conversation: Conversation, lastMessage: String, onItemClic
                     painter = rememberAsyncImagePainter(secondUserProfile.value!!.profileImageUrl),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(70.dp)
                         .clip(CircleShape)
                         .border(2.dp, Color.Gray, CircleShape),
                     contentScale = ContentScale.Crop
@@ -197,7 +208,7 @@ fun ConversationItem(conversation: Conversation, lastMessage: String, onItemClic
                 // Placeholder na wypadek braku zdjęcia
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(70.dp)
                         .clip(CircleShape)
                         .background(Color.LightGray)
                 )

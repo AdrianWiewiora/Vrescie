@@ -74,4 +74,7 @@
     <string name="repeat_password">Repeat password</string>
     <string name="sign_up">Sign in</string>
 
+    <string name="you">You: </string>
+
+
 </resources>

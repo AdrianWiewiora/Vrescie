@@ -76,5 +76,7 @@
     <string name="repeat_password">Powtórz hasło</string>
     <string name="sign_up">Zarejestruj się</string>
 
+    <string name="you">Ty: </string>
+
 
 </resources>
