@@ -1,6 +1,10 @@
 package com.example.vresciecompose.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -9,7 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -37,9 +46,10 @@ fun ReceivedMessage(message: String, messageFontSize: TextUnit) {
 }
 
 @Composable
-fun SentMessage(message: String, messageFontSize: TextUnit) {
+fun SentMessage(message: String, isSeen: Boolean, messageFontSize: TextUnit) {
     Card(
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier
+            .padding(8.dp)
             .padding(start = 25.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
@@ -47,14 +57,29 @@ fun SentMessage(message: String, messageFontSize: TextUnit) {
             contentColor = MaterialTheme.colorScheme.surface,
         )
     ) {
-        Text(
-            text = message,
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .padding(vertical = 5.dp),
-            textAlign = TextAlign.End,
-            fontSize = messageFontSize
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically // Wyrównanie ikony i tekstu w pionie
+        ) {
+            // Ikona statusu wyświetlenia wiadomości
+            Icon(
+                imageVector = if (isSeen) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                contentDescription = if (isSeen) "Message seen" else "Message not seen",
+                tint = MaterialTheme.colorScheme.surface,
+                modifier = Modifier
+                    .size(25.dp) // Rozmiar ikony
+                    .padding(start = 8.dp, end = 3.dp) // Odstęp między ikoną a tekstem
+            )
+
+            // Tekst wiadomości
+            Text(
+                text = message,
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .padding(vertical = 5.dp),
+                textAlign = TextAlign.End,
+                fontSize = messageFontSize
+            )
+        }
     }
 }
 

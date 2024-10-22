@@ -257,7 +257,9 @@ class ConversationViewModel : ViewModel() {
                 val messageId = childSnapshot.key
                 val message = childSnapshot.getValue(Message::class.java)
                 message?.let {
-                    if (!it.messageSeen) {
+                    // Sprawdzamy, czy wiadomość nie została już odczytana
+                    // oraz czy została wysłana przez innego użytkownika
+                    if (!it.messageSeen && it.senderId != currentUserID) {
                         messagesRef.child(messageId!!).child("messageSeen").setValue(true)
                     }
                 }
