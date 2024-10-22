@@ -92,6 +92,7 @@ fun ExplicitConversationScreen(
             Log.d("DisposableEffect", "Effect disposed")  // Log przy wywołaniu onDispose
             viewModel.resetMessages()
             viewModel.removeMessageListener()  // Usuń nasłuchiwacz
+            viewModel.removeExplicitListener()  // Usuń nasłuchiwacz dla explicit_conversations
         }
     }
 

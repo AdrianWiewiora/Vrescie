@@ -15,6 +15,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +41,16 @@ fun MessageList(
     messageFontSize: TextUnit = 14.sp
 ) {
     val listState = rememberLazyListState()
+    val hasScrolled = remember { mutableStateOf(false) } // Stan, aby śledzić, czy przewinięto
+
+    // Przewijanie na dół tylko przy pierwszym uruchomieniu
+    LaunchedEffect(messages) {
+        if (messages.isNotEmpty() && !hasScrolled.value) {
+            Log.d("MessageList", "Scrolling to the last item on initialization")
+            listState.animateScrollToItem(messages.size - 1) // Przewijamy do ostatniego elementu
+            hasScrolled.value = true // Ustawiamy, że przewinięto
+        }
+    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -69,20 +81,20 @@ fun MessageList(
             }
         }
 
-        // Automatyczne przewijanie tylko dla wiadomości typu Sent i System
-        LaunchedEffect(messages) {
-            if (messages.isNotEmpty()) {
-                val lastMessageType = messages.last().second.type
-                Log.d("MessageList", "Last message type: $lastMessageType")
-                Log.d("MessageList", "First visible item index: ${listState.firstVisibleItemIndex}")
-
-                // Przewijamy, jeśli ostatnia wiadomość jest typu Sent lub System
-                if (lastMessageType == MessageType.Type.Sent || lastMessageType == MessageType.Type.System) {
-                    Log.d("MessageList", "Scrolling to the last item")
-                    listState.animateScrollToItem(messages.size - 1) // Przewijamy do ostatniego elementu
-                }
-            }
-        }
+//        // Automatyczne przewijanie tylko dla wiadomości typu Sent i System
+//        LaunchedEffect(messages) {
+//            if (messages.isNotEmpty()) {
+//                val lastMessageType = messages.last().second.type
+//                Log.d("MessageList", "Last message type: $lastMessageType")
+//                Log.d("MessageList", "First visible item index: ${listState.firstVisibleItemIndex}")
+//
+//                // Przewijamy, jeśli ostatnia wiadomość jest typu Sent lub System
+//                if (lastMessageType == MessageType.Type.Sent || lastMessageType == MessageType.Type.System) {
+//                    Log.d("MessageList", "Scrolling to the last item")
+//                    listState.animateScrollToItem(messages.size - 1) // Przewijamy do ostatniego elementu
+//                }
+//            }
+//        }
     }
 }
 

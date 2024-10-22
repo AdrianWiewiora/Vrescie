@@ -17,6 +17,7 @@ class ConversationViewModel : ViewModel() {
     private var conversationId: String = ""
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
     private var messageListener: ChildEventListener? = null  // Nowa zmienna
+    private var explicitMessageListener: ChildEventListener? = null
 
     fun sendMessage(message: String, senderId: String = "") {
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -132,13 +133,18 @@ class ConversationViewModel : ViewModel() {
             .child(conversationId)
             .child("messages")
 
+        // Usuwamy poprzedni nasłuchiwacz, jeśli istnieje
+        explicitMessageListener?.let {
+            conversationRef.removeEventListener(it)
+        }
+
         // Nasłuchuj zmian w bazie danych Firebase
-        conversationRef.addChildEventListener(object : ChildEventListener {
+        explicitMessageListener = object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 val message = snapshot.getValue(Message::class.java)
                 message?.let {
                     // Ustal, czy wiadomość została odczytana
-                    val isSeen = it.messageSeen // Użyj pola isMessageSeen z modelu Message
+                    val isSeen = it.messageSeen
                     Log.d("MessageListener", "Received message: $it, isSeen: $isSeen")
 
                     // Określenie typu wiadomości
@@ -151,7 +157,6 @@ class ConversationViewModel : ViewModel() {
                     _messages.value += it.text to messageType
                 }
             }
-
 
             override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
                 // Obsługa zmian w wiadomościach (opcjonalne)
@@ -168,7 +173,17 @@ class ConversationViewModel : ViewModel() {
             override fun onCancelled(error: DatabaseError) {
                 // Obsługa błędów
             }
-        })
+        }
+
+        conversationRef.addChildEventListener(explicitMessageListener!!)
+    }
+
+    fun removeExplicitListener() {
+        explicitMessageListener?.let {
+            val messagesRef = FirebaseDatabase.getInstance().getReference("explicit_conversations/$conversationId/messages")
+            messagesRef.removeEventListener(it)
+            explicitMessageListener = null  // Ustaw na null po usunięciu
+        }
     }
 
     fun listenForMessages(conversationId: String) {
