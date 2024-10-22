@@ -1,7 +1,8 @@
 package com.example.vresciecompose.view_models
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.example.vresciecompose.ui.components.Message
+import com.example.vresciecompose.data.Message
 import com.example.vresciecompose.ui.components.MessageType
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,13 +16,20 @@ class ConversationViewModel : ViewModel() {
 
     private var conversationId: String = ""
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
+    private var messageListener: ChildEventListener? = null  // Nowa zmienna
 
     fun sendMessage(message: String, senderId: String = "") {
         val currentUser = FirebaseAuth.getInstance().currentUser
         currentUser?.let { user ->
             val currentTime = System.currentTimeMillis()
             val senderId2 = senderId.ifEmpty { user.uid }
-            val messageData = Message(senderId2, message, currentTime)
+
+            val messageData = Message(
+                senderId = senderId2,
+                text = message,
+                timestamp = currentTime,
+                messageSeen = false
+            )
 
             val conversationMessagesRef = FirebaseDatabase.getInstance().reference
                 .child("conversations")
@@ -37,7 +45,7 @@ class ConversationViewModel : ViewModel() {
         currentUser?.let { user ->
             val currentTime = System.currentTimeMillis()
             val senderId2 = senderId.ifEmpty { user.uid }
-            val messageData = Message(senderId2, message, currentTime)
+            val messageData = Message(senderId2, message, currentTime, messageSeen = false)
 
             val conversationMessagesRef = FirebaseDatabase.getInstance().reference
                 .child("explicit_conversations")
@@ -76,15 +84,19 @@ class ConversationViewModel : ViewModel() {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 val message = snapshot.getValue(Message::class.java)
                 message?.let {
+                    // Ustal, czy wiadomość została odczytana
+                    val isSeen = it.messageSeen // Użyj pola isMessageSeen z modelu Message
+
+                    // Określenie typu wiadomości
                     val messageType = when {
-                        it.senderId == currentUserID -> MessageType.Sent
-                        it.senderId == "system" -> MessageType.System
-                        else -> MessageType.Received
+                        it.senderId == currentUserID -> MessageType(MessageType.Type.Sent, isSeen)
+                        it.senderId == "system" -> MessageType(MessageType.Type.System, isSeen)
+                        else -> MessageType(MessageType.Type.Received, isSeen)
                     }
 
                     // Sprawdzamy, czy wiadomość nie istnieje już na liście
                     val messageExists = _messages.value.any { pair ->
-                        pair.first == it.text && pair.second == messageType
+                        pair.first == it.text && pair.second.type == messageType.type
                     }
 
                     // Jeśli wiadomość nie istnieje, dodaj ją do listy
@@ -125,21 +137,18 @@ class ConversationViewModel : ViewModel() {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 val message = snapshot.getValue(Message::class.java)
                 message?.let {
+                    // Ustal, czy wiadomość została odczytana
+                    val isSeen = it.messageSeen // Użyj pola isMessageSeen z modelu Message
+                    Log.d("MessageListener", "Received message: $it, isSeen: $isSeen")
+
+                    // Określenie typu wiadomości
                     val messageType = when {
-                        it.senderId == currentUserID -> MessageType.Sent
-                        it.senderId == "system" -> MessageType.System
-                        else -> MessageType.Received
+                        it.senderId == currentUserID -> MessageType(MessageType.Type.Sent, isSeen)
+                        it.senderId == "system" -> MessageType(MessageType.Type.System, isSeen)
+                        else -> MessageType(MessageType.Type.Received, isSeen)
                     }
 
-                    // Sprawdzamy, czy wiadomość nie istnieje już na liście
-                    val messageExists = _messages.value.any { pair ->
-                        pair.first == it.text && pair.second == messageType
-                    }
-
-                    // Jeśli wiadomość nie istnieje, dodaj ją do listy
-                    if (!messageExists) {
-                        _messages.value += it.text to messageType
-                    }
+                    _messages.value += it.text to messageType
                 }
             }
 
@@ -161,4 +170,104 @@ class ConversationViewModel : ViewModel() {
             }
         })
     }
+
+    fun listenForMessages(conversationId: String) {
+        val messagesRef = FirebaseDatabase.getInstance().getReference("explicit_conversations/$conversationId/messages")
+
+        // Usuwamy poprzedni nasłuchiwacz, jeśli istnieje
+        messageListener?.let { messagesRef.removeEventListener(it) }
+
+        messageListener = object : ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                // Pobieramy wiadomość z bazy
+                val message = snapshot.getValue(Message::class.java)
+                message?.let {
+                    // Tylko dla wiadomości od innych użytkowników
+                    if (!it.messageSeen && it.senderId != currentUserID) {
+                        updateMessageSeenStatus(snapshot.key)
+                    }
+                }
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                // Obsługuje zmiany wiadomości, np. aktualizacje messageSeen
+                val message = snapshot.getValue(Message::class.java)
+                message?.let {
+                    // Uaktualniamy stan wiadomości, np. zmiana messageSeen
+                    _messages.value = _messages.value.map { pair ->
+                        if (pair.first == it.text) {
+                            Pair(it.text, pair.second.copy(isSeen = it.messageSeen))
+                        } else {
+                            pair
+                        }
+                    }
+                }
+            }
+
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                // Obsługuje usunięcie wiadomości
+                val message = snapshot.getValue(Message::class.java)
+                message?.let {
+                    _messages.value = _messages.value.filterNot { pair -> pair.first == it.text }
+                }
+            }
+
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                // Obsługuje przeniesienie wiadomości
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Obsługuje błąd
+                Log.e("FirebaseListener", "Error while listening for messages: ", error.toException())
+            }
+        }
+
+
+        messagesRef.addChildEventListener(messageListener!!)
+    }
+
+    // Funkcja do usuwania nasłuchiwacza
+    fun removeMessageListener() {
+        messageListener?.let {
+            val messagesRef = FirebaseDatabase.getInstance().getReference("explicit_conversations/$conversationId/messages")
+            messagesRef.removeEventListener(it)
+            messageListener = null
+        }
+    }
+
+    // Funkcja do aktualizacji statusu messageSeen
+    private fun updateMessageSeenStatus(messageId: String?) {
+        val messageRef = FirebaseDatabase.getInstance().getReference("explicit_conversations/$conversationId/messages").child(messageId!!)
+
+        messageRef.child("messageSeen").setValue(true)
+            .addOnSuccessListener {
+                Log.d("FirebaseUpdate", "Message seen status updated successfully for message ID: $messageId")
+            }
+            .addOnFailureListener { exception ->
+                Log.e("FirebaseUpdate", "Error updating message seen status: ", exception)
+            }
+    }
+
+
+    fun updateMessagesAsSeen(conversationId: String) {
+        val messagesRef = FirebaseDatabase.getInstance().getReference("explicit_conversations/$conversationId/messages")
+
+        messagesRef.get().addOnSuccessListener { snapshot ->
+            for (childSnapshot in snapshot.children) {
+                val messageId = childSnapshot.key
+                val message = childSnapshot.getValue(Message::class.java)
+                message?.let {
+                    if (!it.messageSeen) {
+                        messagesRef.child(messageId!!).child("messageSeen").setValue(true)
+                    }
+                }
+            }
+        }.addOnFailureListener { exception ->
+            Log.e("FirebaseUpdate", "Error updating messages seen status: ", exception)
+        }
+    }
+
+
+
+
 }

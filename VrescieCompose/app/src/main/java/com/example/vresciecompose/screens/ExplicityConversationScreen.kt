@@ -28,6 +28,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -84,15 +85,23 @@ fun ExplicitConversationScreen(
     }
 
     DisposableEffect(Unit) {
-        Log.d("DisposableEffect", "Effect started1")  // Log przy inicjalizacji
+        Log.d("DisposableEffect", "Effect started")  // Log przy inicjalizacji
+        viewModel.listenForMessages(conversationID)
 
         onDispose {
-            Log.d("DisposableEffect", "Effect disposed1")  // Log przy wywołaniu onDispose
+            Log.d("DisposableEffect", "Effect disposed")  // Log przy wywołaniu onDispose
             viewModel.resetMessages()
+            viewModel.removeMessageListener()  // Usuń nasłuchiwacz
         }
     }
 
-    viewModel.setConversationIdExplicit(conversationID)
+    // Wywołujemy aktualizację wiadomości jako widzianych przy wejściu do konwersacji
+    LaunchedEffect(Unit) {
+        viewModel.setConversationIdExplicit(conversationID)
+        viewModel.updateMessagesAsSeen(conversationID)  // Upewnij się, że ta funkcja jest dostępna w ViewModel
+    }
+
+    //viewModel.setConversationIdExplicit(conversationID)
     val messages by viewModel.messages.collectAsState()
 
     fun sendMessage(message: String) {

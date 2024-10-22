@@ -54,6 +54,7 @@
     <!--  ImplicitChatsScreen and LoadingScreenImageAndCard-->
     <string name="nothing_here_yet">Nothing here yet :(\nTry to get likes\nfrom other users\nin the  v-chat so that\n conversations appear here</string>
     <string name="wait_we_are_looking">Czekaj!!!\n\nTrwa szukanie osoby odpowiedniej dla twoich preferencji</string>
+    <string name="you">You: </string>
     <!--  LoginScreen-->
     <string name="password">Password</string>
     <string name="please_enter_your_email_and_password">Please enter your email and password.</string>
@@ -74,7 +75,7 @@
     <string name="repeat_password">Repeat password</string>
     <string name="sign_up">Sign in</string>
 
-    <string name="you">You: </string>
+
 
 
 </resources>

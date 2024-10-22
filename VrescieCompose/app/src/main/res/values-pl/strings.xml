@@ -56,6 +56,7 @@
     <!--  ImplicitChatsScreen and LoadingScreenImageAndCard-->
     <string name="nothing_here_yet">Jeszcze nic tu nie ma :(\nPostaraj się o polubienia\ninnych użytkowników\nw anonimowym czacie aby\npojawiły się tu konwersacje</string>
     <string name="wait_we_are_looking">Czekaj!!!\n\nSzukamy osoby odpowiedniej dla twoich preferncji</string>
+    <string name="you">Ty: </string>
     <!--  LoginScreen-->
     <string name="password">Hasło</string>
     <string name="please_enter_your_email_and_password">Proszę wprowadzić e-mail i hasło.</string>
@@ -76,7 +77,7 @@
     <string name="repeat_password">Powtórz hasło</string>
     <string name="sign_up">Zarejestruj się</string>
 
-    <string name="you">Ty: </string>
+
 
 
 </resources>
