@@ -42,31 +42,40 @@ class ConversationViewModel(
 
         conversationRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // Iteruj przez wszystkie konwersacje w Firebase
-                for (conversationSnapshot in snapshot.children) {
-                    // Sprawdź, czy bieżący użytkownik jest uczestnikiem konwersacji
-                    if (conversationSnapshot.key?.contains(currentUserId) == true) {
-                        // Pobierz ID konwersacji z Firebase
-                        val firebaseConversationId = conversationSnapshot.key ?: return
+                // Lista do przechowywania konwersacji, które muszą być dodane
+                val conversationsToInsert = mutableListOf<ConversationEntity>()
 
-                        // Pobierz ID drugiego uczestnika konwersacji
-                        val members = conversationSnapshot.child("members")
-                        val secondParticipantId = members.children.find { it.key != currentUserId }?.key ?: continue
+                // Pobiera wszystkie istniejące konwersacje z lokalnej bazy danych (Room)
+                viewModelScope.launch {
+                    val existingConversations = conversationDao.getAllConversations() // Pobiera wszystkie konwersacje z Room
+                    val existingConversationIds = existingConversations.map { it.firebaseConversationId }.toSet()
 
-                        // Stwórz obiekt ConversationEntity
-                        val conversationEntity = ConversationEntity(
-                            firebaseConversationId = firebaseConversationId,
-                            memberId = secondParticipantId
-                        )
+                    for (conversationSnapshot in snapshot.children) {
+                        val firebaseConversationId = conversationSnapshot.key ?: continue
 
-                        // Sprawdź, czy konwersacja już istnieje w Room
-                        viewModelScope.launch {
-                            val existingConversations = conversationDao.getConversationsByMemberId(secondParticipantId)
-                            if (existingConversations.isEmpty()) {
-                                // Jeśli nie istnieje, dodaj do bazy
-                                conversationDao.insertConversation(conversationEntity)
-                            }
+                        // Sprawdza, czy konwersacja już istnieje w lokalnej bazie danych
+                        if (!existingConversationIds.contains(firebaseConversationId)) {
+                            // Jeśli nie istnieje, dodaje do listy do wstawienia
+
+                            val members = conversationSnapshot.child("members")
+                            val secondParticipantId = members.children.find { it.key != currentUserId }?.key ?: continue
+
+                            // Tworzy obiekt ConversationEntity
+                            val conversationEntity = ConversationEntity(
+                                firebaseConversationId = firebaseConversationId,
+                                memberId = secondParticipantId
+                            )
+
+                            conversationsToInsert.add(conversationEntity)
+                            Log.d("FetchConversations", "New conversation added to insert list: $firebaseConversationId")
+                        } else {
+                            Log.d("FetchConversations", "Conversation already exists: $firebaseConversationId")
                         }
+                    }
+
+                    // Teraz zapisz tylko te konwersacje, które są nowe
+                    if (conversationsToInsert.isNotEmpty()) {
+                        conversationDao.insertConversations(conversationsToInsert)
                     }
                 }
             }

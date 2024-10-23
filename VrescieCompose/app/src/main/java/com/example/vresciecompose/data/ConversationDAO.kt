@@ -22,9 +22,16 @@ interface ConversationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertConversation(conversation: ConversationEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertConversations(conversations: List<ConversationEntity>) // Funkcja do wstawiania wielu konwersacji
+
     @Query("SELECT * FROM conversations WHERE memberId = :memberId")
     suspend fun getConversationsByMemberId(memberId: String): List<ConversationEntity>
+
+    @Query("SELECT * FROM conversations") // Funkcja do pobierania wszystkich konwersacji
+    suspend fun getAllConversations(): List<ConversationEntity>
 
     @Query("DELETE FROM conversations")
     suspend fun deleteAllConversations()
 }
+
