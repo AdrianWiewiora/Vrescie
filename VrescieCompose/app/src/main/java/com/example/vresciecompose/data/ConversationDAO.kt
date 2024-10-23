@@ -1,5 +1,6 @@
 package com.example.vresciecompose.data
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
@@ -10,7 +11,7 @@ import androidx.room.Query
 
 @Entity(tableName = "conversations")
 data class ConversationEntity(
-    @PrimaryKey val localConversationId: String, // Lokalny ID konwersacji w Room
+    @PrimaryKey(autoGenerate = true) val localConversationId: Long = 0, // Lokalny ID konwersacji w Room
     val firebaseConversationId: String, // ID konwersacji z Firebase
     val memberId: String // ID członka konwersacji (drugiego użytkownika)
 )

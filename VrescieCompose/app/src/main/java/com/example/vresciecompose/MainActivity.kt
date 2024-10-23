@@ -89,20 +89,22 @@ class MainActivity : ComponentActivity() {
 //            }
 //        }
 
-//        val MIGRATION_2_3 = object : Migration(2, 3) {
+//        val MIGRATION_1_2 = object : Migration(3, 4) {
 //            override fun migrate(database: SupportSQLiteDatabase) {
-//                // Usuwamy istniejącą tabelę conversations, jeśli istnieje
-//                database.execSQL("DROP TABLE IF EXISTS conversations")
-//                // Usuwamy istniejącą tabelę messages, jeśli istnieje
-//                database.execSQL("DROP TABLE IF EXISTS messages")
+//                // Tworzenie nowej tabeli z poprawnym schematem
+//                database.execSQL("CREATE TABLE conversations_new (localConversationId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, firebaseConversationId TEXT NOT NULL, memberId TEXT NOT NULL)")
 //
-//                // Tworzymy nową tabelę conversations
-//                database.execSQL("CREATE TABLE IF NOT EXISTS `conversations` (`localConversationId` TEXT NOT NULL, `firebaseConversationId` TEXT NOT NULL, `memberId` TEXT NOT NULL, PRIMARY KEY(`localConversationId`))")
+//                // Kopiowanie danych ze starej tabeli
+//                database.execSQL("INSERT INTO conversations_new (firebaseConversationId, memberId) SELECT firebaseConversationId, memberId FROM conversations")
 //
-//                // Tworzymy nową tabelę messages z kluczem obcym do conversations
-//                database.execSQL("CREATE TABLE IF NOT EXISTS `messages` (`id` TEXT NOT NULL, `messageId` TEXT NOT NULL, `senderId` TEXT NOT NULL, `text` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `messageSeen` INTEGER NOT NULL, `localConversationId` TEXT NOT NULL, FOREIGN KEY(localConversationId) REFERENCES conversations(localConversationId) ON DELETE CASCADE, PRIMARY KEY(`id`))")
+//                // Usuwanie starej tabeli
+//                database.execSQL("DROP TABLE conversations")
+//
+//                // Zmiana nazwy nowej tabeli na starą
+//                database.execSQL("ALTER TABLE conversations_new RENAME TO conversations")
 //            }
 //        }
+
 
         // Inicjalizacja DataStore
         val dataStore = applicationContext.dataStore
@@ -121,6 +123,12 @@ class MainActivity : ComponentActivity() {
         val userChatPrefsDao = database.userChatPrefsDao()
         val viewModelFactory = UserChatPrefsViewModelFactory(userChatPrefsDao)
         userChatPrefsViewModel = ViewModelProvider(this, viewModelFactory).get(UserChatPrefsViewModel::class.java)
+        // Inicjalizacja DAO message i conversaion
+        val messageDao = database.messageDao()
+        val conversationDao = database.conversationDao()
+        // Utwórz fabrykę dla ConversationViewModel
+        val conversationViewModelFactory = ConversationViewModelFactory(messageDao, conversationDao)
+        conversationViewModel = ViewModelProvider(this, conversationViewModelFactory).get(ConversationViewModel::class.java)
 
         backDispatcher = onBackPressedDispatcher
 
@@ -145,8 +153,6 @@ class MainActivity : ComponentActivity() {
                 Log.e("Location", "Location permission denied")
             }
         }
-
-        conversationViewModel = ViewModelProvider(this).get(ConversationViewModel::class.java)
 
         if (viewModel.isReady.value) {
             val startDestination = when {
@@ -206,7 +212,7 @@ class MainViewModelFactory(private val sharedPreferences: SharedPreferences) :
 }
 
 
-@Database(entities = [UserChatPrefs::class, ConversationEntity::class, MessageEntity::class], version = 3)
+@Database(entities = [UserChatPrefs::class, ConversationEntity::class, MessageEntity::class], version = 4)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userChatPrefsDao(): UserChatPrefsDao
     abstract fun conversationDao(): ConversationDao
@@ -218,6 +224,18 @@ class UserChatPrefsViewModelFactory(private val userChatPrefsDao: UserChatPrefsD
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(UserChatPrefsViewModel::class.java)) {
             return UserChatPrefsViewModel(userChatPrefsDao) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+class ConversationViewModelFactory(
+    private val messageDao: MessageDao,
+    private val conversationDao: ConversationDao
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ConversationViewModel::class.java)) {
+            return ConversationViewModel(messageDao, conversationDao) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -68,7 +68,6 @@ fun ExplicitConversationScreen(
     settingsViewModel: SettingsViewModel,
 ) {
     val currentMessageSize by settingsViewModel.messageSizeFlow.observeAsState(1)
-    // Mapowanie rozmiarów czcionek na TextUnit
     val messageFontSize = when (currentMessageSize) {
         0 -> dimensionResource(id = R.dimen.message_small_size) // 10sp
         1 -> dimensionResource(id = R.dimen.message_normal_size) // 14sp
@@ -77,7 +76,6 @@ fun ExplicitConversationScreen(
         else -> dimensionResource(id = R.dimen.message_normal_size) // Domyślny rozmiar
     }.value.sp // Konwersja na TextUnit
 
-    // Pole tekstowe do wprowadzania wiadomości
     val (messageText, setMessageText) = remember { mutableStateOf("") }
 
     BackHandler {
@@ -85,30 +83,25 @@ fun ExplicitConversationScreen(
     }
 
     DisposableEffect(Unit) {
-        Log.d("DisposableEffect", "Effect started")  // Log przy inicjalizacji
         viewModel.listenForMessages(conversationID)
 
         onDispose {
-            Log.d("DisposableEffect", "Effect disposed")  // Log przy wywołaniu onDispose
             viewModel.resetMessages()
-            viewModel.removeMessageListener()  // Usuń nasłuchiwacz
-            viewModel.removeExplicitListener()  // Usuń nasłuchiwacz dla explicit_conversations
+            viewModel.removeMessageListener()
+            viewModel.removeExplicitListener()
         }
     }
 
-    // Wywołujemy aktualizację wiadomości jako widzianych przy wejściu do konwersacji
     LaunchedEffect(Unit) {
         viewModel.setConversationIdExplicit(conversationID)
-        viewModel.updateMessagesAsSeen(conversationID)  // Upewnij się, że ta funkcja jest dostępna w ViewModel
+        viewModel.updateMessagesAsSeen(conversationID)
     }
 
-    //viewModel.setConversationIdExplicit(conversationID)
     val messages by viewModel.messages.collectAsState()
 
     fun sendMessage(message: String) {
         viewModel.sendMessageExp(message)
     }
-
 
     ExplicitConversationColumn(
         modifier = Modifier
@@ -119,7 +112,6 @@ fun ExplicitConversationScreen(
         sendMessage = ::sendMessage,
         messageFontSize = messageFontSize
     )
-
 
 }
 

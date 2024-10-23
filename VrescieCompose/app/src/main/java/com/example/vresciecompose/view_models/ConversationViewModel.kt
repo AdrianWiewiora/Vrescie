@@ -1,15 +1,27 @@
 package com.example.vresciecompose.view_models
 
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.vresciecompose.data.Conversation
+import com.example.vresciecompose.data.ConversationDao
+import com.example.vresciecompose.data.ConversationEntity
 import com.example.vresciecompose.data.Message
+import com.example.vresciecompose.data.MessageDao
 import com.example.vresciecompose.ui.components.MessageType
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.google.firebase.database.*
+import kotlinx.coroutines.launch
+import androidx.lifecycle.asLiveData
+import java.util.UUID
 
-class ConversationViewModel : ViewModel() {
+class ConversationViewModel(
+    private val messageDao: MessageDao,
+    private val conversationDao: ConversationDao
+) : ViewModel() {
 
     private val _messages = MutableStateFlow<List<Pair<String, MessageType>>>(emptyList())
     val messages: StateFlow<List<Pair<String, MessageType>>> = _messages
@@ -18,6 +30,53 @@ class ConversationViewModel : ViewModel() {
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
     private var messageListener: ChildEventListener? = null  // Nowa zmienna
     private var explicitMessageListener: ChildEventListener? = null
+
+    init {
+        fetchAndStoreConversations()
+    }
+
+    private fun fetchAndStoreConversations() {
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        val conversationRef = FirebaseDatabase.getInstance().getReference("/explicit_conversations")
+
+        conversationRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // Iteruj przez wszystkie konwersacje w Firebase
+                for (conversationSnapshot in snapshot.children) {
+                    // Sprawdź, czy bieżący użytkownik jest uczestnikiem konwersacji
+                    if (conversationSnapshot.key?.contains(currentUserId) == true) {
+                        // Pobierz ID konwersacji z Firebase
+                        val firebaseConversationId = conversationSnapshot.key ?: return
+
+                        // Pobierz ID drugiego uczestnika konwersacji
+                        val members = conversationSnapshot.child("members")
+                        val secondParticipantId = members.children.find { it.key != currentUserId }?.key ?: continue
+
+                        // Stwórz obiekt ConversationEntity
+                        val conversationEntity = ConversationEntity(
+                            firebaseConversationId = firebaseConversationId,
+                            memberId = secondParticipantId
+                        )
+
+                        // Sprawdź, czy konwersacja już istnieje w Room
+                        viewModelScope.launch {
+                            val existingConversations = conversationDao.getConversationsByMemberId(secondParticipantId)
+                            if (existingConversations.isEmpty()) {
+                                // Jeśli nie istnieje, dodaj do bazy
+                                conversationDao.insertConversation(conversationEntity)
+                            }
+                        }
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("FirebaseError", "Error fetching conversations: ", error.toException())
+            }
+        })
+    }
+
 
     fun sendMessage(message: String, senderId: String = "") {
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -132,11 +191,6 @@ class ConversationViewModel : ViewModel() {
             .child("explicit_conversations")
             .child(conversationId)
             .child("messages")
-
-        // Usuwamy poprzedni nasłuchiwacz, jeśli istnieje
-        explicitMessageListener?.let {
-            conversationRef.removeEventListener(it)
-        }
 
         // Nasłuchuj zmian w bazie danych Firebase
         explicitMessageListener = object : ChildEventListener {

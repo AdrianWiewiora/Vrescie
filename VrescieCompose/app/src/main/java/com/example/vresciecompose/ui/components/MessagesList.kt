@@ -43,27 +43,18 @@ fun MessageList(
     messageFontSize: TextUnit = 14.sp
 ) {
     val listState = rememberLazyListState()
-    val hasScrolled = remember { mutableStateOf(false) }
-
-    // Przewijanie na dół tylko przy pierwszym uruchomieniu
-    LaunchedEffect(messages) {
-        if (messages.isNotEmpty() && !hasScrolled.value) {
-            Log.d("MessageList", "Scrolling to the last item on initialization")
-            listState.animateScrollToItem(messages.size - 1)
-            hasScrolled.value = true
-        }
-    }
-
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp)
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            state = listState
+            state = listState,
+            reverseLayout = true,
+            verticalArrangement = Arrangement.Top
         ) {
-            itemsIndexed(messages) { index, (message, type) ->
-                val paddingValues = getMessagePadding(index, messages) // Ustal padding dla wiadomości
+            itemsIndexed(messages.asReversed()) { index, (message, type) ->
+                val paddingValues = getMessagePadding(index, messages)
 
                 when (type.type) {
                     MessageType.Type.Received -> {
@@ -97,17 +88,11 @@ fun MessageList(
             }
         }
 
-        // Automatyczne przewijanie tylko dla wiadomości typu Sent i System
         LaunchedEffect(messages) {
             if (messages.isNotEmpty()) {
                 val lastMessageType = messages.last().second.type
-                Log.d("MessageList", "Last message type: $lastMessageType")
-                Log.d("MessageList", "First visible item index: ${listState.firstVisibleItemIndex}")
-
-                // Przewijamy, jeśli ostatnia wiadomość jest typu Sent lub System
                 if (lastMessageType == MessageType.Type.Sent || lastMessageType == MessageType.Type.System) {
-                    Log.d("MessageList", "Scrolling to the last item")
-                    listState.animateScrollToItem(messages.size - 1)
+                    listState.animateScrollToItem(0)
                 }
             }
         }
@@ -116,25 +101,30 @@ fun MessageList(
 
 
 fun isLastInGroup(index: Int, messages: List<Pair<String, MessageType>>): Boolean {
-    // Sprawdzamy tylko wiadomości typu Sent
-    if (index < 0 || index >= messages.size) return false
-
-    val currentMessageType = messages[index].second.type
-
-    // Sprawdź, czy następna wiadomość jest innego typu lub jest ostatnia
-    return index == messages.size - 1 || messages[index + 1].second.type != currentMessageType
+    val reversedIndex = messages.size - 1 - index
+    // Sprawdza tylko wiadomości typu Sent
+    if (reversedIndex < 0 || reversedIndex >= messages.size) return false
+    val currentMessageType = messages[reversedIndex].second.type
+    // Sprawdza, czy następna wiadomość (w oryginalnej kolejności) jest innego typu lub jest ostatnia
+    return reversedIndex == messages.size - 1 || messages[reversedIndex + 1].second.type != currentMessageType
 }
+
 
 fun getMessagePadding(index: Int, messages: List<Pair<String, MessageType>>): PaddingValues {
-    val currentType = messages[index].second.type
-    val isFirstMessage = index == 0
-    val isLastMessage = index == messages.size - 1
+    // Indeks wiadomości jest liczony od końca w przypadku odwróconej listy
+    val reversedIndex = messages.size - 1 - index
 
-    val topPadding = if (!isFirstMessage && messages[index - 1].second.type == currentType) 1.dp else 8.dp
-    val bottomPadding = if (!isLastMessage && messages[index + 1].second.type == currentType) 1.dp else 8.dp
+    val currentType = messages[reversedIndex].second.type
+    val isFirstMessage = reversedIndex == messages.size - 1
+    val isLastMessage = reversedIndex == 0
 
-    return PaddingValues(top = topPadding, bottom = bottomPadding)
+    // Logika dla paddingu uwzględnia odwróconą kolejność
+    val topPadding = if (!isFirstMessage && messages[reversedIndex + 1].second.type == currentType) 1.dp else 8.dp
+    val bottomPadding = if (!isLastMessage && messages[reversedIndex - 1].second.type == currentType) 1.dp else 8.dp
+
+    return PaddingValues(top = bottomPadding, bottom = topPadding)
 }
+
 
 
 
