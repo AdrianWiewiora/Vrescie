@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import com.google.firebase.database.*
 import kotlinx.coroutines.launch
 import androidx.lifecycle.asLiveData
+import com.example.vresciecompose.data.MessageEntity
 import java.util.UUID
 
 class ConversationViewModel(
@@ -77,6 +78,8 @@ class ConversationViewModel(
                     if (conversationsToInsert.isNotEmpty()) {
                         conversationDao.insertConversations(conversationsToInsert)
                     }
+
+                    fetchMessagesForConversations()
                 }
             }
 
@@ -84,6 +87,59 @@ class ConversationViewModel(
                 Log.e("FirebaseError", "Error fetching conversations: ", error.toException())
             }
         })
+    }
+
+    private fun fetchMessagesForConversations() {
+        viewModelScope.launch {
+            // Pobierz wszystkie konwersacje z Room
+            val conversations = conversationDao.getAllConversations()
+            Log.d("FetchMessages", "Fetched ${conversations.size} conversations from Room.")
+
+            for (conversation in conversations) {
+                val firebaseConversationId = conversation.firebaseConversationId
+                val localConversationId = conversation.localConversationId.toString()
+                Log.d("FetchMessages", "Fetching messages for conversation: $firebaseConversationId")
+
+                val messagesRef = FirebaseDatabase.getInstance().getReference("/explicit_conversations/$firebaseConversationId/messages")
+
+                messagesRef.orderByChild("timestamp").limitToLast(100) // Ogranicz do 100 wiadomości
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            // Lista do przechowywania wiadomości do dodania
+                            val messagesToInsert = mutableListOf<MessageEntity>()
+
+                            viewModelScope.launch {
+                                for (messageSnapshot in snapshot.children) {
+                                    val messageId = messageSnapshot.key ?: continue
+                                    val messageData = messageSnapshot.getValue(MessageEntity::class.java) ?: continue
+
+                                    // Sprawdź, czy wiadomość już istnieje w Room
+                                    if (messageDao.getMessageById(messageId) == null) {
+                                        // Dodaj lokalne ID konwersacji do wiadomości
+                                        val messageEntity = messageData.copy(messageId = messageId, localConversationId = localConversationId)
+                                        messagesToInsert.add(messageEntity)
+                                        Log.d("FetchMessages", "Message added to insert list: ${messageEntity.messageId}")
+                                    } else {
+                                        Log.d("FetchMessages", "Message already exists: $messageId")
+                                    }
+                                }
+
+                                // Zapisz nowo pobrane wiadomości do Room
+                                if (messagesToInsert.isNotEmpty()) {
+                                    messagesToInsert.forEach { messageDao.insertMessage(it) }
+                                    Log.d("FetchMessages", "Inserted ${messagesToInsert.size} new messages to Room.")
+                                } else {
+                                    Log.d("FetchMessages", "No new messages to insert for conversation: $firebaseConversationId")
+                                }
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Log.e("FirebaseError", "Error fetching messages: ", error.toException())
+                        }
+                    })
+            }
+        }
     }
 
 

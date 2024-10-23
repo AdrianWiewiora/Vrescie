@@ -105,6 +105,35 @@ class MainActivity : ComponentActivity() {
 //            }
 //        }
 
+//        val MIGRATION_1_2 = object : Migration(4, 5) {
+//            override fun migrate(database: SupportSQLiteDatabase) {
+//                // Tworzenie nowej tabeli z automatycznie generowanym ID
+//                database.execSQL(
+//                    "CREATE TABLE messages_new (" +
+//                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+//                            "messageId TEXT NOT NULL," +
+//                            "senderId TEXT NOT NULL," +
+//                            "text TEXT NOT NULL," +
+//                            "timestamp INTEGER NOT NULL," +
+//                            "messageSeen INTEGER NOT NULL," +
+//                            "localConversationId TEXT NOT NULL," +
+//                            "FOREIGN KEY(localConversationId) REFERENCES conversations(localConversationId) ON DELETE CASCADE)"
+//                )
+//
+//                // Skopiowanie danych ze starej tabeli
+//                database.execSQL(
+//                    "INSERT INTO messages_new (messageId, senderId, text, timestamp, messageSeen, localConversationId) " +
+//                            "SELECT messageId, senderId, text, timestamp, messageSeen, localConversationId FROM messages"
+//                )
+//
+//                // Usunięcie starej tabeli
+//                database.execSQL("DROP TABLE messages")
+//
+//                // Zmiana nazwy nowej tabeli na oryginalną nazwę
+//                database.execSQL("ALTER TABLE messages_new RENAME TO messages")
+//            }
+//        }
+
 
         // Inicjalizacja DataStore
         val dataStore = applicationContext.dataStore
@@ -212,7 +241,7 @@ class MainViewModelFactory(private val sharedPreferences: SharedPreferences) :
 }
 
 
-@Database(entities = [UserChatPrefs::class, ConversationEntity::class, MessageEntity::class], version = 4)
+@Database(entities = [UserChatPrefs::class, ConversationEntity::class, MessageEntity::class], version = 5)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userChatPrefsDao(): UserChatPrefsDao
     abstract fun conversationDao(): ConversationDao
