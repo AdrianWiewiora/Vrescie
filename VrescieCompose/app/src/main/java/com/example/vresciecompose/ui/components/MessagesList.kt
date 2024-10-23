@@ -104,9 +104,16 @@ fun isLastInGroup(index: Int, messages: List<Pair<String, MessageType>>): Boolea
     val reversedIndex = messages.size - 1 - index
     // Sprawdza tylko wiadomości typu Sent
     if (reversedIndex < 0 || reversedIndex >= messages.size) return false
-    val currentMessageType = messages[reversedIndex].second.type
-    // Sprawdza, czy następna wiadomość (w oryginalnej kolejności) jest innego typu lub jest ostatnia
-    return reversedIndex == messages.size - 1 || messages[reversedIndex + 1].second.type != currentMessageType
+
+    // Odczytaj obecny typ wiadomości i stan 'isSeen'
+    val currentMessageType = messages[reversedIndex].second
+    if (currentMessageType.type != MessageType.Type.Sent) return false // tylko dla wiadomości wysłanych
+
+    // Sprawdź następne wiadomości
+    val nextMessageType = messages.getOrNull(reversedIndex + 1)?.second
+    return if (nextMessageType != null) {
+        nextMessageType.type == MessageType.Type.Sent && !nextMessageType.isSeen && currentMessageType.isSeen || (nextMessageType.type != MessageType.Type.Sent)
+    } else true
 }
 
 

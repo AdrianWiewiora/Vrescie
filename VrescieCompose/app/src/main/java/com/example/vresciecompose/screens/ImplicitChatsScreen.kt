@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,10 +58,11 @@ import com.google.firebase.database.ValueEventListener
 @Composable
 fun ImplicitChatsScreen(onClick: (String) -> Unit) {
     val conversationList = remember { mutableStateListOf<Conversation>() }
-    val lastMessageMap = remember { mutableMapOf<String, String>() }
+    val lastMessageMap = remember { mutableMapOf<String, Triple<String, Boolean, String>>() } // Zmieniamy na Triple
 
     // Pobranie konwersacji z bazy danych Firebase
     val currentUser = FirebaseAuth.getInstance().currentUser
+    val userId = currentUser?.uid ?: ""
     val database = FirebaseDatabase.getInstance()
     val conversationRef = database.getReference("/explicit_conversations")
     val stringYou = stringResource(R.string.you)
@@ -87,19 +89,21 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
 
                         val lastMessageText = lastMessageSnapshot?.child("text")?.value?.toString() ?: ""
                         val senderId = lastMessageSnapshot?.child("senderId")?.value?.toString() ?: ""
-
+                        val isSeen = lastMessageSnapshot?.child("messageSeen")?.value as? Boolean ?: true
 
                         // Dodaje "Ty:" jeśli nadawcą jest bieżący użytkownik
-                        val lastMessage = if (senderId == currentUser?.uid) {
+                        val lastMessageDisplay = if (senderId == currentUser?.uid) {
                             "$stringYou$lastMessageText"
                         } else {
                             lastMessageText
                         }
 
-                        // Twworzy obiekt Conversation i dodaj go do listy
+                        // Tworzy obiekt Conversation i dodaj go do listy
                         val conversation = Conversation(id = conversationSnapshot.key ?: "", name = secondParticipantName, secondParticipantId = secondParticipantId)
                         conversationList.add(conversation)
-                        lastMessageMap[conversationSnapshot.key ?: ""] = lastMessage
+
+                        // Dodajemy informacje o ostatniej wiadomości do lastMessageMap
+                        lastMessageMap[conversationSnapshot.key ?: ""] = Triple(lastMessageDisplay, isSeen, senderId)
                     }
                 }
             }
@@ -119,9 +123,8 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
         onClick("${Navigation.Destinations.EXPLICIT_CONVERSATION}/${conversation.id}")
     }
 
-
     if (conversationList.isNotEmpty()) {
-        ImplicitChats(conversationList, onItemClick, lastMessageMap)
+        ImplicitChats(conversationList, onItemClick, lastMessageMap,userId)
     } else {
         Text(
             text = stringResource(R.string.nothing_here_yet),
@@ -138,18 +141,22 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit) {
 fun ImplicitChats(
     conversationList: List<Conversation>,
     onItemClick: (Conversation) -> Unit,
-    lastMessageMap: Map<String, String>
-){
+    lastMessageMap: Map<String, Triple<String, Boolean, String>>,
+    userId: String
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {
         items(conversationList) { conversation ->
-            val lastMessage = lastMessageMap[conversation.id] ?: ""
+            val (lastMessage, isSeen, senderId) = lastMessageMap[conversation.id] ?: Triple("", true, "")
             ConversationItem(
                 conversation = conversation,
                 lastMessage = lastMessage,
-                onItemClick = onItemClick
+                isSeen = isSeen,
+                senderId = senderId,
+                onItemClick = onItemClick,
+                userId = userId
             )
         }
     }
@@ -157,8 +164,16 @@ fun ImplicitChats(
 
 
 @Composable
-fun ConversationItem(conversation: Conversation, lastMessage: String, onItemClick: (Conversation) -> Unit) {
+fun ConversationItem(
+    conversation: Conversation,
+    lastMessage: String,
+    isSeen: Boolean, // Dodajemy isSeen jako parametr
+    senderId: String, // Dodajemy senderId jako parametr
+    onItemClick: (Conversation) -> Unit,
+    userId: String
+) {
     val secondUserProfile = remember { mutableStateOf<UserProfile?>(null) }
+
 
     // Pobierz dane użytkownika po ID
     LaunchedEffect(conversation.secondParticipantId) {
@@ -179,11 +194,15 @@ fun ConversationItem(conversation: Conversation, lastMessage: String, onItemClic
         })
     }
 
+    // Sprawdzenie, czy wiadomość nie jest od bieżącego użytkownika i nie została wyświetlona
+    val shouldBoldMessage = !isSeen && senderId != userId
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable { onItemClick(conversation) },
+            .clickable { onItemClick(conversation) }
+            .border(1.dp, if (shouldBoldMessage) MaterialTheme.colorScheme.onPrimaryContainer else Color.Transparent, RoundedCornerShape(8.dp)), // Ramka dla nieodczytanych wiadomości
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -224,13 +243,13 @@ fun ConversationItem(conversation: Conversation, lastMessage: String, onItemClic
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = lastMessage,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = if (shouldBoldMessage) MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                    else MaterialTheme.typography.bodyMedium
                 )
             }
         }
     }
 }
-
 
 
 @Preview(showBackground = true)
@@ -243,11 +262,10 @@ fun PreviewImplicitChatsScreen() {
         Conversation(id = "3", name = "Piotr Wiśniewski")
     )
 
-    // Przykładowe ostatnie wiadomości
     val sampleLastMessages = mapOf(
-        "1" to "Cześć! Jak się masz?",
-        "2" to "Dziękuję, do zobaczenia!",
-        "3" to "Co słychać?"
+        "1" to Triple("Cześć! Jak się masz?", false, "uid123"), // wiadomość niewidoczna, nadawca inny niż user
+        "2" to Triple("Dziękuję, do zobaczenia!", true, "uid456"), // wiadomość widoczna
+        "3" to Triple("Co słychać?", false, "currentUserId") // wiadomość niewidoczna, nadawca to bieżący użytkownik
     )
 
     // Mock funkcji onClick
@@ -259,6 +277,7 @@ fun PreviewImplicitChatsScreen() {
     ImplicitChats(
         conversationList = sampleConversations,
         onItemClick = { conversation -> mockOnClick(conversation.id) },
-        lastMessageMap = sampleLastMessages
+        lastMessageMap = sampleLastMessages,
+        userId = "1"
     )
 }
