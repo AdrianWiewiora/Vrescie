@@ -355,9 +355,12 @@ fun AnonymousConversationColumn(
 
             IconButton(
                 onClick = {
+                    val trimmedMessage = messageText.trim()
                     setMessageText(messageText.trimEnd(' ', '\n'))
-                    sendMessageToDb(messageText)
-                    setMessageText("")
+                    if (trimmedMessage.isNotEmpty()) {
+                        sendMessageToDb(trimmedMessage)
+                        setMessageText("")
+                    }
                 },
                 modifier = Modifier
                     .size(50.dp)

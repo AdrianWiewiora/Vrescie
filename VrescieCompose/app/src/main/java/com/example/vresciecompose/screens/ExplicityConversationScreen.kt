@@ -205,9 +205,12 @@ fun ExplicitConversationColumn(
 
             IconButton(
                 onClick = {
+                    val trimmedMessage = messageText.trim()
                     setMessageText(messageText.trimEnd(' ', '\n'))
-                    sendMessage(messageText)
-                    setMessageText("")
+                    if (trimmedMessage.isNotEmpty()) {
+                        sendMessage(trimmedMessage)
+                        setMessageText("")
+                    }
                 },
                 modifier = Modifier
                     .size(50.dp)
