@@ -22,10 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 @Composable
-fun ReceivedMessage(modifier: Modifier, message: String, messageFontSize: TextUnit) {
+fun ReceivedMessage(modifier: Modifier, message: String, messageFontSize: TextUnit, showTime: Boolean, timestamp: Long) {
+    val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
     Card(
         modifier = modifier
             .padding(end = 25.dp),
@@ -35,18 +39,23 @@ fun ReceivedMessage(modifier: Modifier, message: String, messageFontSize: TextUn
             contentColor = MaterialTheme.colorScheme.surface,
         )
     ) {
-        Text(
-            text = message,
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .padding(vertical = 5.dp),
-            fontSize = messageFontSize
-        )
+        Row(modifier = Modifier.padding(horizontal = 8.dp).padding(vertical = 5.dp),verticalAlignment = Alignment.CenterVertically) {
+            Text(text = message, fontSize = messageFontSize)
+            if (showTime) {
+                Text(
+                    text = " $formattedTime",
+                    fontSize = 10.sp,
+                    modifier = Modifier.padding(horizontal = 2.dp),
+                    color = MaterialTheme.colorScheme.surfaceDim,
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun SentMessage(modifier: Modifier, message: String, isSeen: Boolean, showIcon: Boolean, messageFontSize: TextUnit) {
+fun SentMessage(modifier: Modifier, message: String, isSeen: Boolean, showIcon: Boolean, messageFontSize: TextUnit, showTime: Boolean, timestamp: Long) {
+    val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
     Card(
         modifier = modifier
             .padding(start = 25.dp),
@@ -74,11 +83,20 @@ fun SentMessage(modifier: Modifier, message: String, isSeen: Boolean, showIcon: 
             Text(
                 text = message,
                 modifier = Modifier
-                    .padding(end = 8.dp, start = if (showIcon) 0.dp else 8.dp)
+                    .padding(end = if(showTime) 3.dp else 8.dp, start = if (showIcon) 0.dp else 8.dp)
                     .padding(vertical = 5.dp),
                 textAlign = TextAlign.End,
                 fontSize = messageFontSize
             )
+
+            if (showTime) {
+                Text(
+                    text = " $formattedTime",
+                    fontSize = 10.sp,
+                    modifier = Modifier.padding(end = 10.dp),
+                    color = MaterialTheme.colorScheme.surfaceDim,
+                )
+            }
         }
     }
 }

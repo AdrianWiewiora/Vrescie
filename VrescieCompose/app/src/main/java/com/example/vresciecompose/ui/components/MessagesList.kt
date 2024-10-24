@@ -68,6 +68,9 @@ fun MessageList(
                 val timestamp = type.timestamp
                 val date = Date(timestamp)
                 val formattedDate = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(date)
+                val currentCalendar = Calendar.getInstance().apply { timeInMillis = timestamp }
+                val currentHour = currentCalendar.get(Calendar.HOUR_OF_DAY)
+                val currentMinute = currentCalendar.get(Calendar.MINUTE)
 
                 if (index > 0) { // Sprawdzamy,
                     val previousTimestamp = messages[messages.size - 1 - index + 1].second.timestamp
@@ -85,13 +88,36 @@ fun MessageList(
 
                 val paddingValues = getMessagePadding(index, messages)
 
+                var showTime = when{
+                    index == 0 -> true
+                    type.type != messages[messages.size - 1 - index + 1].second.type -> true
+                    else -> false
+                }
+
+                if(index > 0) {
+                    val previousTimestamp = messages[messages.size - 1 - index + 1].second.timestamp
+                    val previousCalendar = Calendar.getInstance().apply { timeInMillis = previousTimestamp }
+                    val previousHour = previousCalendar.get(Calendar.HOUR_OF_DAY)
+                    val previousMinute = previousCalendar.get(Calendar.MINUTE)
+                    if(type.type == messages[messages.size - 1 - index + 1].second.type &&
+                        (previousHour != currentHour && previousMinute != currentMinute ||
+                                previousHour == currentHour && previousMinute != currentMinute ||
+                                previousHour != currentHour))
+                        showTime = true
+                }
+
+
                 when (type.type) {
                     MessageType.Type.Received -> {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
                             ReceivedMessage(
-                                modifier = Modifier.padding(paddingValues).padding(horizontal = 8.dp),
+                                modifier = Modifier
+                                    .padding(paddingValues)
+                                    .padding(horizontal = 8.dp),
                                 message,
-                                messageFontSize
+                                messageFontSize,
+                                showTime,
+                                timestamp
                             )
                         }
                     }
@@ -100,11 +126,15 @@ fun MessageList(
                             val isSeen = type.isSeen
                             val showIcon = isLastInGroup(index, messages)
                             SentMessage(
-                                modifier = Modifier.padding(paddingValues).padding(horizontal = 8.dp),
+                                modifier = Modifier
+                                    .padding(paddingValues)
+                                    .padding(horizontal = 8.dp),
                                 message,
                                 isSeen,
                                 showIcon,
-                                messageFontSize
+                                messageFontSize,
+                                showTime,
+                                timestamp
                             )
                         }
                     }
