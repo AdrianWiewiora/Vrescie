@@ -1,5 +1,6 @@
 package com.example.vresciecompose.screens
 
+import LocalContext
 import android.util.Log
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
@@ -77,7 +78,7 @@ fun ExplicitConversationScreen(
     }.value.sp // Konwersja na TextUnit
 
     val (messageText, setMessageText) = remember { mutableStateOf("") }
-
+    val context = LocalContext.current
     BackHandler {
         onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
     }
@@ -88,12 +89,12 @@ fun ExplicitConversationScreen(
         onDispose {
             viewModel.resetMessages()
             viewModel.removeMessageListener()
-            viewModel.removeExplicitListener()
+            //viewModel.removeExplicitListener()
         }
     }
 
     LaunchedEffect(Unit) {
-        viewModel.setConversationIdExplicit(conversationID)
+        viewModel.setConversationIdExplicit(conversationID, context)
         viewModel.updateMessagesAsSeen(conversationID)
     }
 

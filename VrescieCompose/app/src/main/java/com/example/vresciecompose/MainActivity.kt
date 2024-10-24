@@ -4,6 +4,7 @@ import ProvideContext
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -17,6 +18,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -158,6 +161,7 @@ class MainActivity : ComponentActivity() {
         // Utwórz fabrykę dla ConversationViewModel
         val conversationViewModelFactory = ConversationViewModelFactory(messageDao, conversationDao)
         conversationViewModel = ViewModelProvider(this, conversationViewModelFactory).get(ConversationViewModel::class.java)
+        conversationViewModel.createNotificationChannel(this)
 
         backDispatcher = onBackPressedDispatcher
 
@@ -166,6 +170,36 @@ class MainActivity : ComponentActivity() {
                 !viewModel.isReady.value
             }
         }
+
+        val requestPermissionLauncher1 = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                Log.d("NotificationPermission", "Permission granted!")
+            } else {
+                Log.d("NotificationPermission", "Permission denied.")
+            }
+        }
+
+        fun askNotificationPermission() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                when {
+                    ContextCompat.checkSelfPermission(
+                        this,
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED -> {
+                        // Mamy uprawnienie, można wysyłać powiadomienia
+                        Log.d("NotificationPermission", "Permission already granted.")
+                    }
+                    else -> {
+                        // Poproś użytkownika o zgodę
+                        requestPermissionLauncher1.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+            }
+        }
+        askNotificationPermission()  // Prośba o zgodę na powiadomienia
+
 
         // Inicjalizacja ViewModel
         registrationViewModel = ViewModelProvider(this).get(RegistrationViewModel::class.java)

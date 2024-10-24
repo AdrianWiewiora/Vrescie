@@ -1,6 +1,16 @@
 package com.example.vresciecompose.view_models
 
+import android.app.ActivityManager
+import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,13 +27,15 @@ import com.google.firebase.database.*
 import kotlinx.coroutines.launch
 import androidx.lifecycle.asLiveData
 import com.example.vresciecompose.data.MessageEntity
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 class ConversationViewModel(
     private val messageDao: MessageDao,
     private val conversationDao: ConversationDao
 ) : ViewModel() {
+
+    companion object {
+        private const val CHANNEL_ID = "new_message_channel" // Unikalny identyfikator kanału
+    }
 
     private val _messages = MutableStateFlow<List<Pair<String, MessageType>>>(emptyList())
     val messages: StateFlow<List<Pair<String, MessageType>>> = _messages
@@ -46,6 +58,75 @@ class ConversationViewModel(
     init {
         fetchAndStoreConversations()
     }
+
+    fun createNotificationChannel(context: Context) {
+        Log.d("Notification", "Creating notification channel")
+
+        val name = "New Messages"
+        val descriptionText = "Notifications for new messages"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+            description = descriptionText
+        }
+
+        val notificationManager: NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        Log.d("Notification", "Notification channel created: $name")
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    fun showNotification(context: Context, senderName: String, messageText: String) {
+        Log.d("Notification", "Attempting to show notification for message: $messageText from $senderName")
+
+        // Sprawdzenie uprawnienia na Androidzie 13+ (API 33 i wyżej)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, "android.permission.POST_NOTIFICATIONS")
+                != PackageManager.PERMISSION_GRANTED) {
+
+                // Brak uprawnień - obsługa sytuacji
+                Log.w("Notification", "No permission to post notifications")
+                return
+            }
+        }
+
+        val truncatedMessage = if (messageText.length > 30) {
+            messageText.take(30) + "..."
+        } else {
+            messageText
+        }
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)  // Ikona powiadomienia
+            .setContentTitle(senderName)
+            .setContentText(truncatedMessage)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        val notificationManager = NotificationManagerCompat.from(context)
+        Log.d("Notification", "Showing notification with content: $truncatedMessage")
+        notificationManager.notify(1, notification)
+    }
+
+    private fun isAppInForeground(context: Context): Boolean {
+        Log.d("Notification", "Checking if app is in foreground")
+
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val runningAppProcesses = activityManager.runningAppProcesses ?: return false
+        val packageName = context.packageName
+
+        for (processInfo in runningAppProcesses) {
+            if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+                && processInfo.processName == packageName) {
+                Log.d("Notification", "App is in foreground")
+                return true
+            }
+        }
+
+        Log.d("Notification", "App is in background")
+        return false
+    }
+
 
     fun startListeningForConversations(userId: String) {
         val database = FirebaseDatabase.getInstance()
@@ -208,12 +289,19 @@ class ConversationViewModel(
                                     val messageData = messageSnapshot.getValue(MessageEntity::class.java) ?: continue
 
                                     // Sprawdź, czy wiadomość już istnieje w Room
-                                    if (messageDao.getMessageById(messageId) == null) {
-                                        // Dodaj lokalne ID konwersacji do wiadomości
+                                    val existingMessage = messageDao.getMessageById(messageId)
+                                    if (existingMessage == null) {
+                                        // Dodaj lokalne ID konwersacji do wiadomości i dodaj do listy do wstawienia
                                         val messageEntity = messageData.copy(messageId = messageId, localConversationId = localConversationId)
                                         messagesToInsert.add(messageEntity)
                                         Log.d("FetchMessages", "Message added to insert list: ${messageEntity.messageId}")
                                     } else {
+                                        // Jeśli wiadomość już istnieje, sprawdź, czy jej stan messageSeen w Firebase to true
+                                        if (messageData.messageSeen && !existingMessage.messageSeen) {
+                                            val updatedMessage = existingMessage.copy(messageSeen = true)
+                                            messageDao.updateMessage(updatedMessage)
+                                            Log.d("FetchMessages", "Updated messageSeen for message: $messageId")
+                                        }
                                         Log.d("FetchMessages", "Message already exists: $messageId")
                                     }
                                 }
@@ -292,9 +380,9 @@ class ConversationViewModel(
     }
 
     // Funkcja do ustawiania conversationIdJawnych
-    fun setConversationIdExplicit(id: String) {
+    fun setConversationIdExplicit(id: String, context: Context) {
         conversationId = id
-        initializeDatabaseRefExplicit()
+        initializeDatabaseRefExplicit(context)
     }
 
     fun resetMessages() {
@@ -355,8 +443,14 @@ class ConversationViewModel(
         })
     }
 
-    private fun initializeDatabaseRefExplicit() {
+    private fun initializeDatabaseRefExplicit(context: Context) {
         viewModelScope.launch {
+
+            if (explicitMessageListener != null) {
+                Log.d("InitializeDatabase", "Removing existing message listener.")
+                removeExplicitListener() // Funkcja, która usuwa listenera z Firebase
+            }
+
             // Pobierz lokalne konwersacje na podstawie firebaseConversationId
             Log.d("InitializeDatabase", "Fetching localConversationId for firebaseConversationId: $conversationId")
             val conversation = conversationDao.getAllConversations() // Pobierz wszystkie konwersacje
@@ -373,13 +467,13 @@ class ConversationViewModel(
             val localMessages = messageDao.getMessagesByConversationId(localConversationId.toString())
 
             // Zmieniamy stan messageSeen na true dla wszystkich lokalnych wiadomości
-            localMessages.forEach { messageEntity ->
-                if (!messageEntity.messageSeen) {
-                    // Zaktualizuj stan wiadomości w Room
-                    val updatedMessage = messageEntity.copy(messageSeen = true)
-                    messageDao.updateMessage(updatedMessage)
-                }
-            }
+//            localMessages.forEach { messageEntity ->
+//                if (!messageEntity.messageSeen) {
+//                    // Zaktualizuj stan wiadomości w Room
+//                    val updatedMessage = messageEntity.copy(messageSeen = true)
+//                    messageDao.updateMessage(updatedMessage)
+//                }
+//            }
 
             // Generowanie listy wiadomości do wyświetlenia
             val roomMessages = localMessages.map { messageEntity ->
@@ -442,12 +536,18 @@ class ConversationViewModel(
                                 senderId = it.senderId,
                                 text = it.text,
                                 timestamp = it.timestamp,
-                                messageSeen = true
+                                messageSeen = it.messageSeen
                             )
 
                             // Zapisz wiadomość w Room
                             messageDao.insertMessage(messageEntity)
                             Log.d("MessageListener", "Message saved to Room: ${messageEntity.text}, from sender: ${messageEntity.senderId}")
+
+                            // Sprawdź, czy aplikacja jest w tle
+                            if (!isAppInForeground(context)) {
+                                // Pokaż powiadomienie
+                                getSenderNameAndShowNotification(context, it.senderId, it.text)
+                            }
                         }
                     }
                 }
@@ -465,17 +565,30 @@ class ConversationViewModel(
                         text != messageId // Filtruj wiadomości, które nie mają usuniętego ID
                     }
 
-                    // Opcjonalnie, załaduj wiadomości ponownie z Room, aby upewnić się, że są aktualne
+                    // Zaktualizuj stan wiadomości w Room na messageSeen = true
                     viewModelScope.launch {
-                        // Pobierz lokalne wiadomości na podstawie conversationId
+                        // Pobierz lokalną konwersację na podstawie conversationId
                         val localConversationId3 = conversationDao.getAllConversations()
                             .firstOrNull { it.firebaseConversationId == conversationId }
                             ?.localConversationId ?: return@launch
 
-                        val localMessages2 = messageDao.getMessagesByConversationId(localConversationId3.toString())
+                        // Pobierz wiadomość z Room na podstawie messageId
+                        val localMessage = messageDao.getMessageById(messageId)
+
+                        localMessage?.let { messageEntity ->
+                            // Zaktualizuj messageSeen na true, jeśli wiadomość istnieje
+                            if (!messageEntity.messageSeen) {
+                                val updatedMessage = messageEntity.copy(messageSeen = true)
+                                messageDao.updateMessage(updatedMessage)
+                                Log.d("MessageListener", "Updated messageSeen to true for message: $messageId")
+                            }
+                        }
+
+                        // Pobierz zaktualizowane wiadomości z Room na podstawie conversationId
+                        val localMessages3 = messageDao.getMessagesByConversationId(localConversationId3.toString())
 
                         // Generowanie listy wiadomości do wyświetlenia
-                        val roomMessages2 = localMessages2.map { messageEntity ->
+                        val roomMessages3 = localMessages3.map { messageEntity ->
                             val messageType = when {
                                 messageEntity.senderId == currentUserID -> MessageType(MessageType.Type.Sent, messageEntity.messageSeen, messageEntity.timestamp)
                                 messageEntity.senderId == "system" -> MessageType(MessageType.Type.System, messageEntity.messageSeen, messageEntity.timestamp)
@@ -486,7 +599,7 @@ class ConversationViewModel(
                         }.reversed()
 
                         // Zaktualizuj _messages z wiadomościami z Room
-                        _messages.value = roomMessages2
+                        _messages.value = roomMessages3
                     }
                 }
 
@@ -503,6 +616,25 @@ class ConversationViewModel(
             // Dodaj nasłuchiwacz do Firebase
             conversationRef.addChildEventListener(explicitMessageListener!!)
         }
+    }
+
+    // Funkcja do pobierania imienia nadawcy
+    private fun getSenderNameAndShowNotification(context: Context, senderId: String, messageText: String) {
+        val membersRef = FirebaseDatabase.getInstance().getReference("/explicit_conversations/$conversationId/members")
+
+        membersRef.child(senderId).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val senderName = snapshot.getValue(String::class.java) ?: "Unknown"
+                Log.d("MessageListener", "Sender name: $senderName for senderId: $senderId")
+
+                // Wyświetl powiadomienie z imieniem nadawcy
+                showNotification(context, senderName, messageText)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("FirebaseError", "Error fetching sender name: ", error.toException())
+            }
+        })
     }
 
     fun removeExplicitListener() {
