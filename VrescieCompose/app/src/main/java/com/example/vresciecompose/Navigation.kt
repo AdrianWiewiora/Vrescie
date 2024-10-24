@@ -93,7 +93,8 @@ fun AppNavigation(
                 locationViewModel = locationViewModel,
                 requestPermissionLauncher = requestPermissionLauncher,
                 defaultFragment = defaultFragment,
-                userChatPrefsViewModel = userChatPrefsViewModel
+                userChatPrefsViewModel = userChatPrefsViewModel,
+                conversationViewModel = conversationViewModel
             )
         }
         composable(Navigation.Destinations.FIRST_LAUNCH) {

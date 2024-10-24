@@ -49,6 +49,7 @@ import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.data.Conversation
 import com.example.vresciecompose.data.UserProfile
+import com.example.vresciecompose.view_models.ConversationViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -56,9 +57,9 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
 @Composable
-fun ImplicitChatsScreen(onClick: (String) -> Unit) {
+fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: ConversationViewModel) {
     val conversationList = remember { mutableStateListOf<Conversation>() }
-    val lastMessageMap = remember { mutableMapOf<String, Triple<String, Boolean, String>>() } // Zmieniamy na Triple
+    val lastMessageMap = remember { mutableMapOf<String, Triple<String, Boolean, String>>() }
 
     // Pobranie konwersacji z bazy danych Firebase
     val currentUser = FirebaseAuth.getInstance().currentUser

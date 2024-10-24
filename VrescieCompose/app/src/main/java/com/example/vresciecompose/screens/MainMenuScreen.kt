@@ -49,6 +49,7 @@ import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.data.UserChatPrefs
 import com.example.vresciecompose.data.UserChatPrefsDao
 import com.example.vresciecompose.ui.components.ExitConfirmationDialog
+import com.example.vresciecompose.view_models.ConversationViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 
 @Composable
@@ -58,7 +59,8 @@ fun MainMenuScreen(
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
     defaultFragment: String,
-    userChatPrefsViewModel: UserChatPrefsViewModel
+    userChatPrefsViewModel: UserChatPrefsViewModel,
+    conversationViewModel: ConversationViewModel
 ) {
     Log.d("MainMenuScreen", "Default Fragment received: $defaultFragment")
 
@@ -98,7 +100,8 @@ fun MainMenuScreen(
         locationViewModel,
         requestPermissionLauncher,
         setCurrentFragment,
-        userChatPrefsViewModel
+        userChatPrefsViewModel,
+        conversationViewModel
     )
 
 }
@@ -111,7 +114,8 @@ fun WholeMenu(
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
     setCurrentFragment: (Int) -> Unit,
-    userChatPrefsViewModel: UserChatPrefsViewModel
+    userChatPrefsViewModel: UserChatPrefsViewModel,
+    conversationViewModel: ConversationViewModel
 ){
     Column(modifier = modifier) {
         TopRowMenu(modifier = Modifier.fillMaxWidth(), onClick)
@@ -125,7 +129,8 @@ fun WholeMenu(
             onClick,
             locationViewModel,
             requestPermissionLauncher,
-            userChatPrefsViewModel
+            userChatPrefsViewModel,
+            conversationViewModel
         )
 
         BottomMenu(
@@ -173,7 +178,8 @@ fun MiddleCard(
     onClick: (String) -> Unit,
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
-    userChatPrefsViewModel: UserChatPrefsViewModel
+    userChatPrefsViewModel: UserChatPrefsViewModel,
+    conversationViewModel: ConversationViewModel
 ){
     Column(
         modifier = modifier
@@ -191,7 +197,7 @@ fun MiddleCard(
             ) { target ->
                 when (target) {
                     1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, onClick, userChatPrefsViewModel)
-                    2 -> ImplicitChatsScreen(onClick)
+                    2 -> ImplicitChatsScreen(onClick, conversationViewModel)
                     3 -> ProfileScreen()
                     else ->  Column(
                         modifier = Modifier
@@ -266,48 +272,49 @@ fun MenuItem(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewWholeMenu() {
-    // Przykładowe dane do podglądu
-    val mockOnClick: (String) -> Unit = { println("Clicked: $it") }
-    // Tworzenie mockowanej wersji DAO i ViewModelu
-    val mockUserChatPrefsDao = object : UserChatPrefsDao {
-        override suspend fun getAllUserChatPrefs(): List<UserChatPrefs> {
-            return listOf(
-                UserChatPrefs(1, "Male", 18f, 30f, true, true, 10f),
-                UserChatPrefs(2, "Female", 25f, 35f, false, true, 20f)
-            )
-        }
-
-        override suspend fun insert(userChatPrefs: UserChatPrefs) {}
-        override suspend fun getUserChatPrefs(): UserChatPrefs? {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun getUserChatPrefsById(id: Long): UserChatPrefs {
-            return UserChatPrefs(id, "Other", 20f, 40f, true, false, 20f)
-        }
-
-        override suspend fun update(userChatPrefs: UserChatPrefs) {}
-    }
-
-    // Tworzenie mockowanego UserChatPrefsViewModel
-    val userChatPrefsViewModel = UserChatPrefsViewModel(mockUserChatPrefsDao)
-
-    WholeMenu(
-        modifier = Modifier.fillMaxSize(),
-        currentFragment = 5,  // Zmień to na 1 lub 3, aby przetestować inne ekrany
-        onClick = mockOnClick,
-        locationViewModel = LocationViewModel(),  // Dodaj mockowane dane
-        requestPermissionLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestPermission(),
-            onResult = { /* Obsłuż wynik */ }
-        ),
-        setCurrentFragment = {},
-        userChatPrefsViewModel = userChatPrefsViewModel
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewWholeMenu() {
+//    // Przykładowe dane do podglądu
+//    val mockOnClick: (String) -> Unit = { println("Clicked: $it") }
+//    // Tworzenie mockowanej wersji DAO i ViewModelu
+//    val mockUserChatPrefsDao = object : UserChatPrefsDao {
+//        override suspend fun getAllUserChatPrefs(): List<UserChatPrefs> {
+//            return listOf(
+//                UserChatPrefs(1, "Male", 18f, 30f, true, true, 10f),
+//                UserChatPrefs(2, "Female", 25f, 35f, false, true, 20f)
+//            )
+//        }
+//
+//        override suspend fun insert(userChatPrefs: UserChatPrefs) {}
+//        override suspend fun getUserChatPrefs(): UserChatPrefs? {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override suspend fun getUserChatPrefsById(id: Long): UserChatPrefs {
+//            return UserChatPrefs(id, "Other", 20f, 40f, true, false, 20f)
+//        }
+//
+//        override suspend fun update(userChatPrefs: UserChatPrefs) {}
+//    }
+//
+//    // Tworzenie mockowanego UserChatPrefsViewModel
+//    val userChatPrefsViewModel = UserChatPrefsViewModel(mockUserChatPrefsDao)
+//
+//    WholeMenu(
+//        modifier = Modifier.fillMaxSize(),
+//        currentFragment = 5,  // Zmień to na 1 lub 3, aby przetestować inne ekrany
+//        onClick = mockOnClick,
+//        locationViewModel = LocationViewModel(),  // Dodaj mockowane dane
+//        requestPermissionLauncher = rememberLauncherForActivityResult(
+//            contract = ActivityResultContracts.RequestPermission(),
+//            onResult = { /* Obsłuż wynik */ }
+//        ),
+//        setCurrentFragment = {},
+//        userChatPrefsViewModel = userChatPrefsViewModel,
+//        conversationViewModel =
+//    )
+//}
 
 @Preview
 @Composable

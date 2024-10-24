@@ -17,7 +17,8 @@ import com.google.firebase.database.*
 import kotlinx.coroutines.launch
 import androidx.lifecycle.asLiveData
 import com.example.vresciecompose.data.MessageEntity
-import java.util.UUID
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 class ConversationViewModel(
     private val messageDao: MessageDao,
@@ -130,6 +131,16 @@ class ConversationViewModel(
                                     Log.d("FetchMessages", "Inserted ${messagesToInsert.size} new messages to Room.")
                                 } else {
                                     Log.d("FetchMessages", "No new messages to insert for conversation: $firebaseConversationId")
+                                }
+
+                                // Usuń wiadomości z Firebase, jeśli messageSeen jest true
+                                for (messageSnapshot in snapshot.children) {
+                                    val messageData = messageSnapshot.getValue(MessageEntity::class.java) ?: continue
+                                    if (messageData.messageSeen) { // Sprawdzamy, czy messageSeen jest true
+                                        val messageId = messageSnapshot.key ?: continue
+                                        messagesRef.child(messageId).removeValue()
+                                        Log.d("FetchMessages", "Deleted message from Firebase: $messageId")
+                                    }
                                 }
                             }
                         }
@@ -252,51 +263,85 @@ class ConversationViewModel(
     }
 
     private fun initializeDatabaseRefExplicit() {
-        // Utwórz odwołanie do węzła konwersacji
-        val conversationRef = FirebaseDatabase.getInstance().reference
-            .child("explicit_conversations")
-            .child(conversationId)
-            .child("messages")
+        viewModelScope.launch {
+            // Pobierz lokalne konwersacje na podstawie firebaseConversationId
+            Log.d("InitializeDatabase", "Fetching localConversationId for firebaseConversationId: $conversationId")
+            val conversation = conversationDao.getAllConversations() // Pobierz wszystkie konwersacje
 
-        // Nasłuchuj zmian w bazie danych Firebase
-        explicitMessageListener = object : ChildEventListener {
-            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                val message = snapshot.getValue(Message::class.java)
-                message?.let {
-                    // Ustal, czy wiadomość została odczytana
-                    val isSeen = it.messageSeen
-                    val timestamp = it.timestamp
-                    Log.d("MessageListener", "Received message: $it, isSeen: $isSeen")
+            val localConversationId = conversation.firstOrNull { it.firebaseConversationId == conversationId }?.localConversationId
+                ?: run {
+                    Log.d("InitializeDatabase", "No localConversationId found for firebaseConversationId: $conversationId")
+                    return@launch
+                }
 
-                    // Określenie typu wiadomości
+            Log.d("InitializeDatabase", "Using localConversationId: $localConversationId for firebaseConversationId: $conversationId")
+
+            // Ładujemy wiadomości z Room Database na podstawie localConversationId
+            val localMessages = messageDao.getMessagesByConversationId(localConversationId.toString())
+            val roomMessages = localMessages
+                .filter { it.messageSeen } // Filtrujemy wiadomości, aby uwzględnić tylko te z messageSeen = true
+                .map { messageEntity ->
                     val messageType = when {
-                        it.senderId == currentUserID -> MessageType(MessageType.Type.Sent, isSeen, timestamp)
-                        it.senderId == "system" -> MessageType(MessageType.Type.System, isSeen, timestamp)
-                        else -> MessageType(MessageType.Type.Received, isSeen, timestamp)
+                        messageEntity.senderId == currentUserID -> MessageType(MessageType.Type.Sent, messageEntity.messageSeen, messageEntity.timestamp)
+                        messageEntity.senderId == "system" -> MessageType(MessageType.Type.System, messageEntity.messageSeen, messageEntity.timestamp)
+                        else -> MessageType(MessageType.Type.Received, messageEntity.messageSeen, messageEntity.timestamp)
                     }
+                    Log.d("InitializeDatabase", "Loaded message from Room: ${messageEntity.text}, type: ${messageType.type}")
+                    messageEntity.text to messageType
+                }
+                .reversed() // Odwrócenie listy wiadomości
 
-                    _messages.value += it.text to messageType
+            // Zaktualizuj _messages z wiadomościami z Room
+            _messages.value = roomMessages
+
+            // Utwórz odwołanie do węzła konwersacji w Firebase
+            val conversationRef = FirebaseDatabase.getInstance().reference
+                .child("explicit_conversations")
+                .child(conversationId)
+                .child("messages")
+
+            // Nasłuchuj zmian w bazie danych Firebase
+            explicitMessageListener = object : ChildEventListener {
+                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                    val message = snapshot.getValue(Message::class.java)
+                    message?.let {
+                        // Ustal, czy wiadomość została odczytana
+                        val isSeen = it.messageSeen
+                        val timestamp = it.timestamp
+                        Log.d("MessageListener", "Received message from Firebase: $it, isSeen: $isSeen")
+
+                        // Określenie typu wiadomości
+                        val messageType = when {
+                            it.senderId == currentUserID -> MessageType(MessageType.Type.Sent, isSeen, timestamp)
+                            it.senderId == "system" -> MessageType(MessageType.Type.System, isSeen, timestamp)
+                            else -> MessageType(MessageType.Type.Received, isSeen, timestamp)
+                        }
+
+                        // Dodaj wiadomość do _messages
+                        _messages.value += it.text to messageType
+                    }
+                }
+
+                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                    // Obsługa zmian w wiadomościach (opcjonalne)
+                }
+
+                override fun onChildRemoved(snapshot: DataSnapshot) {
+                    // Obsługa usunięcia wiadomości (opcjonalne)
+                }
+
+                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                    // Obsługa przemieszczenia wiadomości (opcjonalne)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("FirebaseError", "Error fetching messages: ", error.toException())
                 }
             }
 
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                // Obsługa zmian w wiadomościach (opcjonalne)
-            }
-
-            override fun onChildRemoved(snapshot: DataSnapshot) {
-                // Obsługa usunięcia wiadomości (opcjonalne)
-            }
-
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-                // Obsługa przemieszczenia wiadomości (opcjonalne)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Obsługa błędów
-            }
+            // Dodaj nasłuchiwacz do Firebase
+            conversationRef.addChildEventListener(explicitMessageListener!!)
         }
-
-        conversationRef.addChildEventListener(explicitMessageListener!!)
     }
 
     fun removeExplicitListener() {

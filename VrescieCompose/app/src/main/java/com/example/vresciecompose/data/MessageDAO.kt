@@ -49,4 +49,7 @@ interface MessageDao {
 
     @Query("DELETE FROM messages")
     suspend fun deleteAllMessages()
+
+    @Query("SELECT * FROM messages WHERE localConversationId = :localConversationId ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLastMessageForConversation(localConversationId: String): MessageEntity?
 }
