@@ -205,8 +205,28 @@ fun getMessagePadding(index: Int, messages: List<Pair<String, MessageType>>): Pa
     val isLastMessage = reversedIndex == 0
 
     // Logika dla paddingu uwzględnia odwróconą kolejność
-    val topPadding = if (!isFirstMessage && messages[reversedIndex + 1].second.type == currentType) 1.dp else 8.dp
+    var topPadding = if (!isFirstMessage && messages[reversedIndex + 1].second.type == currentType) 1.dp else 8.dp
     val bottomPadding = if (!isLastMessage && messages[reversedIndex - 1].second.type == currentType) 1.dp else 8.dp
+
+    // Sprawdzamy różnicę czasu
+    if (reversedIndex < messages.size - 1) {
+        val currentTimestamp = messages[reversedIndex].second.timestamp
+        val previousTimestamp = messages[reversedIndex + 1].second.timestamp
+
+        // Obliczamy różnicę czasu w minutach
+        val diffInMinutes = (previousTimestamp - currentTimestamp) / (1000 * 60)
+
+        // Logujemy szczegóły
+        Log.d("MessageList", "Current timestamp: $currentTimestamp, Previous timestamp: $previousTimestamp")
+        Log.d("MessageList", "Difference in minutes: $diffInMinutes")
+
+        if (diffInMinutes >= 2 && messages[reversedIndex - 1].second.type == currentType) {
+            topPadding = 6.dp
+            Log.d("MessageList", "Adding 5.dp padding due to time difference.")
+        } else {
+            Log.d("MessageList", "No additional padding required.")
+        }
+    }
 
     return PaddingValues(top = bottomPadding, bottom = topPadding)
 }
