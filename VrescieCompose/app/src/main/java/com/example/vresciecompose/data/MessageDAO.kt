@@ -7,6 +7,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.Update
 
 @Entity(
     tableName = "messages",
@@ -52,4 +53,7 @@ interface MessageDao {
 
     @Query("SELECT * FROM messages WHERE localConversationId = :localConversationId ORDER BY timestamp DESC LIMIT 1")
     suspend fun getLastMessageForConversation(localConversationId: String): MessageEntity?
+
+    @Update
+    suspend fun updateMessage(message: MessageEntity)
 }

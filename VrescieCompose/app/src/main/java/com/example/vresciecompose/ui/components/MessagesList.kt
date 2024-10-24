@@ -203,9 +203,22 @@ fun getMessageCornerRadius(
             topRightCorner = 10.dp
         }
     }
+    // Sprawdzamy, czy to jedyny element w liście
+    if (messages.size == 1) {
+        // Jeśli jest tylko jeden element, możemy dodać obie logiki
+        val onlyMessageTimestamp = messages[0].second.timestamp
+        val diffInMinutes = (currentTimestamp - onlyMessageTimestamp) / (1000 * 60)
+
+        if (diffInMinutes <= 2) {
+            topLeftCorner = 20.dp
+            topRightCorner = 20.dp
+            bottomLeftCorner = 20.dp
+            bottomRightCorner = 20.dp
+        }
+    }
 
     // Sprawdzamy, czy to pierwszy element
-    if (reversedIndex == messages.size - 1) {
+    else if (reversedIndex == messages.size - 1) {
         val nextTimestamp = messages[reversedIndex - 1].second.timestamp
         val diffInMinutesNext = (currentTimestamp - nextTimestamp) / (1000 * 60)
         if (diffInMinutesNext <= 2 && messages[reversedIndex - 1].second.type == currentType) {
@@ -215,7 +228,7 @@ fun getMessageCornerRadius(
     }
 
     // Sprawdzamy, czy to ostatni element
-    if (reversedIndex == 0) {
+    else if (reversedIndex == 0) {
         val previousTimestamp = messages[reversedIndex + 1].second.timestamp
         val diffInMinutesPrev = (previousTimestamp - currentTimestamp) / (1000 * 60)
         if (diffInMinutesPrev <= 2 && messages[reversedIndex + 1].second.type == currentType) {

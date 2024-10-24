@@ -28,7 +28,10 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,66 +61,22 @@ import com.google.firebase.database.ValueEventListener
 
 @Composable
 fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: ConversationViewModel) {
-    val conversationList = remember { mutableStateListOf<Conversation>() }
-    val lastMessageMap = remember { mutableMapOf<String, Triple<String, Boolean, String>>() }
-
-    // Pobranie konwersacji z bazy danych Firebase
+    val conversationList by conversationViewModel.conversationList.collectAsState()
+    val lastMessageMap by conversationViewModel.lastMessageMap.collectAsState()
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid ?: ""
-    val database = FirebaseDatabase.getInstance()
-    val conversationRef = database.getReference("/explicit_conversations")
-    val stringYou = stringResource(R.string.you)
-    // Listener dla zmian w bazie danych
-    val conversationListener = remember {
-        object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                conversationList.clear()
-                lastMessageMap.clear()
-                for (conversationSnapshot in snapshot.children) {
-                    // Sprawdź, czy bieżący użytkownik jest uczestnikiem konwersacji
-                    if (conversationSnapshot.key?.contains(currentUser?.uid.toString()) == true) {
-                        // Pobierz imię drugiego uczestnika konwersacji
-                        val participants = conversationSnapshot.child("members")
-                        val secondParticipant = participants.children.find { it.key != currentUser?.uid }
-                        val secondParticipantName = secondParticipant?.value as? String ?: ""
-                        // Pobierz ID drugiego uczestnika konwersacji
-                        val secondParticipantId = participants.children.find { it.key != currentUser?.uid }?.key ?: ""
 
-                        // Pobierz ostatnią wiadomość oraz nadawcę tej wiadomości
-                        val lastMessageSnapshot = conversationSnapshot.child("messages")
-                            .children.sortedByDescending { it.child("timestamp").value as? Long }
-                            .firstOrNull()
-
-                        val lastMessageText = lastMessageSnapshot?.child("text")?.value?.toString() ?: ""
-                        val senderId = lastMessageSnapshot?.child("senderId")?.value?.toString() ?: ""
-                        val isSeen = lastMessageSnapshot?.child("messageSeen")?.value as? Boolean ?: true
-
-                        // Dodaje "Ty:" jeśli nadawcą jest bieżący użytkownik
-                        val lastMessageDisplay = if (senderId == currentUser?.uid) {
-                            "$stringYou$lastMessageText"
-                        } else {
-                            lastMessageText
-                        }
-
-                        // Tworzy obiekt Conversation i dodaj go do listy
-                        val conversation = Conversation(id = conversationSnapshot.key ?: "", name = secondParticipantName, secondParticipantId = secondParticipantId)
-                        conversationList.add(conversation)
-
-                        // Dodajemy informacje o ostatniej wiadomości do lastMessageMap
-                        lastMessageMap[conversationSnapshot.key ?: ""] = Triple(lastMessageDisplay, isSeen, senderId)
-                    }
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Obsłuż błąd
-            }
-        }
+    // Dodaj słuchacza Firebase
+    LaunchedEffect(key1 = userId) {
+        conversationViewModel.startListeningForConversations(userId)
     }
 
-    // Dodaj listener do bazy danych
-    val listenerRef = remember { mutableStateOf(conversationListener) }
-    conversationRef.addValueEventListener(listenerRef.value)
+    // Usuń słuchacza Firebase, gdy composable zostanie zniszczony
+    DisposableEffect(Unit) {
+        onDispose {
+            conversationViewModel.stopListeningForConversations()
+        }
+    }
 
     // Obsługa kliknięcia w element LazyColumn
     val onItemClick: (Conversation) -> Unit = { conversation ->
@@ -125,7 +84,7 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: Conver
     }
 
     if (conversationList.isNotEmpty()) {
-        ImplicitChats(conversationList, onItemClick, lastMessageMap,userId)
+        ImplicitChats(conversationList, onItemClick, lastMessageMap, userId)
     } else {
         Text(
             text = stringResource(R.string.nothing_here_yet),
@@ -137,6 +96,7 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: Conver
         )
     }
 }
+
 
 @Composable
 fun ImplicitChats(

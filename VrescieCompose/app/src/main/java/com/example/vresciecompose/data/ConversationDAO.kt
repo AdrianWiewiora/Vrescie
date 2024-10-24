@@ -33,5 +33,9 @@ interface ConversationDao {
 
     @Query("DELETE FROM conversations")
     suspend fun deleteAllConversations()
+
+    @Query("SELECT * FROM conversations WHERE firebaseConversationId = :firebaseConversationId LIMIT 1")
+    suspend fun getConversationByFirebaseId(firebaseConversationId: String): ConversationEntity?
+
 }
 
