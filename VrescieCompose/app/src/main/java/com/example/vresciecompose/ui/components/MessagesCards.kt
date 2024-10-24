@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import java.text.SimpleDateFormat
@@ -28,18 +29,27 @@ import java.util.Locale
 
 
 @Composable
-fun ReceivedMessage(modifier: Modifier, message: String, messageFontSize: TextUnit, showTime: Boolean, timestamp: Long) {
+fun ReceivedMessage(
+    modifier: Modifier,
+    message: String,
+    messageFontSize: TextUnit,
+    showTime: Boolean,
+    timestamp: Long,
+    cornerShape: RoundedCornerShape
+) {
     val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
     Card(
-        modifier = modifier
-            .padding(end = 25.dp),
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier.padding(end = 25.dp),
+        shape = cornerShape,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondary,
-            contentColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Row(modifier = Modifier.padding(horizontal = 8.dp).padding(vertical = 5.dp),verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp).padding(vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(text = message, fontSize = messageFontSize)
             if (showTime) {
                 Text(
@@ -54,37 +64,43 @@ fun ReceivedMessage(modifier: Modifier, message: String, messageFontSize: TextUn
 }
 
 @Composable
-fun SentMessage(modifier: Modifier, message: String, isSeen: Boolean, showIcon: Boolean, messageFontSize: TextUnit, showTime: Boolean, timestamp: Long) {
+fun SentMessage(
+    modifier: Modifier,
+    message: String,
+    isSeen: Boolean,
+    showIcon: Boolean,
+    messageFontSize: TextUnit,
+    showTime: Boolean,
+    timestamp: Long,
+    cornerShape: RoundedCornerShape
+) {
     val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
     Card(
-        modifier = modifier
-            .padding(start = 25.dp),
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier.padding(start = 25.dp),
+        shape = cornerShape,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically // Wyrównanie ikony i tekstu w pionie
+            verticalAlignment = Alignment.CenterVertically
         ) {
             if (showIcon) {
                 Icon(
                     imageVector = if (isSeen) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
                     contentDescription = if (isSeen) "Message seen" else "Message not seen",
                     tint = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier
-                        .size(25.dp)
-                        .padding(start = 8.dp, end = 3.dp)
+                    modifier = Modifier.size(25.dp).padding(start = 8.dp, end = 3.dp)
                 )
             }
 
-            // Tekst wiadomości
             Text(
                 text = message,
-                modifier = Modifier
-                    .padding(end = if(showTime) 3.dp else 8.dp, start = if (showIcon) 0.dp else 8.dp)
-                    .padding(vertical = 5.dp),
+                modifier = Modifier.padding(
+                    end = if (showTime) 3.dp else 8.dp,
+                    start = if (showIcon) 0.dp else 8.dp
+                ).padding(vertical = 5.dp),
                 textAlign = TextAlign.End,
                 fontSize = messageFontSize
             )

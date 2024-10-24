@@ -1,7 +1,6 @@
 package com.example.vresciecompose.ui.components
 
 import android.util.Log
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,27 +9,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vresciecompose.view_models.SettingsViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -109,32 +102,34 @@ fun MessageList(
 
                 when (type.type) {
                     MessageType.Type.Received -> {
+                        val cornerShape = getMessageCornerRadius(index, messages)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
                             ReceivedMessage(
                                 modifier = Modifier
                                     .padding(paddingValues)
                                     .padding(horizontal = 8.dp),
-                                message,
-                                messageFontSize,
-                                showTime,
-                                timestamp
+                                message = message,
+                                messageFontSize = messageFontSize,
+                                showTime = showTime,
+                                timestamp = timestamp,
+                                cornerShape = cornerShape
                             )
                         }
                     }
                     MessageType.Type.Sent -> {
+                        val cornerShape = getMessageCornerRadius(index, messages)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            val isSeen = type.isSeen
-                            val showIcon = isLastInGroup(index, messages)
                             SentMessage(
                                 modifier = Modifier
                                     .padding(paddingValues)
                                     .padding(horizontal = 8.dp),
-                                message,
-                                isSeen,
-                                showIcon,
-                                messageFontSize,
-                                showTime,
-                                timestamp
+                                message = message,
+                                isSeen = type.isSeen,
+                                showIcon = isLastInGroup(index, messages),
+                                messageFontSize = messageFontSize,
+                                showTime = showTime,
+                                timestamp = timestamp,
+                                cornerShape = cornerShape
                             )
                         }
                     }
@@ -178,6 +173,70 @@ fun DateHeader(date: String) {
     }
 }
 
+fun getMessageCornerRadius(
+    index: Int,
+    messages: List<Pair<String, MessageType>>
+): RoundedCornerShape {
+    val reversedIndex = messages.size - 1 - index
+    val currentType = messages[reversedIndex].second.type
+
+    var topLeftCorner = 20.dp
+    var bottomLeftCorner = 20.dp
+    var topRightCorner = 20.dp
+    var bottomRightCorner = 20.dp
+    val currentTimestamp = messages[reversedIndex].second.timestamp
+
+    if (reversedIndex < messages.size - 1 && reversedIndex > 0) {
+        val previousTimestamp = messages[reversedIndex + 1].second.timestamp
+        val nextTimestamp = messages[reversedIndex - 1].second.timestamp
+
+        // Obliczamy różnicę czasu w minutach
+        val diffInMinutesPrev = (previousTimestamp - currentTimestamp) / (1000 * 60)
+        val diffInMinutesNext = (currentTimestamp - nextTimestamp) / (1000 * 60)
+
+        if (diffInMinutesPrev <= 2 && messages[reversedIndex + 1].second.type == currentType) {
+            bottomLeftCorner = 10.dp
+            bottomRightCorner = 10.dp
+        }
+        if (diffInMinutesNext <= 2 && messages[reversedIndex - 1].second.type == currentType) {
+            topLeftCorner = 10.dp
+            topRightCorner = 10.dp
+        }
+    }
+
+    // Sprawdzamy, czy to pierwszy element
+    if (reversedIndex == messages.size - 1) {
+        val nextTimestamp = messages[reversedIndex - 1].second.timestamp
+        val diffInMinutesNext = (currentTimestamp - nextTimestamp) / (1000 * 60)
+        if (diffInMinutesNext <= 2 && messages[reversedIndex - 1].second.type == currentType) {
+            topLeftCorner = 10.dp
+            topRightCorner = 10.dp
+        }
+    }
+
+    // Sprawdzamy, czy to ostatni element
+    if (reversedIndex == 0) {
+        val previousTimestamp = messages[reversedIndex + 1].second.timestamp
+        val diffInMinutesPrev = (previousTimestamp - currentTimestamp) / (1000 * 60)
+        if (diffInMinutesPrev <= 2 && messages[reversedIndex + 1].second.type == currentType) {
+            bottomLeftCorner = 10.dp
+            bottomRightCorner = 10.dp
+        }
+    }
+
+    return when (currentType) {
+        MessageType.Type.Received -> RoundedCornerShape(
+            topStart = topLeftCorner, bottomStart = bottomLeftCorner,
+            topEnd = 20.dp, bottomEnd = 20.dp
+        )
+        MessageType.Type.Sent -> RoundedCornerShape(
+            topStart = 20.dp, bottomStart = 20.dp,
+            topEnd = topRightCorner, bottomEnd = bottomRightCorner
+        )
+        else -> RoundedCornerShape(20.dp) // Domyślne dla innych typów wiadomości
+    }
+}
+
 
 fun isLastInGroup(index: Int, messages: List<Pair<String, MessageType>>): Boolean {
     val reversedIndex = messages.size - 1 - index
@@ -205,8 +264,8 @@ fun getMessagePadding(index: Int, messages: List<Pair<String, MessageType>>): Pa
     val isLastMessage = reversedIndex == 0
 
     // Logika dla paddingu uwzględnia odwróconą kolejność
-    var topPadding = if (!isFirstMessage && messages[reversedIndex + 1].second.type == currentType) 1.dp else 8.dp
-    val bottomPadding = if (!isLastMessage && messages[reversedIndex - 1].second.type == currentType) 1.dp else 8.dp
+    var bottomPadding = if (!isFirstMessage && messages[reversedIndex + 1].second.type == currentType) 1.dp else 8.dp
+    val topPadding = if (!isLastMessage && messages[reversedIndex - 1].second.type == currentType) 1.dp else 8.dp
 
     // Sprawdzamy różnicę czasu
     if (reversedIndex < messages.size - 1) {
@@ -216,19 +275,13 @@ fun getMessagePadding(index: Int, messages: List<Pair<String, MessageType>>): Pa
         // Obliczamy różnicę czasu w minutach
         val diffInMinutes = (previousTimestamp - currentTimestamp) / (1000 * 60)
 
-        // Logujemy szczegóły
-        Log.d("MessageList", "Current timestamp: $currentTimestamp, Previous timestamp: $previousTimestamp")
-        Log.d("MessageList", "Difference in minutes: $diffInMinutes")
 
-        if (diffInMinutes >= 2 && messages[reversedIndex - 1].second.type == currentType) {
-            topPadding = 6.dp
-            Log.d("MessageList", "Adding 5.dp padding due to time difference.")
-        } else {
-            Log.d("MessageList", "No additional padding required.")
+        if (diffInMinutes >= 2 && reversedIndex > 0 && messages[reversedIndex - 1].second.type == currentType) {
+            bottomPadding = 6.dp
         }
     }
 
-    return PaddingValues(top = bottomPadding, bottom = topPadding)
+    return PaddingValues(top = topPadding, bottom = bottomPadding)
 }
 
 
