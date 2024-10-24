@@ -211,12 +211,13 @@ class ConversationViewModel(
                 message?.let {
                     // Ustal, czy wiadomość została odczytana
                     val isSeen = it.messageSeen // Użyj pola isMessageSeen z modelu Message
+                    val timestamp = it.timestamp
 
                     // Określenie typu wiadomości
                     val messageType = when {
-                        it.senderId == currentUserID -> MessageType(MessageType.Type.Sent, isSeen)
-                        it.senderId == "system" -> MessageType(MessageType.Type.System, isSeen)
-                        else -> MessageType(MessageType.Type.Received, isSeen)
+                        it.senderId == currentUserID -> MessageType(MessageType.Type.Sent, isSeen, timestamp)
+                        it.senderId == "system" -> MessageType(MessageType.Type.System, isSeen, timestamp)
+                        else -> MessageType(MessageType.Type.Received, isSeen, timestamp)
                     }
 
                     // Sprawdzamy, czy wiadomość nie istnieje już na liście
@@ -264,13 +265,14 @@ class ConversationViewModel(
                 message?.let {
                     // Ustal, czy wiadomość została odczytana
                     val isSeen = it.messageSeen
+                    val timestamp = it.timestamp
                     Log.d("MessageListener", "Received message: $it, isSeen: $isSeen")
 
                     // Określenie typu wiadomości
                     val messageType = when {
-                        it.senderId == currentUserID -> MessageType(MessageType.Type.Sent, isSeen)
-                        it.senderId == "system" -> MessageType(MessageType.Type.System, isSeen)
-                        else -> MessageType(MessageType.Type.Received, isSeen)
+                        it.senderId == currentUserID -> MessageType(MessageType.Type.Sent, isSeen, timestamp)
+                        it.senderId == "system" -> MessageType(MessageType.Type.System, isSeen, timestamp)
+                        else -> MessageType(MessageType.Type.Received, isSeen, timestamp)
                     }
 
                     _messages.value += it.text to messageType

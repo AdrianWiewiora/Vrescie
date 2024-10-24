@@ -3,6 +3,7 @@ package com.example.vresciecompose.ui.components
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,21 +16,30 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.view_models.SettingsViewModel
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 data class MessageType(
     val type: Type,
-    val isSeen: Boolean = false
+    val isSeen: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis()
 ) {
     enum class Type {
         Received, Sent, System
@@ -54,6 +64,25 @@ fun MessageList(
             verticalArrangement = Arrangement.Top
         ) {
             itemsIndexed(messages.asReversed()) { index, (message, type) ->
+
+                val timestamp = type.timestamp
+                val date = Date(timestamp)
+                val formattedDate = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(date)
+
+                if (index > 0) { // Sprawdzamy,
+                    val previousTimestamp = messages[messages.size - 1 - index + 1].second.timestamp
+                    val previousDate = Date(previousTimestamp)
+
+                    val calendar1 = Calendar.getInstance().apply { time = date }
+                    val calendar2 = Calendar.getInstance().apply { time = previousDate }
+                    val formattedPreviousDate = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(previousDate)
+
+                    if (calendar1.get(Calendar.YEAR) != calendar2.get(Calendar.YEAR) ||
+                        calendar1.get(Calendar.DAY_OF_YEAR) != calendar2.get(Calendar.DAY_OF_YEAR)) {
+                        DateHeader(formattedPreviousDate)
+                    }
+                }
+
                 val paddingValues = getMessagePadding(index, messages)
 
                 when (type.type) {
@@ -85,6 +114,9 @@ fun MessageList(
                         }
                     }
                 }
+                if (index == messages.size - 1) {
+                    DateHeader(formattedDate)
+                }
             }
         }
 
@@ -96,6 +128,23 @@ fun MessageList(
                 }
             }
         }
+    }
+}
+
+
+@Composable
+fun DateHeader(date: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = date,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -139,18 +188,18 @@ fun getMessagePadding(index: Int, messages: List<Pair<String, MessageType>>): Pa
 @Composable
 fun MessageListPreview() {
     val messages = listOf(
-        "Hello, how are you?" to MessageType(MessageType.Type.Received, isSeen = true),
-        "Hello, how are you?" to MessageType(MessageType.Type.Received, isSeen = true),
-        "I'm doing great, thanks!" to MessageType(MessageType.Type.Sent, isSeen = true),
-        "What about you?" to MessageType(MessageType.Type.Received, isSeen = true),
-        "What about you?" to MessageType(MessageType.Type.Received, isSeen = true),
-        "What about you?" to MessageType(MessageType.Type.Received, isSeen = true), // Przykład wiadomości widzianej
-        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true),
-        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true),
-        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true),
-        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = false),
-        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = false),
-        "System message: User exit the chat" to MessageType(MessageType.Type.System),
+        "Hello, how are you?" to MessageType(MessageType.Type.Received, isSeen = true, timestamp = 1698451200000L),
+        "Hello, how are you?" to MessageType(MessageType.Type.Received, isSeen = true, timestamp = 1698451200000L),
+        "I'm doing great, thanks!" to MessageType(MessageType.Type.Sent, isSeen = true, timestamp = 1698451200000L),
+        "What about you?" to MessageType(MessageType.Type.Received, isSeen = true, timestamp = 1698451200000L),
+        "What about you?" to MessageType(MessageType.Type.Received, isSeen = true, timestamp = 1698364800000L),
+        "What about you?" to MessageType(MessageType.Type.Received, isSeen = true, timestamp = 1698364800000L),
+        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true, timestamp = 1698364800000L),
+        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true, timestamp = 1698278500000L),
+        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true, timestamp = 1698278500000L),
+        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = false, timestamp = 1698278500000L),
+        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = false, timestamp = 1698278500000L),
+        "System message: User exit the chat" to MessageType(MessageType.Type.System, timestamp = 1698278500000L),
     )
 
     MessageList(
