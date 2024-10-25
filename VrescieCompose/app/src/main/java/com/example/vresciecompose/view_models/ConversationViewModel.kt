@@ -280,29 +280,26 @@ class ConversationViewModel(
                 messagesRef.orderByChild("timestamp").limitToLast(100) // Ogranicz do 100 wiadomości
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
-                            // Lista do przechowywania wiadomości do dodania
+                            // Lista do przechowywania wiadomości do dodania i identyfikatorów z Firebase
                             val messagesToInsert = mutableListOf<MessageEntity>()
+                            val firebaseMessageIds = mutableSetOf<String>()
 
                             viewModelScope.launch {
                                 for (messageSnapshot in snapshot.children) {
                                     val messageId = messageSnapshot.key ?: continue
-                                    val messageData = messageSnapshot.getValue(MessageEntity::class.java) ?: continue
+                                    firebaseMessageIds.add(messageId)
 
-                                    // Sprawdź, czy wiadomość już istnieje w Room
+                                    val messageData = messageSnapshot.getValue(MessageEntity::class.java) ?: continue
                                     val existingMessage = messageDao.getMessageById(messageId)
+
                                     if (existingMessage == null) {
-                                        // Dodaj lokalne ID konwersacji do wiadomości i dodaj do listy do wstawienia
                                         val messageEntity = messageData.copy(messageId = messageId, localConversationId = localConversationId)
                                         messagesToInsert.add(messageEntity)
                                         Log.d("FetchMessages", "Message added to insert list: ${messageEntity.messageId}")
-                                    } else {
-                                        // Jeśli wiadomość już istnieje, sprawdź, czy jej stan messageSeen w Firebase to true
-                                        if (messageData.messageSeen && !existingMessage.messageSeen) {
-                                            val updatedMessage = existingMessage.copy(messageSeen = true)
-                                            messageDao.updateMessage(updatedMessage)
-                                            Log.d("FetchMessages", "Updated messageSeen for message: $messageId")
-                                        }
-                                        Log.d("FetchMessages", "Message already exists: $messageId")
+                                    } else if (messageData.messageSeen && !existingMessage.messageSeen) {
+                                        val updatedMessage = existingMessage.copy(messageSeen = true)
+                                        messageDao.updateMessage(updatedMessage)
+                                        Log.d("FetchMessages", "Updated messageSeen for message: $messageId")
                                     }
                                 }
 
@@ -310,17 +307,15 @@ class ConversationViewModel(
                                 if (messagesToInsert.isNotEmpty()) {
                                     messagesToInsert.forEach { messageDao.insertMessage(it) }
                                     Log.d("FetchMessages", "Inserted ${messagesToInsert.size} new messages to Room.")
-                                } else {
-                                    Log.d("FetchMessages", "No new messages to insert for conversation: $firebaseConversationId")
                                 }
 
-                                // Usuń wiadomości z Firebase, jeśli messageSeen jest true
-                                for (messageSnapshot in snapshot.children) {
-                                    val messageData = messageSnapshot.getValue(MessageEntity::class.java) ?: continue
-                                    if (messageData.messageSeen) { // Sprawdzamy, czy messageSeen jest true
-                                        val messageId = messageSnapshot.key ?: continue
-                                        messagesRef.child(messageId).removeValue()
-                                        Log.d("FetchMessages", "Deleted message from Firebase: $messageId")
+                                // Aktualizuj messageSeen = true dla wiadomości, które nie istnieją już w Firebase
+                                val localMessages = messageDao.getMessagesByConversationId(localConversationId)
+                                for (localMessage in localMessages) {
+                                    if (localMessage.messageId !in firebaseMessageIds && !localMessage.messageSeen) {
+                                        val updatedMessage = localMessage.copy(messageSeen = true)
+                                        messageDao.updateMessage(updatedMessage)
+                                        Log.d("FetchMessages", "Set messageSeen=true for missing message in Firebase: ${localMessage.messageId}")
                                     }
                                 }
                             }
@@ -466,21 +461,12 @@ class ConversationViewModel(
             // Ładujemy wiadomości z Room Database na podstawie localConversationId
             val localMessages = messageDao.getMessagesByConversationId(localConversationId.toString())
 
-            // Zmieniamy stan messageSeen na true dla wszystkich lokalnych wiadomości
-//            localMessages.forEach { messageEntity ->
-//                if (!messageEntity.messageSeen) {
-//                    // Zaktualizuj stan wiadomości w Room
-//                    val updatedMessage = messageEntity.copy(messageSeen = true)
-//                    messageDao.updateMessage(updatedMessage)
-//                }
-//            }
-
-            // Generowanie listy wiadomości do wyświetlenia
+            // Generowanie listy wiadomości do wyświetlenia, korzystając z istniejącej wartości messageSeen
             val roomMessages = localMessages.map { messageEntity ->
                 val messageType = when {
-                    messageEntity.senderId == currentUserID -> MessageType(MessageType.Type.Sent, true, messageEntity.timestamp)
-                    messageEntity.senderId == "system" -> MessageType(MessageType.Type.System, true, messageEntity.timestamp)
-                    else -> MessageType(MessageType.Type.Received, true, messageEntity.timestamp)
+                    messageEntity.senderId == currentUserID -> MessageType(MessageType.Type.Sent, messageEntity.messageSeen, messageEntity.timestamp)
+                    messageEntity.senderId == "system" -> MessageType(MessageType.Type.System, messageEntity.messageSeen, messageEntity.timestamp)
+                    else -> MessageType(MessageType.Type.Received, messageEntity.messageSeen, messageEntity.timestamp)
                 }
                 Log.d("InitializeDatabase", "Loaded message from Room: ${messageEntity.text}, type: ${messageType.type}")
                 messageEntity.text to messageType

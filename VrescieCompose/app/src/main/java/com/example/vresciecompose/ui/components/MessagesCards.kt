@@ -1,6 +1,7 @@
 package com.example.vresciecompose.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -46,16 +47,16 @@ fun ReceivedMessage(
             contentColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp).padding(vertical = 5.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+            horizontalAlignment = Alignment.End // ustawia czas na prawą stronę
         ) {
             Text(text = message, fontSize = messageFontSize)
             if (showTime) {
                 Text(
-                    text = " $formattedTime",
+                    text = formattedTime,
                     fontSize = 10.sp,
-                    modifier = Modifier.padding(horizontal = 2.dp),
+                    modifier = Modifier.padding(start = 8.dp),
                     color = MaterialTheme.colorScheme.surfaceDim,
                 )
             }
@@ -83,31 +84,28 @@ fun SentMessage(
             contentColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.padding(vertical = 5.dp)
         ) {
-            if (showIcon) {
-                Icon(
-                    imageVector = if (isSeen) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                    contentDescription = if (isSeen) "Message seen" else "Message not seen",
-                    tint = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.size(25.dp).padding(start = 8.dp, end = 3.dp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (showIcon) {
+                    Icon(
+                        imageVector = if (isSeen) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                        contentDescription = if (isSeen) "Message seen" else "Message not seen",
+                        tint = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.size(25.dp).padding(start = 8.dp, end = 3.dp)
+                    )
+                }
+                Text(
+                    text = message,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    fontSize = messageFontSize
                 )
             }
-
-            Text(
-                text = message,
-                modifier = Modifier.padding(
-                    end = if (showTime) 3.dp else 8.dp,
-                    start = if (showIcon) 0.dp else 8.dp
-                ).padding(vertical = 5.dp),
-                textAlign = TextAlign.End,
-                fontSize = messageFontSize
-            )
-
             if (showTime) {
                 Text(
-                    text = " $formattedTime",
+                    text = formattedTime,
                     fontSize = 10.sp,
                     modifier = Modifier.padding(end = 10.dp),
                     color = MaterialTheme.colorScheme.surfaceDim,

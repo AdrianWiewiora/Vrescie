@@ -309,12 +309,12 @@ fun MessageListPreview() {
         "I'm doing great, thanks!" to MessageType(MessageType.Type.Sent, isSeen = true, timestamp = 1698451200000L),
         "What about you?" to MessageType(MessageType.Type.Received, isSeen = true, timestamp = 1698451200000L),
         "What about you?" to MessageType(MessageType.Type.Received, isSeen = true, timestamp = 1698364800000L),
-        "What about you?" to MessageType(MessageType.Type.Received, isSeen = true, timestamp = 1698364800000L),
+        "What about you  sdf s sd sdf sd ?" to MessageType(MessageType.Type.Received, isSeen = true, timestamp = 1698364800000L),
         "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true, timestamp = 1698364800000L),
         "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true, timestamp = 1698278500000L),
         "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = true, timestamp = 1698278500000L),
         "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = false, timestamp = 1698278500000L),
-        "I'm fine too, thank you!" to MessageType(MessageType.Type.Sent, isSeen = false, timestamp = 1698278500000L),
+        "I'm fine too, thank you sdf sd sdfsdf sd fsd fsd fs!" to MessageType(MessageType.Type.Sent, isSeen = false, timestamp = 1698278500000L),
         "System message: User exit the chat" to MessageType(MessageType.Type.System, timestamp = 1698278500000L),
     )
 
