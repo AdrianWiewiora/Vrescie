@@ -115,4 +115,7 @@ dependencies {
     // To add photos to firebase
     implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
     implementation("com.google.firebase:firebase-storage-ktx")
+
+    // To add photo locally
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
 }

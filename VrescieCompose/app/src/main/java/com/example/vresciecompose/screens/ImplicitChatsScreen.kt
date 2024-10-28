@@ -1,5 +1,7 @@
 package com.example.vresciecompose.screens
 
+import LocalContext
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -59,6 +61,15 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import okhttp3.OkHttpClient
+import java.io.File
+import java.io.FileOutputStream
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Request
+import okhttp3.Response
+import java.io.IOException
+
 
 @Composable
 fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: ConversationViewModel, isConnected: Boolean) {
@@ -126,7 +137,8 @@ fun ImplicitChats(
     conversationList: List<Conversation>,
     onItemClick: (Conversation) -> Unit,
     lastMessageMap: Map<String, Triple<String, Boolean, String>>,
-    userId: String
+    userId: String,
+    context: Context = LocalContext.current
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -140,7 +152,8 @@ fun ImplicitChats(
                 isSeen = isSeen,
                 senderId = senderId,
                 onItemClick = onItemClick,
-                userId = userId
+                userId = userId,
+                context = context
             )
         }
     }
@@ -154,21 +167,25 @@ fun ConversationItem(
     isSeen: Boolean, // Dodajemy isSeen jako parametr
     senderId: String, // Dodajemy senderId jako parametr
     onItemClick: (Conversation) -> Unit,
-    userId: String
+    userId: String,
+    context: Context
 ) {
     val secondUserProfile = remember { mutableStateOf<UserProfile?>(null) }
-
 
     // Pobierz dane użytkownika po ID
     LaunchedEffect(conversation.secondParticipantId) {
         val database = FirebaseDatabase.getInstance()
         val userRef = database.getReference("user/${conversation.secondParticipantId}")
+
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     val name = snapshot.child("name").getValue(String::class.java) ?: ""
                     val profileImageUrl = snapshot.child("photoUrl").getValue(String::class.java) ?: ""
                     secondUserProfile.value = UserProfile(name = name, profileImageUrl = profileImageUrl)
+
+                    // Zapisz zdjęcie lokalnie
+                    saveImageLocally(profileImageUrl, conversation.secondParticipantId, context)
                 }
             }
 
@@ -186,7 +203,7 @@ fun ConversationItem(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .clickable { onItemClick(conversation) }
-            .border(1.dp, if (shouldBoldMessage) MaterialTheme.colorScheme.onPrimaryContainer else Color.Transparent, RoundedCornerShape(8.dp)), // Ramka dla nieodczytanych wiadomości
+            .border(1.dp, if (shouldBoldMessage) MaterialTheme.colorScheme.onPrimaryContainer else Color.Transparent, RoundedCornerShape(8.dp)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -196,10 +213,13 @@ fun ConversationItem(
             modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Wyświetl zdjęcie jeśli jest dostępne
-            if (secondUserProfile.value?.profileImageUrl?.isNotEmpty() == true) {
+            // Odczytaj lokalne zdjęcie, jeśli dostępne
+            val localImagePath = getLocalImagePath(conversation.secondParticipantId, context)
+            val imageUrl = localImagePath ?: secondUserProfile.value?.profileImageUrl
+
+            if (imageUrl != null) {
                 Image(
-                    painter = rememberAsyncImagePainter(secondUserProfile.value!!.profileImageUrl),
+                    painter = rememberAsyncImagePainter(imageUrl),
                     contentDescription = null,
                     modifier = Modifier
                         .size(70.dp)
@@ -235,6 +255,42 @@ fun ConversationItem(
     }
 }
 
+// Funkcja do zapisywania zdjęcia w pamięci wewnętrznej
+fun saveImageLocally(imageUrl: String, userId: String, context: Context) {
+    val client = OkHttpClient()
+    val request = Request.Builder().url(imageUrl).build()
+
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            // Obsłuż błąd
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            response.body?.let { responseBody ->
+                val inputStream = responseBody.byteStream()
+                // Ścieżka do pliku w pamięci wewnętrznej aplikacji
+                val localFile = File(context.filesDir, "$userId.jpg") // Możesz dostosować nazwę pliku
+                val outputStream = FileOutputStream(localFile)
+
+                inputStream.use { input ->
+                    outputStream.use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+        }
+    })
+}
+
+// Funkcja do odczytywania lokalnej ścieżki do zdjęcia
+fun getLocalImagePath(userId: String, context: Context): String? {
+    val localFile = File(context.filesDir, "$userId.jpg")
+    return if (localFile.exists()) {
+        localFile.absolutePath // Zwróć ścieżkę do lokalnego pliku
+    } else {
+        null // Zwróć null, jeśli plik nie istnieje
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
@@ -256,12 +312,15 @@ fun PreviewImplicitChatsScreen() {
     val mockOnClick: (String) -> Unit = { conversationId ->
         println("Clicked on conversation with id: $conversationId")
     }
+    // Uzyskaj lokalny kontekst
+    val context = LocalContext.current
 
     // Wywołanie ImplicitChats z przykładowymi danymi
     ImplicitChats(
         conversationList = sampleConversations,
         onItemClick = { conversation -> mockOnClick(conversation.id) },
         lastMessageMap = sampleLastMessages,
-        userId = "1"
+        userId = "1",
+        context
     )
 }
