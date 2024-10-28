@@ -76,8 +76,7 @@
     <string name="enter_your_email_and_password">Podaj swój e-mail i hasło</string>
     <string name="repeat_password">Powtórz hasło</string>
     <string name="sign_up">Zarejestruj się</string>
-
-
+    <string name="no_internet_connection">Brak połączenia z internetem</string>
 
 
 </resources>

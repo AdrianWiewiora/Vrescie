@@ -1,6 +1,9 @@
 package com.example.vresciecompose.screens
 
 import LocalContext
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -34,6 +37,7 @@ import androidx.compose.material.icons.filled.SocialDistance
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.dimensionResource
@@ -55,9 +59,11 @@ fun AnonymousChatConfigurationScreen(
     viewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
     onClick: (String) -> Unit,
-    userChatPrefsViewModel: UserChatPrefsViewModel
+    userChatPrefsViewModel: UserChatPrefsViewModel,
+    isConnected: Boolean
 ) {
     val allChatPrefs by userChatPrefsViewModel.allChatPrefs.observeAsState(emptyList())
+
 
     var latitude by remember { mutableStateOf<Double?>(null) }
     var longitude by remember { mutableStateOf<Double?>(null) }
@@ -207,7 +213,6 @@ fun AnonymousChatConfigurationScreen(
                             onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
                         },
                         onFailure = {
-                            // Obsługa niepowodzenia
                             Log.e(TAG, "Failed to get location")
                             Toast.makeText(
                                 context,
@@ -237,10 +242,11 @@ fun AnonymousChatConfigurationScreen(
                 topEnd = 0.dp,
                 bottomStart = 20.dp,
                 bottomEnd = 20.dp
-            )
+            ),
+            enabled = isConnected
         ) {
             Text(
-                text = stringResource(R.string.draw),
+                text = if (isConnected) stringResource(R.string.draw) else stringResource(R.string.no_internet_connection),
                 style = MaterialTheme.typography.titleMedium
             )
         }

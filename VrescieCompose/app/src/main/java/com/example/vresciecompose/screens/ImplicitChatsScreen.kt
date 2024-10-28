@@ -26,6 +26,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -60,7 +61,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
 @Composable
-fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: ConversationViewModel) {
+fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: ConversationViewModel, isConnected: Boolean) {
     val conversationList by conversationViewModel.conversationList.collectAsState()
     val lastMessageMap by conversationViewModel.lastMessageMap.collectAsState()
     val currentUser = FirebaseAuth.getInstance().currentUser
@@ -83,17 +84,43 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: Conver
         onClick("${Navigation.Destinations.EXPLICIT_CONVERSATION}/${conversation.id}")
     }
 
-    if (conversationList.isNotEmpty()) {
-        ImplicitChats(conversationList, onItemClick, lastMessageMap, userId)
-    } else {
-        Text(
-            text = stringResource(R.string.nothing_here_yet),
-            fontSize = 26.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(vertical = 40.dp, horizontal = 20.dp)
-                .fillMaxSize()
-        )
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        if (!isConnected) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.no_internet_connection),
+                    modifier = Modifier.padding(8.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+
+        }
+
+        if (conversationList.isNotEmpty()) {
+            ImplicitChats(conversationList, onItemClick = { conversation ->
+                onClick("${Navigation.Destinations.EXPLICIT_CONVERSATION}/${conversation.id}")
+            }, lastMessageMap = lastMessageMap, userId = userId)
+        } else {
+            Text(
+                text = stringResource(R.string.nothing_here_yet),
+                fontSize = 26.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(vertical = 40.dp, horizontal = 20.dp)
+                    .fillMaxSize()
+            )
+        }
     }
 }
 
