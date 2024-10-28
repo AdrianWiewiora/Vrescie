@@ -2,6 +2,7 @@ package com.example.vresciecompose.view_models
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -23,7 +24,7 @@ class ProfileViewModel(private val appContext: Context) : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
-
+    private val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
     private val sharedPreferences: SharedPreferences =
         appContext.getSharedPreferences("UserProfilePrefs", Context.MODE_PRIVATE)
 
@@ -55,11 +56,16 @@ class ProfileViewModel(private val appContext: Context) : ViewModel() {
                         val profileConfigured = snapshot.child("profileConfigured").getValue(Boolean::class.java) ?: false
                         val profileImageUrl = snapshot.child("photoUrl").getValue(String::class.java) ?: ""
 
-                        // Zapisz zdjęcie lokalnie
-                        saveImageLocally(profileImageUrl, userId)
+                        // Sprawdź, czy zdjęcie jest już zapisane lokalnie
+                        if (!isImageLocallySaved()) {
+                            // Zapisz zdjęcie lokalnie, jeśli jeszcze nie zostało zapisane
+                            saveImageLocally(profileImageUrl, userId)
+                        }
 
-                        // Zapisz dane do SharedPreferences
-                        saveProfileToPreferences(name, age, email, gender, joinTime, profileConfigured)
+                        // Zapisz dane do SharedPreferences tylko, jeśli nie są już zapisane
+                        if (!isProfileSaved()) {
+                            saveProfileToPreferences(name, age, email, gender, joinTime, profileConfigured)
+                        }
 
                         val userProfile = UserProfile(name, age, email, gender, joinTime.toString(), profileImageUrl)
                         _userProfile.postValue(userProfile)
@@ -72,6 +78,16 @@ class ProfileViewModel(private val appContext: Context) : ViewModel() {
                 }
             })
         }
+    }
+
+    private fun isImageLocallySaved(): Boolean {
+        val localImagePath = getLocalImagePath()
+        return !localImagePath.isNullOrEmpty()
+    }
+
+    private fun isProfileSaved(): Boolean {
+        val profileConfigured = sharedPreferences.getBoolean("profileConfigured", false)
+        return profileConfigured
     }
 
     private fun saveProfileToPreferences(name: String, age: Int, email: String, gender: String, joinTime: Long, profileConfigured: Boolean) {
@@ -91,14 +107,12 @@ class ProfileViewModel(private val appContext: Context) : ViewModel() {
         val request = Request.Builder().url(imageUrl).build()
 
         client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                // Obsłuż błąd
-            }
+            override fun onFailure(call: Call, e: IOException) {}
 
             override fun onResponse(call: Call, response: Response) {
                 response.body?.let { responseBody ->
                     val inputStream = responseBody.byteStream()
-                    val localFile = File(appContext.filesDir, "$userId.jpg") // Możesz dostosować nazwę pliku
+                    val localFile = File(appContext.filesDir, "$userId.jpg")
                     val outputStream = FileOutputStream(localFile)
 
                     inputStream.use { input ->
@@ -107,7 +121,6 @@ class ProfileViewModel(private val appContext: Context) : ViewModel() {
                         }
                     }
 
-                    // Zapisz ścieżkę do lokalnego pliku w SharedPreferences
                     saveLocalImagePath(localFile.absolutePath)
                 }
             }
@@ -116,13 +129,14 @@ class ProfileViewModel(private val appContext: Context) : ViewModel() {
 
     private fun saveLocalImagePath(imagePath: String) {
         with(sharedPreferences.edit()) {
-            putString("profileImagePath", imagePath)
+            putString("profileImagePath_$currentUserID", imagePath)
             apply()
         }
     }
 
     fun getLocalImagePath(): String? {
-        return sharedPreferences.getString("profileImagePath", null)
+        val imagePath = sharedPreferences.getString("profileImagePath_$currentUserID", null)
+        return imagePath
     }
 
     fun getStoredProfile(): UserProfile? {

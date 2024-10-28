@@ -1,6 +1,7 @@
 package com.example.vresciecompose.screens
 
 import LocalContext
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
@@ -50,20 +51,22 @@ import java.util.Locale
 
 @Composable
 fun ProfileScreen(isConnected: Boolean, profileViewModel: ProfileViewModel) {
-    // Sprawdź, czy dane są lokalnie
     val localUserProfile = profileViewModel.getStoredProfile()
-
-    // Ustawienie stanu na podstawie dostępności lokalnych danych
     val userProfile = profileViewModel.userProfile.observeAsState()
     var dataLoaded by remember { mutableStateOf(false) }
 
-    // Jeśli dane lokalne są dostępne, ustaw dataLoaded na true
-    if (localUserProfile != null) {
-        profileViewModel.setProfileConfigured(true) // Możesz ustawić tę wartość, jeśli jest potrzebna
-        profileViewModel._userProfile.value = localUserProfile // Przypisz lokalne dane do _userProfile
-        dataLoaded = true
+    // Jeśli nie ma połączenia, ustaw dane lokalne
+    if (!isConnected) {
+        if (localUserProfile != null) {
+            profileViewModel.setProfileConfigured(true)
+            profileViewModel._userProfile.value = localUserProfile
+            dataLoaded = true
+        } else {
+            // Możesz wyświetlić komunikat o braku danych lokalnych
+            dataLoaded = false
+        }
     } else {
-        // Jeśli nie ma lokalnych danych, załaduj dane z Firebase
+        // Jeśli połączenie jest dostępne, załaduj dane z Firebase
         profileViewModel.loadUserProfile()
     }
 
@@ -102,7 +105,21 @@ fun ProfileScreen(isConnected: Boolean, profileViewModel: ProfileViewModel) {
 
         Crossfade(targetState = dataLoaded, label = "") { isLoaded ->
             if (isLoaded) {
-                ProfileContent(userProfile.value!!, localImagePath = profileViewModel.getLocalImagePath())
+                val profile = userProfile.value
+                if (profile != null) {
+                    // Dodanie logu dla ścieżki lokalnego obrazu
+                    val localImagePath = profileViewModel.getLocalImagePath()
+                    Log.d("ProfileScreen", "Local image path: $localImagePath")
+
+                    ProfileContent(profile, localImagePath = localImagePath)
+                } else {
+                    // Możesz wyświetlić komunikat o błędzie lub inny widok
+                    Text(
+                        text = stringResource(R.string.loading_data),
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             } else {
                 AnimatedVisibility(
                     visible = true,
@@ -117,7 +134,6 @@ fun ProfileScreen(isConnected: Boolean, profileViewModel: ProfileViewModel) {
             }
         }
     }
-
 }
 
 @Composable

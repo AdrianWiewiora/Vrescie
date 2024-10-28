@@ -184,8 +184,11 @@ fun ConversationItem(
                     val profileImageUrl = snapshot.child("photoUrl").getValue(String::class.java) ?: ""
                     secondUserProfile.value = UserProfile(name = name, profileImageUrl = profileImageUrl)
 
-                    // Zapisz zdjęcie lokalnie
-                    saveImageLocally(profileImageUrl, conversation.secondParticipantId, context)
+                    // Sprawdź, czy zdjęcie jest już zapisane lokalnie
+                    if (!isImageLocallySaved(conversation.secondParticipantId, context)) {
+                        // Zapisz zdjęcie lokalnie, jeśli nie zostało zapisane
+                        saveImageLocally(profileImageUrl, conversation.secondParticipantId, context)
+                    }
                 }
             }
 
@@ -253,6 +256,11 @@ fun ConversationItem(
             }
         }
     }
+}
+// Funkcja do sprawdzania, czy zdjęcie jest zapisane lokalnie
+private fun isImageLocallySaved(userId: String, context: Context): Boolean {
+    // Sprawdź, czy lokalny plik zdjęcia istnieje
+    return getLocalImagePath(userId, context) != null
 }
 
 // Funkcja do zapisywania zdjęcia w pamięci wewnętrznej
