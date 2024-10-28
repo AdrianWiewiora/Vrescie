@@ -6,6 +6,9 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -27,11 +30,16 @@ import com.google.firebase.database.*
 import kotlinx.coroutines.launch
 import androidx.lifecycle.asLiveData
 import com.example.vresciecompose.data.MessageEntity
+import kotlinx.coroutines.flow.asStateFlow
 
 class ConversationViewModel(
     private val messageDao: MessageDao,
     private val conversationDao: ConversationDao
 ) : ViewModel() {
+
+    private val _isConnected = MutableStateFlow(true)
+    val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     companion object {
         private const val CHANNEL_ID = "new_message_channel" // Unikalny identyfikator kanału
@@ -57,6 +65,35 @@ class ConversationViewModel(
 
     init {
         fetchAndStoreConversations()
+    }
+
+    fun monitorNetworkConnection(context: Context) {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork
+        val isConnectedInitially = network != null && connectivityManager.getNetworkCapabilities(network)?.hasCapability(
+            NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+
+        // Ustaw początkowy stan połączenia
+        _isConnected.value = isConnectedInitially
+
+        // Zarejestruj nasłuchiwanie, aby monitorować zmiany w stanie połączenia
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                _isConnected.value = true
+            }
+
+            override fun onLost(network: Network) {
+                _isConnected.value = false
+            }
+        }
+        connectivityManager.registerDefaultNetworkCallback(networkCallback!!)
+    }
+
+
+    fun stopMonitoringNetworkConnection(context: Context) {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        networkCallback?.let { connectivityManager.unregisterNetworkCallback(it) }
+        networkCallback = null
     }
 
     fun createNotificationChannel(context: Context) {

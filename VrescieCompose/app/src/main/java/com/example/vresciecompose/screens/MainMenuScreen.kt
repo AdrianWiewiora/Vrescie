@@ -45,6 +45,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.setValue
@@ -70,8 +71,7 @@ fun MainMenuScreen(
 ) {
     Log.d("MainMenuScreen", "Default Fragment received: $defaultFragment")
 
-    var isConnected by remember { mutableStateOf(true) }
-    val context = LocalContext.current
+    val isConnected by conversationViewModel.isConnected.collectAsState()
     val (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(defaultFragment.toInt()) }
     val showDialog = remember { mutableStateOf(false) }
     if(currentFragment == 0) setCurrentFragment(1)
@@ -98,24 +98,6 @@ fun MainMenuScreen(
             onClick(Navigation.Destinations.FIRST_CONFIGURATION)
         } else {
             Log.d("MainMenuScreen", "Profile is configured, no navigation needed")
-        }
-    }
-    // Checking internet connection
-    DisposableEffect(context) {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkCallback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                isConnected = true
-            }
-
-            override fun onLost(network: Network) {
-                isConnected = false
-            }
-        }
-        connectivityManager.registerDefaultNetworkCallback(networkCallback)
-
-        onDispose {
-            connectivityManager.unregisterNetworkCallback(networkCallback)
         }
     }
 

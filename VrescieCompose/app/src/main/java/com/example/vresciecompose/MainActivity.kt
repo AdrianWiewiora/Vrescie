@@ -162,6 +162,7 @@ class MainActivity : ComponentActivity() {
         val conversationViewModelFactory = ConversationViewModelFactory(messageDao, conversationDao)
         conversationViewModel = ViewModelProvider(this, conversationViewModelFactory).get(ConversationViewModel::class.java)
         conversationViewModel.createNotificationChannel(this)
+        conversationViewModel.monitorNetworkConnection(this)
 
         backDispatcher = onBackPressedDispatcher
 
@@ -259,6 +260,11 @@ class MainActivity : ComponentActivity() {
                     .apply()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        conversationViewModel.stopMonitoringNetworkConnection(this)
     }
 }
 
