@@ -13,7 +13,8 @@ import androidx.room.Query
 data class ConversationEntity(
     @PrimaryKey(autoGenerate = true) val localConversationId: Long = 0, // Lokalny ID konwersacji w Room
     val firebaseConversationId: String, // ID konwersacji z Firebase
-    val memberId: String // ID członka konwersacji (drugiego użytkownika)
+    val memberId: String, // ID członka konwersacji (drugiego użytkownika)
+    val participantName: String // Imię uczestnika
 )
 
 

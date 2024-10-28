@@ -69,7 +69,8 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: Conver
 
     // Dodaj słuchacza Firebase
     LaunchedEffect(key1 = userId) {
-        conversationViewModel.startListeningForConversations(userId)
+        //conversationViewModel.startListeningForConversations(userId)
+        conversationViewModel.fetchConversationsAndListen(userId)
     }
 
     // Usuń słuchacza Firebase, gdy composable zostanie zniszczony
@@ -77,11 +78,6 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: Conver
         onDispose {
             conversationViewModel.stopListeningForConversations()
         }
-    }
-
-    // Obsługa kliknięcia w element LazyColumn
-    val onItemClick: (Conversation) -> Unit = { conversation ->
-        onClick("${Navigation.Destinations.EXPLICIT_CONVERSATION}/${conversation.id}")
     }
 
     Column(

@@ -1,8 +1,10 @@
 package com.example.vresciecompose
 
 import ProvideContext
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -80,6 +82,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -137,6 +140,12 @@ class MainActivity : ComponentActivity() {
 //            }
 //        }
 
+        val MIGRATION_1_2 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE conversations ADD COLUMN participantName TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
 
         // Inicjalizacja DataStore
         val dataStore = applicationContext.dataStore
@@ -149,7 +158,7 @@ class MainActivity : ComponentActivity() {
         )[SettingsViewModel::class.java]
 
         // Inicjalizacja bazy danych
-        database = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "my-database").addMigrations().build()
+        database = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "my-database").addMigrations(MIGRATION_1_2).build()
 
         // Inicjalizacja ViewModelu z fabryką
         val userChatPrefsDao = database.userChatPrefsDao()
@@ -217,6 +226,7 @@ class MainActivity : ComponentActivity() {
                 Log.e("Location", "Location permission denied")
             }
         }
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         if (viewModel.isReady.value) {
             val startDestination = when {
@@ -281,7 +291,7 @@ class MainViewModelFactory(private val sharedPreferences: SharedPreferences) :
 }
 
 
-@Database(entities = [UserChatPrefs::class, ConversationEntity::class, MessageEntity::class], version = 5)
+@Database(entities = [UserChatPrefs::class, ConversationEntity::class, MessageEntity::class], version = 6)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userChatPrefsDao(): UserChatPrefsDao
     abstract fun conversationDao(): ConversationDao

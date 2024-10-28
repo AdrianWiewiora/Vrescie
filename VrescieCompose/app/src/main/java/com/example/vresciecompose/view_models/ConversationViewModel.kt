@@ -165,17 +165,17 @@ class ConversationViewModel(
     }
 
 
-    fun startListeningForConversations(userId: String) {
+    private fun startListeningForConversations(userId: String) {
         val database = FirebaseDatabase.getInstance()
         val conversationRef = database.getReference("/explicit_conversations")
 
         conversationListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 viewModelScope.launch {
-                    val conversationList = mutableListOf<Conversation>()
+                    // Aktualizacja mapy z ostatnimi wiadomościami
                     val lastMessageMap = mutableMapOf<String, Triple<String, Boolean, String>>()
 
-                    // Przeiterowanie przez konwersacje z Firebase
+                    // Iteracja przez konwersacje z Firebase
                     for (conversationSnapshot in snapshot.children) {
                         if (conversationSnapshot.key?.contains(userId) == true) {
                             val participants = conversationSnapshot.child("members")
@@ -187,29 +187,29 @@ class ConversationViewModel(
 
                             // Pobranie lokalnego ID konwersacji z Room na podstawie firebaseConversationId
                             val localConversationEntity = conversationDao.getConversationByFirebaseId(conversationId)
-                            val localConversationId = localConversationEntity?.localConversationId.toString()
 
-                            // Pobranie ostatniej wiadomości z lokalnej bazy Room
-                            val localLastMessage = messageDao.getLastMessageForConversation(localConversationId)
-                            var lastMessageDisplay = localLastMessage?.text ?: "Brak wiadomości"
-                            var isSeen = localLastMessage?.messageSeen ?: true
-                            var senderId = localLastMessage?.senderId ?: ""
-
-                            // Dodanie konwersacji do listy
-                            val conversation = Conversation(
-                                id = conversationId,
-                                name = secondParticipantName,
-                                secondParticipantId = secondParticipantId
-                            )
-                            conversationList.add(conversation)
+                            // Jeśli konwersacja nie istnieje, dodaj ją
+                            if (localConversationEntity == null) {
+                                // Dodanie nowej konwersacji do listy
+                                val conversation = Conversation(
+                                    id = conversationId,
+                                    name = secondParticipantName,
+                                    secondParticipantId = secondParticipantId
+                                )
+                                _conversationList.value += conversation
+                            }
 
                             // Pobierz ostatnią wiadomość z Firebase (jeśli istnieje)
                             val lastMessageSnapshot = conversationSnapshot.child("messages")
                                 .children.sortedByDescending { it.child("timestamp").value as? Long }
                                 .firstOrNull()
 
+                            var lastMessageDisplay = "Brak wiadomości"
+                            var isSeen = true
+                            var senderId = ""
+
+                            // Jeśli istnieje ostatnia wiadomość w Firebase, zaktualizuj dane
                             if (lastMessageSnapshot != null) {
-                                // Zaktualizowanie wiadomości danymi z Firebase, jeśli jest dostępna
                                 val firebaseLastMessageText = lastMessageSnapshot.child("text").value?.toString() ?: ""
                                 senderId = lastMessageSnapshot.child("senderId").value?.toString() ?: ""
                                 isSeen = lastMessageSnapshot.child("messageSeen").value as? Boolean ?: true
@@ -226,8 +226,7 @@ class ConversationViewModel(
                         }
                     }
 
-                    // Aktualizacja stanu
-                    _conversationList.value = conversationList
+                    // Uaktualnij tylko mapę z ostatnimi wiadomościami
                     _lastMessageMap.value = lastMessageMap
                 }
             }
@@ -239,6 +238,54 @@ class ConversationViewModel(
 
         conversationRef.addValueEventListener(conversationListener!!)
     }
+
+
+
+    fun fetchConversationsAndListen(userId: String) {
+        viewModelScope.launch {
+            // Pobierz konwersacje z Room
+            val existingConversations = conversationDao.getAllConversations()
+
+            // Jeśli nie ma konwersacji, uruchom nasłuch z Firebase
+            if (existingConversations.isEmpty()) {
+                startListeningForConversations(userId)
+            } else {
+                // Lista do przechowywania konwersacji z ostatnimi wiadomościami
+                val conversationList = mutableListOf<Conversation>()
+                val lastMessageMap = mutableMapOf<String, Triple<String, Boolean, String>>() // Do przechowywania ostatnich wiadomości
+
+                // Iteracja przez istniejące konwersacje
+                for (conversationEntity in existingConversations) {
+                    // Pobranie ostatniej wiadomości z lokalnej bazy danych
+                    val localLastMessage = messageDao.getLastMessageForConversation(conversationEntity.localConversationId.toString())
+                    val lastMessageDisplay = localLastMessage?.text ?: "Brak wiadomości"
+                    val isSeen = localLastMessage?.messageSeen ?: true
+                    val senderId = localLastMessage?.senderId ?: ""
+
+                    // Utworzenie obiektu Conversation
+                    val conversation = Conversation(
+                        id = conversationEntity.firebaseConversationId,
+                        name = conversationEntity.participantName,
+                        secondParticipantId = conversationEntity.memberId
+                    )
+
+                    // Dodanie konwersacji do listy
+                    conversationList.add(conversation)
+
+                    // Zaktualizowanie mapy z ostatnimi wiadomościami
+                    lastMessageMap[conversationEntity.firebaseConversationId] = Triple(lastMessageDisplay, isSeen, senderId)
+                }
+
+                // Aktualizacja stanu
+                _conversationList.value = conversationList
+                _lastMessageMap.value = lastMessageMap
+
+                // Uruchomienie nasłuchu z Firebase
+                startListeningForConversations(userId)
+            }
+        }
+    }
+
 
     // Zatrzymywanie słuchacza
     fun stopListeningForConversations() {
@@ -255,34 +302,35 @@ class ConversationViewModel(
 
         conversationRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // Lista do przechowywania konwersacji, które muszą być dodane
                 val conversationsToInsert = mutableListOf<ConversationEntity>()
 
-                // Pobiera wszystkie istniejące konwersacje z lokalnej bazy danych (Room)
                 viewModelScope.launch {
-                    val existingConversations = conversationDao.getAllConversations() // Pobiera wszystkie konwersacje z Room
+                    val existingConversations = conversationDao.getAllConversations()
                     val existingConversationIds = existingConversations.map { it.firebaseConversationId }.toSet()
 
                     for (conversationSnapshot in snapshot.children) {
                         val firebaseConversationId = conversationSnapshot.key ?: continue
 
-                        // Sprawdza, czy konwersacja już istnieje w lokalnej bazie danych
+                        // Sprawdza, czy konwersacja już istnieje
                         if (!existingConversationIds.contains(firebaseConversationId)) {
-                            // Jeśli nie istnieje, dodaje do listy do wstawienia
-
                             val members = conversationSnapshot.child("members")
-                            val secondParticipantId = members.children.find { it.key != currentUserId }?.key ?: continue
+                            // Sprawdza, czy bieżący użytkownik jest uczestnikiem konwersacji
+                            if (members.hasChild(currentUserId)) {
+                                val secondParticipantId = members.children.find { it.key != currentUserId }?.key ?: continue
+                                val participantName = members.child(secondParticipantId).value as? String ?: ""
+                                val conversationEntity = ConversationEntity(
+                                    firebaseConversationId = firebaseConversationId,
+                                    memberId = secondParticipantId,
+                                    participantName = participantName
+                                )
 
-                            // Tworzy obiekt ConversationEntity
-                            val conversationEntity = ConversationEntity(
-                                firebaseConversationId = firebaseConversationId,
-                                memberId = secondParticipantId
-                            )
-
-                            conversationsToInsert.add(conversationEntity)
-                            Log.d("FetchConversations", "New conversation added to insert list: $firebaseConversationId")
+                                conversationsToInsert.add(conversationEntity)
+                                Log.d("FetchConversations", "Nowa konwersacja dodana do listy do dodania: $firebaseConversationId")
+                            } else {
+                                Log.d("FetchConversations", "Użytkownik $currentUserId nie jest uczestnikiem konwersacji: $firebaseConversationId")
+                            }
                         } else {
-                            Log.d("FetchConversations", "Conversation already exists: $firebaseConversationId")
+                            Log.d("FetchConversations", "Konwersacja już istnieje: $firebaseConversationId")
                         }
                     }
 
@@ -296,7 +344,7 @@ class ConversationViewModel(
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Log.e("FirebaseError", "Error fetching conversations: ", error.toException())
+                Log.e("FirebaseError", "Błąd podczas pobierania konwersacji: ", error.toException())
             }
         })
     }
@@ -660,7 +708,7 @@ class ConversationViewModel(
         })
     }
 
-    fun removeExplicitListener() {
+    private fun removeExplicitListener() {
         explicitMessageListener?.let {
             val messagesRef = FirebaseDatabase.getInstance().getReference("explicit_conversations/$conversationId/messages")
             messagesRef.removeEventListener(it)
