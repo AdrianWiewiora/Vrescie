@@ -216,7 +216,7 @@ class MainActivity : ComponentActivity() {
         loginViewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
         configurationProfileViewModel =
             ViewModelProvider(this).get(ConfigurationProfileViewModel::class.java)
-        profileViewModel = ViewModelProvider(this).get(ProfileViewModel::class.java)
+        profileViewModel = ProfileViewModelFactory(applicationContext).create(ProfileViewModel::class.java)
         locationViewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
 
         // Inicjalizacja ActivityResultLauncher dla żądania uprawnień
@@ -327,6 +327,15 @@ class SettingsViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
             return SettingsViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+class ProfileViewModelFactory(private val appContext: Context) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
+            return ProfileViewModel(appContext) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

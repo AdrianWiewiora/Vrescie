@@ -1,5 +1,6 @@
 package com.example.vresciecompose.screens
 
+import LocalContext
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
@@ -23,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.example.vresciecompose.R
 import com.example.vresciecompose.data.UserProfile
 import com.example.vresciecompose.view_models.ProfileViewModel
@@ -45,24 +48,29 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-
 @Composable
-fun ProfileScreen(isConnected: Boolean) {
-    val profileViewModel: ProfileViewModel = viewModel()
-    profileViewModel.loadUserProfile()
-    val userProfile = profileViewModel.userProfile
+fun ProfileScreen(isConnected: Boolean, profileViewModel: ProfileViewModel) {
+    // Sprawdź, czy dane są lokalnie
+    val localUserProfile = profileViewModel.getStoredProfile()
 
+    // Ustawienie stanu na podstawie dostępności lokalnych danych
+    val userProfile = profileViewModel.userProfile.observeAsState()
     var dataLoaded by remember { mutableStateOf(false) }
 
-    // Launch a coroutine that refreshes data every 0.15 seconds until data is loaded
-    LaunchedEffect(dataLoaded) {
-        while (!dataLoaded) {
-            delay(150)
-            if (userProfile.value == null) {
-                profileViewModel.loadUserProfile()
-            } else {
-                dataLoaded = true
-            }
+    // Jeśli dane lokalne są dostępne, ustaw dataLoaded na true
+    if (localUserProfile != null) {
+        profileViewModel.setProfileConfigured(true) // Możesz ustawić tę wartość, jeśli jest potrzebna
+        profileViewModel._userProfile.value = localUserProfile // Przypisz lokalne dane do _userProfile
+        dataLoaded = true
+    } else {
+        // Jeśli nie ma lokalnych danych, załaduj dane z Firebase
+        profileViewModel.loadUserProfile()
+    }
+
+    // Obserwuj zmiany w userProfile i aktualizuj dataLoaded
+    LaunchedEffect(userProfile.value) {
+        if (userProfile.value != null) {
+            dataLoaded = true
         }
     }
 
@@ -77,7 +85,8 @@ fun ProfileScreen(isConnected: Boolean) {
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                ),                shape = RoundedCornerShape(8.dp),
+                ),
+                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
@@ -91,11 +100,10 @@ fun ProfileScreen(isConnected: Boolean) {
             }
         }
 
-        Crossfade(targetState = userProfile.value != null, label = "") { isLoaded ->
+        Crossfade(targetState = dataLoaded, label = "") { isLoaded ->
             if (isLoaded) {
-                ProfileContent(userProfile.value!!)
+                ProfileContent(userProfile.value!!, localImagePath = profileViewModel.getLocalImagePath())
             } else {
-                // Użycie AnimatedVisibility
                 AnimatedVisibility(
                     visible = true,
                     enter = fadeIn(),
@@ -113,14 +121,26 @@ fun ProfileScreen(isConnected: Boolean) {
 }
 
 @Composable
-fun ProfileContent(userProfile: UserProfile) {
+fun ProfileContent(userProfile: UserProfile, localImagePath: String? = null) {
+
     LazyColumn(
         modifier = Modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            // Jeśli profileImageUrl nie jest pusty, wyświetl obrazek
-            if (userProfile.profileImageUrl.isNotEmpty()) {
+            // Jeśli lokalna ścieżka nie jest pusta, wyświetl lokalny obrazek
+            if (!localImagePath.isNullOrEmpty()) {
+                Image(
+                    painter = rememberAsyncImagePainter(localImagePath),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(128.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, Color.Gray, CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
+            } else if (userProfile.profileImageUrl.isNotEmpty()) {
+                // Alternatywnie, wyświetl obrazek z URL, jeśli nie ma lokalnego
                 Image(
                     painter = rememberAsyncImagePainter(userProfile.profileImageUrl),
                     contentDescription = null,
@@ -139,6 +159,7 @@ fun ProfileContent(userProfile: UserProfile) {
         }
     }
 }
+
 
 
 @Composable

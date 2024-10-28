@@ -110,7 +110,8 @@ fun MainMenuScreen(
         setCurrentFragment,
         userChatPrefsViewModel,
         conversationViewModel,
-        isConnected
+        isConnected,
+        profileViewModel
     )
 
 }
@@ -125,7 +126,8 @@ fun WholeMenu(
     setCurrentFragment: (Int) -> Unit,
     userChatPrefsViewModel: UserChatPrefsViewModel,
     conversationViewModel: ConversationViewModel,
-    isConnected: Boolean = true
+    isConnected: Boolean = true,
+    profileViewModel: ProfileViewModel
 ){
     Column(modifier = modifier) {
         TopRowMenu(modifier = Modifier.fillMaxWidth(), onClick)
@@ -141,7 +143,8 @@ fun WholeMenu(
             requestPermissionLauncher,
             userChatPrefsViewModel,
             conversationViewModel,
-            isConnected
+            isConnected,
+            profileViewModel
         )
 
         BottomMenu(
@@ -191,7 +194,8 @@ fun MiddleCard(
     requestPermissionLauncher: ActivityResultLauncher<String>,
     userChatPrefsViewModel: UserChatPrefsViewModel,
     conversationViewModel: ConversationViewModel,
-    isConnected: Boolean
+    isConnected: Boolean,
+    profileViewModel: ProfileViewModel
 ){
     Column(
         modifier = modifier
@@ -210,7 +214,7 @@ fun MiddleCard(
                 when (target) {
                     1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, onClick, userChatPrefsViewModel, isConnected)
                     2 -> ImplicitChatsScreen(onClick, conversationViewModel, isConnected)
-                    3 -> ProfileScreen(isConnected)
+                    3 -> ProfileScreen(isConnected, profileViewModel)
                     else ->  Column(
                         modifier = Modifier
                             .fillMaxWidth()
