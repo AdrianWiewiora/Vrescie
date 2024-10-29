@@ -51,6 +51,8 @@ import com.example.vresciecompose.view_models.RegistrationViewModel
 import com.example.vresciecompose.view_models.SettingsViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : ComponentActivity() {
     // Room database
@@ -85,6 +87,19 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("FCM", "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+
+            // Uzyskaj nowy token rejestracji FCM
+            val token = task.result
+            // Wywołaj saveTokenToFirebase
+            MyFirebaseMessagingService().saveTokenToFirebase(token)
+            Log.d("FCM Token", "Token: $token")
+        })
 
 
 //        val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -170,7 +185,6 @@ class MainActivity : ComponentActivity() {
         // Utwórz fabrykę dla ConversationViewModel
         val conversationViewModelFactory = ConversationViewModelFactory(messageDao, conversationDao)
         conversationViewModel = ViewModelProvider(this, conversationViewModelFactory).get(ConversationViewModel::class.java)
-        conversationViewModel.createNotificationChannel(this)
         conversationViewModel.monitorNetworkConnection(this)
 
         backDispatcher = onBackPressedDispatcher

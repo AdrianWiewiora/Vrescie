@@ -96,75 +96,6 @@ class ConversationViewModel(
         networkCallback = null
     }
 
-    fun createNotificationChannel(context: Context) {
-        Log.d("Notification", "Creating notification channel")
-
-        val name = "New Messages"
-        val descriptionText = "Notifications for new messages"
-        val importance = NotificationManager.IMPORTANCE_DEFAULT
-        val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-            description = descriptionText
-        }
-
-        val notificationManager: NotificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        Log.d("Notification", "Notification channel created: $name")
-        notificationManager.createNotificationChannel(channel)
-    }
-
-    fun showNotification(context: Context, senderName: String, messageText: String) {
-        Log.d("Notification", "Attempting to show notification for message: $messageText from $senderName")
-
-        // Sprawdzenie uprawnienia na Androidzie 13+ (API 33 i wyżej)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(context, "android.permission.POST_NOTIFICATIONS")
-                != PackageManager.PERMISSION_GRANTED) {
-
-                // Brak uprawnień - obsługa sytuacji
-                Log.w("Notification", "No permission to post notifications")
-                return
-            }
-        }
-
-        val truncatedMessage = if (messageText.length > 30) {
-            messageText.take(30) + "..."
-        } else {
-            messageText
-        }
-
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)  // Ikona powiadomienia
-            .setContentTitle(senderName)
-            .setContentText(truncatedMessage)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .build()
-
-        val notificationManager = NotificationManagerCompat.from(context)
-        Log.d("Notification", "Showing notification with content: $truncatedMessage")
-        notificationManager.notify(1, notification)
-    }
-
-    private fun isAppInForeground(context: Context): Boolean {
-        Log.d("Notification", "Checking if app is in foreground")
-
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val runningAppProcesses = activityManager.runningAppProcesses ?: return false
-        val packageName = context.packageName
-
-        for (processInfo in runningAppProcesses) {
-            if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
-                && processInfo.processName == packageName) {
-                Log.d("Notification", "App is in foreground")
-                return true
-            }
-        }
-
-        Log.d("Notification", "App is in background")
-        return false
-    }
-
-
     private fun startListeningForConversations(userId: String) {
         val database = FirebaseDatabase.getInstance()
         val conversationRef = database.getReference("/explicit_conversations")
@@ -614,11 +545,6 @@ class ConversationViewModel(
                             messageDao.insertMessage(messageEntity)
                             Log.d("MessageListener", "Message saved to Room: ${messageEntity.text}, from sender: ${messageEntity.senderId}")
 
-                            // Sprawdź, czy aplikacja jest w tle
-                            if (!isAppInForeground(context)) {
-                                // Pokaż powiadomienie
-                                getSenderNameAndShowNotification(context, it.senderId, it.text)
-                            }
                         }
                     }
                 }
@@ -687,25 +613,6 @@ class ConversationViewModel(
             // Dodaj nasłuchiwacz do Firebase
             conversationRef.addChildEventListener(explicitMessageListener!!)
         }
-    }
-
-    // Funkcja do pobierania imienia nadawcy
-    private fun getSenderNameAndShowNotification(context: Context, senderId: String, messageText: String) {
-        val membersRef = FirebaseDatabase.getInstance().getReference("/explicit_conversations/$conversationId/members")
-
-        membersRef.child(senderId).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val senderName = snapshot.getValue(String::class.java) ?: "Unknown"
-                Log.d("MessageListener", "Sender name: $senderName for senderId: $senderId")
-
-                // Wyświetl powiadomienie z imieniem nadawcy
-                showNotification(context, senderName, messageText)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("FirebaseError", "Error fetching sender name: ", error.toException())
-            }
-        })
     }
 
     private fun removeExplicitListener() {
