@@ -1,10 +1,11 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const {assignUsersToConversation} = require("./conversationFunctions");
+const {notifyNewMessage} = require("./notificationFunctions");
 admin.initializeApp();
 
 exports.assignUsersToConversation = assignUsersToConversation;
-
+exports.notifyNewMessage = notifyNewMessage;
 
 exports.checkAndRemoveConversations = functions.database
     .ref("/conversations/{conversationId}")
