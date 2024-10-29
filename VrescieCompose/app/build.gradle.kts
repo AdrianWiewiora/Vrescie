@@ -119,4 +119,8 @@ dependencies {
 
     // To add photo locally
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
+
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.google.firebase:firebase-vertexai:16.0.1")
+    implementation("com.google.firebase:firebase-appcheck-debug")
 }

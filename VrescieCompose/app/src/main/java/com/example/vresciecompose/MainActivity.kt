@@ -52,6 +52,11 @@ import com.example.vresciecompose.view_models.SettingsViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.Firebase
+import com.google.firebase.appcheck.appCheck
+import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
+import com.google.firebase.initialize
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : ComponentActivity() {
@@ -100,7 +105,10 @@ class MainActivity : ComponentActivity() {
             MyFirebaseMessagingService().saveTokenToFirebase(token)
             Log.d("FCM Token", "Token: $token")
         })
-
+        Firebase.initialize(context = this)
+        Firebase.appCheck.installAppCheckProviderFactory(
+            DebugAppCheckProviderFactory.getInstance(),
+        )
 
 //        val MIGRATION_1_2 = object : Migration(1, 2) {
 //            override fun migrate(database: SupportSQLiteDatabase) {

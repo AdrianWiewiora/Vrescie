@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
@@ -53,6 +54,7 @@ import com.example.vresciecompose.ui.components.MessageList
 import com.example.vresciecompose.ui.components.MessageType
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.example.vresciecompose.view_models.SettingsViewModel
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -60,6 +62,11 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.vertexai.type.generationConfig
+import com.google.firebase.vertexai.vertexAI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun ExplicitConversationScreen(
@@ -79,6 +86,15 @@ fun ExplicitConversationScreen(
 
     val (messageText, setMessageText) = remember { mutableStateOf("") }
     val context = LocalContext.current
+    val config = generationConfig {
+        maxOutputTokens = 300
+        temperature = 0.2f
+        topK = 40
+        topP = 0.95f
+    }
+    val generativeModel = Firebase.vertexAI.generativeModel(modelName ="gemini-1.0-pro", generationConfig  = config)
+    val (aiResponse, setAiResponse) = remember { mutableStateOf("") }
+
     BackHandler {
         onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
     }
@@ -89,8 +105,14 @@ fun ExplicitConversationScreen(
         onDispose {
             viewModel.resetMessages()
             viewModel.removeMessageListener()
-            //viewModel.removeExplicitListener()
         }
+    }
+
+    // Funkcja wysyłająca prompt do Vertex AI
+    suspend fun fetchAIResponse() {
+        val prompt = "Odpowiadaj maksymalnie dwoma zdaniami. Opowiedz żaert."
+        val response = generativeModel.generateContent(prompt)
+        response.text?.let { setAiResponse(it) }
     }
 
     LaunchedEffect(Unit) {
@@ -111,7 +133,14 @@ fun ExplicitConversationScreen(
         messageText = messageText,
         setMessageText = setMessageText,
         sendMessage = ::sendMessage,
-        messageFontSize = messageFontSize
+        messageFontSize = messageFontSize,
+        aiResponse = aiResponse,
+        onAiButtonClick = {
+            // Uruchom fetchAIResponse w Coroutine Scope
+            CoroutineScope(Dispatchers.IO).launch {
+                fetchAIResponse()
+            }
+        }
     )
 
 }
@@ -124,9 +153,10 @@ fun ExplicitConversationColumn(
     messageText: String = "",
     setMessageText: (String) -> Unit = {},
     sendMessage: (String) -> Unit = {},
-    messageFontSize: TextUnit = 14.sp
+    messageFontSize: TextUnit = 14.sp,
+    aiResponse: String = "",
+    onAiButtonClick: () -> Unit = {}
 ){
-
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.SpaceBetween,
@@ -170,7 +200,14 @@ fun ExplicitConversationColumn(
                 }
             }
         }
-
+        // Wyświetlenie odpowiedzi modelu AI nad MessageList
+        if (aiResponse.isNotEmpty()) {
+            Text(
+                text = aiResponse,
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
         MessageList(
             messages = messages,
             modifier = Modifier
@@ -219,6 +256,19 @@ fun ExplicitConversationColumn(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Send",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(50.dp)
+                )
+            }
+            IconButton(
+                onClick = onAiButtonClick,
+                modifier = Modifier
+                    .size(50.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Link,
+                    contentDescription = "AI-Vertex",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .size(50.dp)
