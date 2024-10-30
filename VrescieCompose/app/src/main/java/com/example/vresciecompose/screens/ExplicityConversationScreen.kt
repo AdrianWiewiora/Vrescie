@@ -11,16 +11,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +68,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.vertexai.type.ResponseStoppedException
 import com.google.firebase.vertexai.type.generationConfig
 import com.google.firebase.vertexai.vertexAI
 import kotlinx.coroutines.CoroutineScope
@@ -89,8 +96,8 @@ fun ExplicitConversationScreen(
     val config = generationConfig {
         maxOutputTokens = 300
         temperature = 0.2f
-        topK = 40
-        topP = 0.95f
+        topK = 20
+        topP = 0.85f
     }
     val generativeModel = Firebase.vertexAI.generativeModel(modelName ="gemini-1.0-pro", generationConfig  = config)
     val (aiResponse, setAiResponse) = remember { mutableStateOf("") }
@@ -107,20 +114,54 @@ fun ExplicitConversationScreen(
             viewModel.removeMessageListener()
         }
     }
+    val messages by viewModel.messages.collectAsState()
 
     // Funkcja wysyłająca prompt do Vertex AI
-    suspend fun fetchAIResponse() {
-        val prompt = "Odpowiadaj maksymalnie dwoma zdaniami. Opowiedz żaert."
-        val response = generativeModel.generateContent(prompt)
-        response.text?.let { setAiResponse(it) }
+    suspend fun fetchAIResponse(numberOfButton: Int) {
+        val messagesList = messages.takeLast(
+            when (numberOfButton) {
+                1 -> 10
+                3, 4, 5 -> 20
+                else -> 0
+            }
+        )
+
+        // Formatuj wiadomości
+        val formattedMessages = messagesList.joinToString("\n") { (text, messageType) ->
+            when (messageType.type) {
+                MessageType.Type.Received -> "Obcy: $text"
+                MessageType.Type.Sent -> "Ja: $text"
+                MessageType.Type.System -> "System: $text"
+            }
+        }
+
+        val prompt: String = when (numberOfButton) {
+            1 -> "Odpowiedz maksymalnie jednym zdaniem. Po prostu napisz odpowiedź jaką proponujesz Jak mogę odpisać w tej rozmowie? Ostatnie 10 wiadomości tej konwersdacji prezentują się następująco:\n$formattedMessages. Moje wiadomości podpisałem jako Ja a mojego rozmówcy jako Obcy. Podpowiedz jak mam odpisać na wiadomości obcego a nie na moje własne"
+            2 -> "Podaj tylko dwie propozycje ciekawych tematów do rozmowy i nic więcej. Odpowiedź ma być krótka, nie rozwijaj jej"
+            3 -> "Zaproponuj tylko dwa oryginalne powitania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n$formattedMessages. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako obcy."
+            4 -> "Zaproponuj tylko dwa oryginalne pożegnania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n$formattedMessages. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako obcy."
+            5 -> "Zaproponuj tylko dwa pytania jakie ja mógłbym zadać obcemu dotyczące ostatnich wiadomości w mojej rozmowie:\n$formattedMessages. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako obcy. Odpowiedź ma być krótka, maksymalnie dwa zdania"
+            else -> ""
+        }
+
+        try {
+            val response = generativeModel.generateContent(prompt)
+            response.text?.let { setAiResponse(it) }
+        } catch (e: ResponseStoppedException) {
+            // Obsługa błędu, gdy generacja treści została przerwana
+            Log.e("AIResponseError", "Generowanie treści zatrzymane: ${e.message}")
+            setAiResponse("Wystąpił problem z generowaniem odpowiedzi. Spróbuj ponownie.")
+        } catch (e: Exception) {
+            // Ogólna obsługa błędów
+            Log.e("AIResponseError", "Błąd podczas pobierania odpowiedzi AI: ${e.message}")
+            setAiResponse("Wystąpił błąd. Spróbuj ponownie.")
+        }
     }
 
     LaunchedEffect(Unit) {
         viewModel.setConversationIdExplicit(conversationID, context)
         viewModel.updateMessagesAsSeen(conversationID)
     }
-
-    val messages by viewModel.messages.collectAsState()
 
     fun sendMessage(message: String) {
         viewModel.sendMessageExp(message)
@@ -135,10 +176,10 @@ fun ExplicitConversationScreen(
         sendMessage = ::sendMessage,
         messageFontSize = messageFontSize,
         aiResponse = aiResponse,
-        onAiButtonClick = {
-            // Uruchom fetchAIResponse w Coroutine Scope
+        setAiResponse = setAiResponse,
+        onAiButtonClick = { numberOfButton ->
             CoroutineScope(Dispatchers.IO).launch {
-                fetchAIResponse()
+                fetchAIResponse(numberOfButton )
             }
         }
     )
@@ -155,8 +196,11 @@ fun ExplicitConversationColumn(
     sendMessage: (String) -> Unit = {},
     messageFontSize: TextUnit = 14.sp,
     aiResponse: String = "",
-    onAiButtonClick: () -> Unit = {}
+    setAiResponse: (String) -> Unit = {},
+    onAiButtonClick: (Int) -> Unit = {}
 ){
+    val isShowAiMenu = remember { mutableStateOf(false) }
+    val isShowPrompt = remember { mutableStateOf(false) }
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.SpaceBetween,
@@ -183,6 +227,25 @@ fun ExplicitConversationColumn(
             ) {
                 IconButton(
                     onClick = {
+                        isShowAiMenu.value = !isShowAiMenu.value
+                        isShowPrompt.value = false
+                        setAiResponse("")
+                    },
+                    modifier = Modifier
+                        .size(dimensionResource(R.dimen.image_medium_size))
+                        .padding(end = 5.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Quiz,
+                        contentDescription = "VrescieAI",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(dimensionResource(R.dimen.image_medium_size))
+
+                    )
+                }
+                IconButton(
+                    onClick = {
 
                     },
                     modifier = Modifier
@@ -200,13 +263,102 @@ fun ExplicitConversationColumn(
                 }
             }
         }
+        if (isShowAiMenu.value) {
+            LazyRow(
+                modifier = Modifier.height(50.dp)
+            ) {
+                item {
+                    Button(
+                        onClick = {
+                            isShowAiMenu.value = !isShowAiMenu.value
+                            onAiButtonClick(1)
+                            isShowPrompt.value = !isShowPrompt.value
+                        },
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Text("Co mogę odpisać?")
+                    }
+                }
+                item {
+                    Button(
+                        onClick = {
+                            isShowAiMenu.value = !isShowAiMenu.value
+                            onAiButtonClick(2)
+                            isShowPrompt.value = !isShowPrompt.value
+                        },
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Text("Podaj ciekawe tematy do rozmowy")
+                    }
+                }
+                item {
+                    Button(
+                        onClick = {
+                            isShowAiMenu.value = !isShowAiMenu.value
+                            onAiButtonClick(3)
+                            isShowPrompt.value = !isShowPrompt.value
+                        },
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Text("Zaproponuj oryginalne powitanie")
+                    }
+                }
+                item {
+                    Button(
+                        onClick = {
+                            isShowAiMenu.value = !isShowAiMenu.value
+                            onAiButtonClick(4)
+                            isShowPrompt.value = !isShowPrompt.value
+                        },
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Text("Zaproponuj oryginalne pożegnanie")
+                    }
+                }
+                item {
+                    Button(
+                        onClick = {
+                            isShowAiMenu.value = !isShowAiMenu.value
+                            onAiButtonClick(5)
+                            isShowPrompt.value = !isShowPrompt.value
+                        },
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Text("Zaproponuj pytania jakie mogę zadać dotyczące rozmowy.")
+                    }
+                }
+            }
+        }
+
         // Wyświetlenie odpowiedzi modelu AI nad MessageList
-        if (aiResponse.isNotEmpty()) {
-            Text(
-                text = aiResponse,
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.bodyMedium
-            )
+        if (isShowPrompt.value) {
+            ElevatedCard(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+            ) {
+                if (aiResponse.isEmpty()) {
+                    Text(
+                        text = "Ładowanie",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .height(100.dp)
+                    ) {
+                        item {
+                            Text(
+                                text = aiResponse,
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
+
         }
         MessageList(
             messages = messages,
@@ -256,19 +408,6 @@ fun ExplicitConversationColumn(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Send",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .size(50.dp)
-                )
-            }
-            IconButton(
-                onClick = onAiButtonClick,
-                modifier = Modifier
-                    .size(50.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Link,
-                    contentDescription = "AI-Vertex",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .size(50.dp)
