@@ -129,18 +129,18 @@ fun ExplicitConversationScreen(
         // Formatuj wiadomości
         val formattedMessages = messagesList.joinToString("\n") { (text, messageType) ->
             when (messageType.type) {
-                MessageType.Type.Received -> "Obcy: $text"
+                MessageType.Type.Received -> "Znajomy: $text"
                 MessageType.Type.Sent -> "Ja: $text"
                 MessageType.Type.System -> "System: $text"
             }
         }
 
         val prompt: String = when (numberOfButton) {
-            1 -> "Odpowiedz maksymalnie jednym zdaniem. Po prostu napisz odpowiedź jaką proponujesz Jak mogę odpisać w tej rozmowie? Ostatnie 10 wiadomości tej konwersdacji prezentują się następująco:\n$formattedMessages. Moje wiadomości podpisałem jako Ja a mojego rozmówcy jako Obcy. Podpowiedz jak mam odpisać na wiadomości obcego a nie na moje własne"
+            1 -> "Odpowiedz maksymalnie jednym zdaniem. Po prostu napisz odpowiedź jaką proponujesz jak mogę odpisać znajomemu w tej rozmowie? Ostatnie 10 wiadomości tej konwersdacji prezentują się następująco:\n$formattedMessages. Moje wiadomości podpisałem jako 'Ja' a mojego rozmówcy jako 'Znajomy'. Podpowiedz co mam odpisać na ostatnią wiadomość znajomego a nie na moje własne, zwróć jedną najlepszą według Ciebie propozycje."
             2 -> "Podaj tylko dwie propozycje ciekawych tematów do rozmowy i nic więcej. Odpowiedź ma być krótka, nie rozwijaj jej"
-            3 -> "Zaproponuj tylko dwa oryginalne powitania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n$formattedMessages. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako obcy."
-            4 -> "Zaproponuj tylko dwa oryginalne pożegnania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n$formattedMessages. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako obcy."
-            5 -> "Zaproponuj tylko dwa pytania jakie ja mógłbym zadać obcemu dotyczące ostatnich wiadomości w mojej rozmowie:\n$formattedMessages. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako obcy. Odpowiedź ma być krótka, maksymalnie dwa zdania"
+            3 -> "Zaproponuj tylko dwa oryginalne powitania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n$formattedMessages. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy."
+            4 -> "Zaproponuj tylko dwa oryginalne pożegnania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n$formattedMessages. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy."
+            5 -> "Zaproponuj tylko dwa pytania jakie ja mógłbym zadać obcemu dotyczące ostatnich wiadomości w mojej rozmowie:\n$formattedMessages. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy. Odpowiedź ma być krótka, maksymalnie dwa zdania"
             else -> ""
         }
 
@@ -332,32 +332,46 @@ fun ExplicitConversationColumn(
 
         // Wyświetlenie odpowiedzi modelu AI nad MessageList
         if (isShowPrompt.value) {
-            ElevatedCard(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-            ) {
-                if (aiResponse.isEmpty()) {
-                    Text(
-                        text = "Ładowanie",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .height(100.dp)
-                    ) {
-                        item {
-                            Text(
-                                text = aiResponse,
-                                modifier = Modifier.padding(16.dp),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+            Column{
+                ElevatedCard(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp)
+                        .fillMaxWidth(),
+                ) {
+                    if (aiResponse.isEmpty()) {
+                        Text(
+                            text = "Ładowanie",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .height(100.dp)
+                        ) {
+                            item {
+                                Text(
+                                    text = aiResponse,
+                                    modifier = Modifier.padding(16.dp),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                         }
                     }
                 }
+                Button(
+                    onClick = {
+                        setMessageText(aiResponse)
+                        isShowPrompt.value = !isShowPrompt.value
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
+                    enabled = aiResponse.isNotEmpty()
+                ) {
+                    Text("Wklej odpowiedź")
+                }
             }
+
 
         }
         MessageList(

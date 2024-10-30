@@ -95,7 +95,6 @@ class MainActivity : ComponentActivity() {
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (!task.isSuccessful) {
-                Log.w("FCM", "Fetching FCM registration token failed", task.exception)
                 return@OnCompleteListener
             }
 
@@ -103,7 +102,6 @@ class MainActivity : ComponentActivity() {
             val token = task.result
             // Wywołaj saveTokenToFirebase
             MyFirebaseMessagingService().saveTokenToFirebase(token)
-            Log.d("FCM Token", "Token: $token")
         })
         Firebase.initialize(context = this)
         Firebase.appCheck.installAppCheckProviderFactory(

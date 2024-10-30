@@ -256,7 +256,6 @@ class ConversationViewModel(
                                 )
 
                                 conversationsToInsert.add(conversationEntity)
-                                Log.d("FetchConversations", "Nowa konwersacja dodana do listy do dodania: $firebaseConversationId")
                             } else {
                                 Log.d("FetchConversations", "Użytkownik $currentUserId nie jest uczestnikiem konwersacji: $firebaseConversationId")
                             }
@@ -284,12 +283,10 @@ class ConversationViewModel(
         viewModelScope.launch {
             // Pobierz wszystkie konwersacje z Room
             val conversations = conversationDao.getAllConversations()
-            Log.d("FetchMessages", "Fetched ${conversations.size} conversations from Room.")
 
             for (conversation in conversations) {
                 val firebaseConversationId = conversation.firebaseConversationId
                 val localConversationId = conversation.localConversationId.toString()
-                Log.d("FetchMessages", "Fetching messages for conversation: $firebaseConversationId")
 
                 val messagesRef = FirebaseDatabase.getInstance().getReference("/explicit_conversations/$firebaseConversationId/messages")
 
@@ -311,18 +308,15 @@ class ConversationViewModel(
                                     if (existingMessage == null) {
                                         val messageEntity = messageData.copy(messageId = messageId, localConversationId = localConversationId)
                                         messagesToInsert.add(messageEntity)
-                                        Log.d("FetchMessages", "Message added to insert list: ${messageEntity.messageId}")
                                     } else if (messageData.messageSeen && !existingMessage.messageSeen) {
                                         val updatedMessage = existingMessage.copy(messageSeen = true)
                                         messageDao.updateMessage(updatedMessage)
-                                        Log.d("FetchMessages", "Updated messageSeen for message: $messageId")
                                     }
                                 }
 
                                 // Zapisz nowo pobrane wiadomości do Room
                                 if (messagesToInsert.isNotEmpty()) {
                                     messagesToInsert.forEach { messageDao.insertMessage(it) }
-                                    Log.d("FetchMessages", "Inserted ${messagesToInsert.size} new messages to Room.")
                                 }
 
                                 // Aktualizuj messageSeen = true dla wiadomości, które nie istnieją już w Firebase
@@ -331,7 +325,6 @@ class ConversationViewModel(
                                     if (localMessage.messageId !in firebaseMessageIds && !localMessage.messageSeen) {
                                         val updatedMessage = localMessage.copy(messageSeen = true)
                                         messageDao.updateMessage(updatedMessage)
-                                        Log.d("FetchMessages", "Set messageSeen=true for missing message in Firebase: ${localMessage.messageId}")
                                     }
                                 }
                             }
@@ -458,21 +451,16 @@ class ConversationViewModel(
         viewModelScope.launch {
 
             if (explicitMessageListener != null) {
-                Log.d("InitializeDatabase", "Removing existing message listener.")
                 removeExplicitListener() // Funkcja, która usuwa listenera z Firebase
             }
 
             // Pobierz lokalne konwersacje na podstawie firebaseConversationId
-            Log.d("InitializeDatabase", "Fetching localConversationId for firebaseConversationId: $conversationId")
             val conversation = conversationDao.getAllConversations() // Pobierz wszystkie konwersacje
 
             val localConversationId = conversation.firstOrNull { it.firebaseConversationId == conversationId }?.localConversationId
                 ?: run {
-                    Log.d("InitializeDatabase", "No localConversationId found for firebaseConversationId: $conversationId")
                     return@launch
                 }
-
-            Log.d("InitializeDatabase", "Using localConversationId: $localConversationId for firebaseConversationId: $conversationId")
 
             // Ładujemy wiadomości z Room Database na podstawie localConversationId
             val localMessages = messageDao.getMessagesByConversationId(localConversationId.toString())
@@ -484,7 +472,6 @@ class ConversationViewModel(
                     messageEntity.senderId == "system" -> MessageType(MessageType.Type.System, messageEntity.messageSeen, messageEntity.timestamp)
                     else -> MessageType(MessageType.Type.Received, messageEntity.messageSeen, messageEntity.timestamp)
                 }
-                Log.d("InitializeDatabase", "Loaded message from Room: ${messageEntity.text}, type: ${messageType.type}")
                 messageEntity.text to messageType
             }.reversed()
 
@@ -508,14 +495,15 @@ class ConversationViewModel(
                         viewModelScope.launch {
                             val existingMessage = messageDao.getMessageById(messageId)
                             if (existingMessage != null) {
-                                Log.d("MessageListener", "Message with ID $messageId already exists in Room, skipping addition.")
+                                // Aktualizuj status messageSeen na true
+                                val updatedMessage = existingMessage.copy(messageSeen = true)
+                                messageDao.updateMessage(updatedMessage)
                                 return@launch // Nie dodawaj wiadomości, jeśli już istnieje
                             }
 
                             // Ustal, czy wiadomość została odczytana
                             val isSeen = it.messageSeen
                             val timestamp = it.timestamp
-                            Log.d("MessageListener", "Received message from Firebase: $it, isSeen: $isSeen")
 
                             // Określenie typu wiadomości
                             val messageType = when {
@@ -543,8 +531,6 @@ class ConversationViewModel(
 
                             // Zapisz wiadomość w Room
                             messageDao.insertMessage(messageEntity)
-                            Log.d("MessageListener", "Message saved to Room: ${messageEntity.text}, from sender: ${messageEntity.senderId}")
-
                         }
                     }
                 }
@@ -555,7 +541,6 @@ class ConversationViewModel(
 
                 override fun onChildRemoved(snapshot: DataSnapshot) {
                     val messageId = snapshot.key ?: return  // Użyj klucza snapshotu jako ID wiadomości
-                    Log.d("MessageListener", "Message with ID $messageId has been removed from Firebase.")
 
                     // Usuwanie wiadomości z _messages
                     _messages.value = _messages.value.filter { (text, _) ->
@@ -577,7 +562,6 @@ class ConversationViewModel(
                             if (!messageEntity.messageSeen) {
                                 val updatedMessage = messageEntity.copy(messageSeen = true)
                                 messageDao.updateMessage(updatedMessage)
-                                Log.d("MessageListener", "Updated messageSeen to true for message: $messageId")
                             }
                         }
 
@@ -591,7 +575,6 @@ class ConversationViewModel(
                                 messageEntity.senderId == "system" -> MessageType(MessageType.Type.System, messageEntity.messageSeen, messageEntity.timestamp)
                                 else -> MessageType(MessageType.Type.Received, messageEntity.messageSeen, messageEntity.timestamp)
                             }
-                            Log.d("InitializeDatabase", "Loaded message from Room: ${messageEntity.text}, type: ${messageType.type}")
                             messageEntity.text to messageType
                         }.reversed()
 
