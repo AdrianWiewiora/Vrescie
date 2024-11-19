@@ -75,11 +75,10 @@ class ConversationViewModel(
         fetchAndStoreConversations()
     }
 
-    fun makeMove(conversationId: String, playerId: String, positionX: Int, positionY: Int) {
-        // Sprawdź, czy ostatni ruch nie był wykonany przez tego samego gracza
+    fun makeMove(conversationId: String, playerId: String, positionX: Int, positionY: Int): Boolean {
         if (lastMoveByPlayer) {
             Log.d("TicTacToeGame", "Nie możesz teraz wykonać ruchu.")
-            return
+            return false
         }
 
         // Sprawdź, czy miejsce na planszy jest puste
@@ -94,9 +93,11 @@ class ConversationViewModel(
 
             // Sprawdź, czy gracz wygrał
             if (checkForWin(playerId, positionX, positionY)) {
-
+                updateGameStatistics(conversationId, playerId) // Zaktualizuj statystyki gry
+                return true
             }
         }
+        return false
     }
 
 
@@ -113,6 +114,31 @@ class ConversationViewModel(
     }
 
     private fun checkForWin(playerId: String, x: Int, y: Int): Boolean {
+        val target = if (lastMoveByPlayer) "X" else "O" // Sprawdź, jaki symbol gracz używa
+        val boardState = board.value
+
+        // Funkcja pomocnicza do liczenia elementów w linii
+        fun countInDirection(deltaX: Int, deltaY: Int): Int {
+            var count = 0
+            var currX = x + deltaX
+            var currY = y + deltaY
+
+            while (currX in 0 until 15 && currY in 0 until 15 && boardState[currX][currY] == target) {
+                count++
+                currX += deltaX
+                currY += deltaY
+            }
+            return count
+        }
+
+        // Sprawdź w pionie
+        val verticalCount = 1 + countInDirection(-1, 0) + countInDirection(1, 0)
+        if (verticalCount >= 5) return true
+
+        // Sprawdź w poziomie
+        val horizontalCount = 1 + countInDirection(0, -1) + countInDirection(0, 1)
+        if (horizontalCount >= 5) return true
+
         return false
     }
 
@@ -270,7 +296,6 @@ class ConversationViewModel(
                             var isSeen = true
                             var senderId = ""
 
-                            // Jeśli istnieje ostatnia wiadomość w Firebase, zaktualizuj dane
                             if (lastMessageSnapshot != null) {
                                 val firebaseLastMessageText = lastMessageSnapshot.child("text").value?.toString() ?: ""
                                 senderId = lastMessageSnapshot.child("senderId").value?.toString() ?: ""
@@ -281,7 +306,16 @@ class ConversationViewModel(
                                 } else {
                                     firebaseLastMessageText
                                 }
+                            } else {
+                                // Pobierz ostatnią wiadomość z Room
+                                val localLastMessage = localConversationEntity?.localConversationId?.let { localId ->
+                                    messageDao.getLastMessageForConversation(localId.toString())
+                                }
+                                lastMessageDisplay = localLastMessage?.text ?: "Brak wiadomości"
+                                isSeen = localLastMessage?.messageSeen ?: true
+                                senderId = localLastMessage?.senderId ?: ""
                             }
+
 
                             // Aktualizacja mapy z ostatnimi wiadomościami
                             lastMessageMap[conversationId] = Triple(lastMessageDisplay, isSeen, senderId)
@@ -318,9 +352,16 @@ class ConversationViewModel(
 
                 // Iteracja przez istniejące konwersacje
                 for (conversationEntity in existingConversations) {
-                    // Pobranie ostatniej wiadomości z lokalnej bazy danych
-                    val localLastMessage = messageDao.getLastMessageForConversation(conversationEntity.localConversationId.toString())
+                    // Pobierz lastConversationId i wyświetl w logach
+                    val localConversationId = conversationEntity.localConversationId.toString()
+                    Log.d("FetchConversations2", "Fetching last message for conversationId: $localConversationId")
+
+                    // Pobranie ostatniej wiadomości i logowanie wyniku
+                    val localLastMessage = messageDao.getLastMessageForConversation(localConversationId)
+                    Log.d("FetchConversations2", "Last message for conversationId $localConversationId: $localLastMessage")
+
                     val lastMessageDisplay = localLastMessage?.text ?: "Brak wiadomości"
+                    Log.d("FetchConversations2", "Last message display for conversationId $localConversationId: $lastMessageDisplay")
                     val isSeen = localLastMessage?.messageSeen ?: true
                     val senderId = localLastMessage?.senderId ?: ""
 
@@ -331,18 +372,16 @@ class ConversationViewModel(
                         secondParticipantId = conversationEntity.memberId
                     )
 
-                    // Dodanie konwersacji do listy
                     conversationList.add(conversation)
-
-                    // Zaktualizowanie mapy z ostatnimi wiadomościami
                     lastMessageMap[conversationEntity.firebaseConversationId] = Triple(lastMessageDisplay, isSeen, senderId)
                 }
 
-                // Aktualizacja stanu
+                // Logowanie mapy z ostatnimi wiadomościami
+                Log.d(" ", "Last message map: $lastMessageMap")
+
                 _conversationList.value = conversationList
                 _lastMessageMap.value = lastMessageMap
 
-                // Uruchomienie nasłuchu z Firebase
                 startListeningForConversations(userId)
             }
         }
@@ -456,6 +495,16 @@ class ConversationViewModel(
                                     if (localMessage.messageId !in firebaseMessageIds && !localMessage.messageSeen) {
                                         val updatedMessage = localMessage.copy(messageSeen = true)
                                         messageDao.updateMessage(updatedMessage)
+                                    }
+                                }
+
+                                // Usuń wiadomości z Firebase, jeśli messageSeen jest true
+                                for (messageSnapshot in snapshot.children) {
+                                    val messageData = messageSnapshot.getValue(MessageEntity::class.java) ?: continue
+                                    if (messageData.messageSeen) { // Sprawdzamy, czy messageSeen jest true
+                                        val messageId = messageSnapshot.key ?: continue
+                                        messagesRef.child(messageId).removeValue()
+                                        Log.d("FetchMessages", "Deleted message from Firebase: $messageId")
                                     }
                                 }
                             }
