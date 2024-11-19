@@ -2,17 +2,18 @@ package com.example.vresciecompose.screens
 
 import LocalContext
 import android.util.Log
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,11 +21,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Quiz
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -32,11 +31,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -49,7 +47,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -62,12 +59,6 @@ import com.example.vresciecompose.view_models.ConversationViewModel
 import com.example.vresciecompose.view_models.SettingsViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.vertexai.type.ResponseStoppedException
 import com.google.firebase.vertexai.type.generationConfig
 import com.google.firebase.vertexai.vertexAI
@@ -101,6 +92,18 @@ fun ExplicitConversationScreen(
     }
     val generativeModel = Firebase.vertexAI.generativeModel(modelName ="gemini-1.0-pro", generationConfig  = config)
     val (aiResponse, setAiResponse) = remember { mutableStateOf("") }
+
+    val board = viewModel.board
+    val conversationId = viewModel.currentConversationId
+    val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
+
+    fun makeMove(positionX: Int, positionY: Int)  {
+        viewModel.makeMove(conversationId,currentUserID.toString(), positionX, positionY )
+    }
+
+    fun listenForMoves() {
+        viewModel.listenForMoves(conversationId, currentUserID.toString())
+    }
 
     BackHandler {
         onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
@@ -181,7 +184,10 @@ fun ExplicitConversationScreen(
             CoroutineScope(Dispatchers.IO).launch {
                 fetchAIResponse(numberOfButton )
             }
-        }
+        },
+        board = board,
+        makeMove = ::makeMove,
+        listenForMoves = ::listenForMoves
     )
 
 }
@@ -197,10 +203,20 @@ fun ExplicitConversationColumn(
     messageFontSize: TextUnit = 14.sp,
     aiResponse: String = "",
     setAiResponse: (String) -> Unit = {},
-    onAiButtonClick: (Int) -> Unit = {}
+    onAiButtonClick: (Int) -> Unit = {},
+    board: MutableState<Array<Array<String>>> = mutableStateOf(Array(15) { Array(15) { "" } }),
+    makeMove: (Int, Int) -> Unit,
+    listenForMoves: () -> Unit
 ){
     val isShowAiMenu = remember { mutableStateOf(false) }
     val isShowPrompt = remember { mutableStateOf(false) }
+    val isShowGamesMenu = remember { mutableStateOf(false) }
+    val isShowTicTacToe = remember { mutableStateOf(false) }
+
+    // Stan gry
+    var currentPlayer by remember { mutableStateOf("X") }
+
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.SpaceBetween,
@@ -227,8 +243,29 @@ fun ExplicitConversationColumn(
             ) {
                 IconButton(
                     onClick = {
+                        isShowGamesMenu.value = !isShowGamesMenu.value
+                        isShowPrompt.value = false
+                        isShowAiMenu.value = false
+                        isShowTicTacToe.value = false
+                    },
+                    modifier = Modifier
+                        .size(dimensionResource(R.dimen.image_medium_size))
+                        .padding(end = 5.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.SportsEsports,
+                        contentDescription = "Games",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(dimensionResource(R.dimen.image_medium_size))
+
+                    )
+                }
+                IconButton(
+                    onClick = {
                         isShowAiMenu.value = !isShowAiMenu.value
                         isShowPrompt.value = false
+                        isShowGamesMenu.value = false
                         setAiResponse("")
                     },
                     modifier = Modifier
@@ -371,9 +408,63 @@ fun ExplicitConversationColumn(
                     Text("Wklej odpowiedź")
                 }
             }
-
-
         }
+
+        // Wyświetlenie Menu gier
+        if (isShowGamesMenu.value) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+            ){
+                ElevatedCard(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(vertical = 8.dp)
+                        .height(100.dp)
+                        .fillMaxWidth(),
+                ) {
+                    Button(
+                        onClick = {
+                            isShowTicTacToe.value = !isShowTicTacToe.value
+                            isShowGamesMenu.value = false
+                        },
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Text("Kółko-krzyżyk")
+                    }
+                    Button(
+                        onClick = {
+
+                        },
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Text("Statystyki")
+                    }
+                }
+
+            }
+        }
+
+        // Wyświetlenie gry Kółko-krzyżyk
+        if (isShowTicTacToe.value) {
+            ElevatedCard(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(vertical = 8.dp)
+                    .fillMaxWidth(),
+            ) {
+                TicTacToeGame(
+                    board = board,
+                    onCellClick = { row, col ->
+                        makeMove(row, col)
+                    },
+                    listenForMoves = {
+                        listenForMoves()
+                    }
+                )
+            }
+        }
+
         MessageList(
             messages = messages,
             modifier = Modifier
@@ -431,8 +522,51 @@ fun ExplicitConversationColumn(
     }
 }
 
+@Composable
+fun TicTacToeGame(
+    modifier: Modifier = Modifier,
+    board: MutableState<Array<Array<String>>>,
+    onCellClick: (Int, Int) -> Unit,
+    listenForMoves: () -> Unit
+) {
+    // Rozpocznij nasłuchiwanie na ruchy, kiedy komponent jest aktywny
+    LaunchedEffect(Unit) {
+        listenForMoves()
+    }
+
+    Column(modifier = modifier) {
+        board.value.forEachIndexed { rowIndex, row -> // Użyj board.value
+            Row(modifier = Modifier.fillMaxWidth()) {
+                row.forEachIndexed { colIndex, cell -> // Użyj board.value
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .border(1.dp, Color.Gray)
+                            .clickable { onCellClick(rowIndex, colIndex) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = cell,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = when (cell) {
+                                "X" -> Color.Blue
+                                "O" -> Color.Red
+                                else -> Color.Black
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 @Preview
 @Composable
 fun ExplicitConversationColumnPreview() {
-    ExplicitConversationColumn()
+    fun makeMove(positionX: Int, positionY: Int) {}
+    fun listenForMoves() {}
+    ExplicitConversationColumn(makeMove = ::makeMove, listenForMoves = { listenForMoves() })
 }

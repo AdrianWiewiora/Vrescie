@@ -11,6 +11,8 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -30,6 +32,8 @@ import com.google.firebase.database.*
 import kotlinx.coroutines.launch
 import androidx.lifecycle.asLiveData
 import com.example.vresciecompose.data.MessageEntity
+import com.example.vresciecompose.data.MoveData
+import com.example.vresciecompose.data.Stats
 import kotlinx.coroutines.flow.asStateFlow
 
 class ConversationViewModel(
@@ -44,11 +48,15 @@ class ConversationViewModel(
     companion object {
         private const val CHANNEL_ID = "new_message_channel" // Unikalny identyfikator kanału
     }
+    var board: MutableState<Array<Array<String>>> = mutableStateOf(Array(15) { Array(15) { "" } })
+    private var lastMoveByPlayer: Boolean = false
 
     private val _messages = MutableStateFlow<List<Pair<String, MessageType>>>(emptyList())
     val messages: StateFlow<List<Pair<String, MessageType>>> = _messages
 
     private var conversationId: String = ""
+    val currentConversationId: String
+        get() = conversationId
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
     private var messageListener: ChildEventListener? = null  // Nowa zmienna
     private var explicitMessageListener: ChildEventListener? = null
@@ -66,6 +74,129 @@ class ConversationViewModel(
     init {
         fetchAndStoreConversations()
     }
+
+    fun makeMove(conversationId: String, playerId: String, positionX: Int, positionY: Int) {
+        // Sprawdź, czy ostatni ruch nie był wykonany przez tego samego gracza
+        if (lastMoveByPlayer) {
+            Log.d("TicTacToeGame", "Nie możesz teraz wykonać ruchu.")
+            return
+        }
+
+        // Sprawdź, czy miejsce na planszy jest puste
+        if (board.value[positionX][positionY].isEmpty()) {
+            // Użyj mutableStateOf do aktualizacji planszy
+            val updatedBoard = board.value.map { it.clone() }.toTypedArray() // Skopiuj tablicę
+            updatedBoard[positionX][positionY] = "X"
+            board.value = updatedBoard // Ustaw zaktualizowaną planszę
+
+            lastMoveByPlayer = true
+            saveMoveToFirebase(conversationId, playerId, positionX, positionY)
+
+            // Sprawdź, czy gracz wygrał
+            if (checkForWin(playerId, positionX, positionY)) {
+
+            }
+        }
+    }
+
+
+    private fun saveMoveToFirebase(conversationId: String, playerId: String, positionX: Int, positionY: Int) {
+        val moveData = mapOf(
+            "playerId" to playerId,
+            "positionX" to positionX,
+            "positionY" to positionY
+        )
+        FirebaseDatabase.getInstance().reference
+            .child("explicit_conversations/$conversationId/games/tic-tac-toe/moves")
+            .push()
+            .setValue(moveData)
+    }
+
+    private fun checkForWin(playerId: String, x: Int, y: Int): Boolean {
+        return false
+    }
+
+
+    private fun updateGameStatistics(conversationId: String, winningPlayerId: String) {
+        val statsRef = FirebaseDatabase.getInstance().reference
+            .child("explicit_conversations/$conversationId/games/tic-tac-toe/statistic")
+
+        statsRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                val stats = currentData.getValue(Stats::class.java) ?: Stats()
+                stats.games += 1
+                if (winningPlayerId == "ID_Player1") {
+                    stats.winsIdPlayer1 += 1
+                } else {
+                    stats.winsIdPlayer2 += 1
+                }
+                currentData.value = stats
+                return Transaction.success(currentData)
+            }
+
+            override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
+                if (error != null) {
+                    Log.e("UpdateStats", "Transaction failed: ${error.message}")
+                } else if (committed) {
+                    Log.d("UpdateStats", "Transaction successful!")
+                }
+            }
+        })
+    }
+
+    fun listenForMoves(conversationId: String, playerId: String) {
+        val movesRef = FirebaseDatabase.getInstance().reference
+            .child("explicit_conversations/$conversationId/games/tic-tac-toe/moves")
+
+        // Najpierw załaduj istniejące ruchy
+        movesRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // Utwórz nową planszę na podstawie obecnej
+                val currentBoard = Array(15) { Array(15) { "" } }
+
+                for (childSnapshot in snapshot.children) {
+                    val moveData = childSnapshot.getValue(MoveData::class.java)
+                    moveData?.let {
+                        // Dodaj istniejące ruchy do planszy
+                        currentBoard[it.positionX][it.positionY] = if (it.playerId == playerId) "X" else "O"
+                    }
+                }
+
+                // Zaktualizuj planszę w MutableState
+                board.value = currentBoard
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("TicTacToeGame", "Load failed: ${error.message}")
+            }
+        })
+
+
+        movesRef.addChildEventListener(object : ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                val moveData = snapshot.getValue(MoveData::class.java)
+                moveData?.let {
+                    if (it.playerId != playerId) {
+                        // Użyj mutableStateOf do aktualizacji planszy
+                        val updatedBoard = board.value.map { it.clone() }.toTypedArray()
+                        updatedBoard[it.positionX][it.positionY] = "O"
+                        board.value = updatedBoard // Ustaw zaktualizowaną planszę
+                    }
+                    // Aktualizuj stan ostatniego gracza, który wykonał ruch
+                    lastMoveByPlayer = it.playerId == playerId
+                }
+            }
+            // Inne funkcje ChildEventListener pozostają puste
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildRemoved(snapshot: DataSnapshot) {}
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("TicTacToeGame", "Listen failed: ${error.message}")
+            }
+        })
+    }
+
+
 
     fun monitorNetworkConnection(context: Context) {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
