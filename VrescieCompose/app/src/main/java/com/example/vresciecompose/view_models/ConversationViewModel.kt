@@ -115,6 +115,7 @@ class ConversationViewModel(
             }
             override fun onChildRemoved(snapshot: DataSnapshot) {
                 // Zmniejszamy licznik, gdy rekord zostaje usunięty
+                setNewGame()
                 _wantNewGameCount.value = (_wantNewGameCount.value ?: 0) - 1
             }
             override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
@@ -153,15 +154,54 @@ class ConversationViewModel(
     }
 
     fun setWantNewGame(userId: String) {
-        val wantNewGameRef = Firebase.database.reference
+        val database = Firebase.database.reference
+        val wantNewGameRef = database
             .child("explicit_conversations")
             .child(conversationId)
             .child("games")
             .child("tic-tac-toe")
             .child("wantNewGame")
-            .child(userId)
 
-        wantNewGameRef.setValue(true)
+        // Sprawdź aktualny stan "wantNewGame" w Firebase
+        wantNewGameRef.get().addOnSuccessListener { snapshot ->
+            val currentWantNewGame = snapshot.children.mapNotNull { it.key }
+
+            if (currentWantNewGame.contains(userId)) {
+                Log.d("TicTacToe", "User already marked as wanting a new game.")
+            } else if (currentWantNewGame.size == 1 && currentWantNewGame.firstOrNull() != userId) {
+                // Jeśli jest dokładnie jeden gracz i nie jest to bieżący użytkownik
+                setNewGame() // Rozpocznij nową grę
+            } else {
+                // Dodaj bieżącego użytkownika do listy
+                wantNewGameRef.child(userId).setValue(true)
+            }
+        }.addOnFailureListener { error ->
+            Log.e("TicTacToe", "Failed to fetch wantNewGame: ${error.message}")
+        }
+    }
+
+
+    private fun setNewGame() {
+        val databaseRef = Firebase.database.reference
+            .child("explicit_conversations")
+            .child(conversationId)
+            .child("games")
+            .child("tic-tac-toe")
+
+        // Usuwanie wszystkich ruchów z Firebase
+        databaseRef.child("moves").removeValue()
+
+        // Usuwanie rekordu o wygranej
+        databaseRef.child("current-game-win").removeValue()
+
+        // Usuwanie rekordów w wantNewGame
+        databaseRef.child("wantNewGame").removeValue()
+
+        // Resetowanie statusu gry na 'false'
+        databaseRef.child("isActualGameDone").setValue(false)
+
+        // Resetowanie planszy (tutaj zakładamy, że board to stan MutableState)
+        board.value = Array(10) { Array(10) { "" } }  // Ustawiamy początkowy stan planszy (10x10, puste pola)
     }
 
 
@@ -311,14 +351,27 @@ class ConversationViewModel(
 
         statsRef.runTransaction(object : Transaction.Handler {
             override fun doTransaction(currentData: MutableData): Transaction.Result {
-                val stats = currentData.getValue(Stats::class.java) ?: Stats()
-                stats.games += 1
-                if (winningPlayerId == "ID_Player1") {
-                    stats.winsIdPlayer1 += 1
-                } else {
-                    stats.winsIdPlayer2 += 1
+                val dataSnapshot = currentData.value
+
+                // Inicjalizacja zmiennych do aktualizacji
+                var gamesCount = 0L
+                var playerWins = 0L
+
+                // Sprawdzamy, czy dane istnieją i są odpowiedniej struktury
+                if (dataSnapshot is Map<*, *>) {
+                    gamesCount = (dataSnapshot["games"] as? Long) ?: 0L
+                    playerWins = (dataSnapshot[winningPlayerId] as? Long) ?: 0L
                 }
-                currentData.value = stats
+
+                // Aktualizacja wartości
+                gamesCount += 1
+                playerWins += 1
+
+                // Zapis nowych danych w Firebase
+                currentData.value = mapOf(
+                    "games" to gamesCount,
+                    winningPlayerId to playerWins
+                )
                 return Transaction.success(currentData)
             }
 

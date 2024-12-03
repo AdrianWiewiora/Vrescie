@@ -25,6 +25,8 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -611,15 +613,20 @@ fun TicTacToeGame(
                             .clickable { onCellClick(rowIndex, colIndex) },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = cell,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = when (cell) {
-                                "X" -> Color.Blue
-                                "O" -> Color.Red
-                                else -> Color.Black
-                            }
-                        )
+                        when (cell) {
+                            "X" -> Icon(
+                                imageVector = Icons.Outlined.Close,
+                                contentDescription = "Player X",
+                                tint = Color.Blue,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            "O" -> Icon(
+                                imageVector = Icons.Outlined.Circle,
+                                contentDescription = "Player O",
+                                tint = Color.Red,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
                     }
                 }
             }
