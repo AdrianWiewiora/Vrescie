@@ -128,6 +128,11 @@ class ConversationViewModel(
     }
 
     fun makeMove(conversationId: String, playerId: String, positionX: Int, positionY: Int): Boolean {
+        // Sprawdzamy, czy gra już się zakończyła
+        if (_gameWinner.value != null) {
+            Log.d("TicTacToeGame", "Gra zakończona, nie możesz wykonać ruchu.")
+            return false
+        }
         if (lastMoveByPlayer) {
             Log.d("TicTacToeGame", "Nie możesz teraz wykonać ruchu.")
             return false
@@ -259,17 +264,22 @@ class ConversationViewModel(
             override fun onDataChange(snapshot: DataSnapshot) {
                 // Utwórz nową planszę na podstawie obecnej
                 val currentBoard = Array(10) { Array(10) { "" } }
+                var lastPlayerId: String? = null
 
                 for (childSnapshot in snapshot.children) {
                     val moveData = childSnapshot.getValue(MoveData::class.java)
                     moveData?.let {
                         // Dodaj istniejące ruchy do planszy
                         currentBoard[it.positionX][it.positionY] = if (it.playerId == playerId) "X" else "O"
+                        lastPlayerId = it.playerId
                     }
                 }
 
                 // Zaktualizuj planszę w MutableState
                 board.value = currentBoard
+                // Ustal, czy to obecny gracz wykonał ostatni ruch
+                lastMoveByPlayer = lastPlayerId == playerId
+                updateCurrentPlayerMessage(!lastMoveByPlayer) // Aktualizuj komunikat na podstawie ruchu
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -290,6 +300,7 @@ class ConversationViewModel(
                     }
                     // Aktualizuj stan ostatniego gracza, który wykonał ruch
                     lastMoveByPlayer = it.playerId == playerId
+                    updateCurrentPlayerMessage(!lastMoveByPlayer)
                 }
             }
             // Inne funkcje ChildEventListener pozostają puste

@@ -466,12 +466,24 @@ fun ExplicitConversationColumn(
                     .fillMaxWidth(),
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
-                    Text(
-                        text = currentPlayerMessage,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
+                    // Sprawdź, czy gra jest zakończona
+                    if (!gameStatusMessage.isNullOrEmpty()) {
+                        // Wyświetl komunikat o zakończeniu gry
+                        Text(
+                            text = gameStatusMessage,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = if (gameStatusMessage == "Wygrałeś!") Color.Green else Color.Red,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    } else {
+                        // Wyświetl informację o obecnym graczu, jeśli gra trwa
+                        Text(
+                            text = currentPlayerMessage,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    }
                     TicTacToeGame(
                         board = board,
                         onCellClick = { row, col ->
@@ -489,9 +501,6 @@ fun ExplicitConversationColumn(
                         }
                     )
                 }
-            }
-            if (gameStatusMessage != null) {
-                Text(text = gameStatusMessage)
             }
         }
 
