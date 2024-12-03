@@ -36,6 +36,7 @@ import com.example.vresciecompose.data.MessageEntity
 import com.example.vresciecompose.data.MoveData
 import com.example.vresciecompose.data.Stats
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.asStateFlow
 
 class ConversationViewModel(
@@ -83,8 +84,84 @@ class ConversationViewModel(
     private val _currentPlayerMessage = MutableStateFlow("Twój ruch")
     val currentPlayerMessage: StateFlow<String> = _currentPlayerMessage.asStateFlow()
 
+    // Pole wantNewGame przechowuje liczbę osób, które chcą rozpocząć nową grę
+    private val _wantNewGameCount = MutableStateFlow(0)  // Zmienna przechowująca liczbę rekordów
+    val wantNewGameCount: StateFlow<Int> = _wantNewGameCount
+
+    // Nasłuchiwacz Firebase
+    private var wantNewGameListener: ChildEventListener? = null
+
+    // Funkcja nasłuchująca zmiany w kolekcji wantNewGame w Firebase
+    fun listenForNewGameRequests(conversationId: String) {
+        // Usuwamy poprzedni nasłuchiwacz (jeśli istnieje)
+        wantNewGameListener?.let {
+            Firebase.database.reference
+                .child("explicit_conversations")
+                .child(conversationId)
+                .child("games")
+                .child("tic-tac-toe")
+                .child("wantNewGame")
+                .removeEventListener(it)
+        }
+
+        // Nasłuchujemy zmian w kolekcji 'wantNewGame' dla danej rozmowy
+        wantNewGameListener = object : ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                // Zliczamy nowe rekordy
+                _wantNewGameCount.value = (_wantNewGameCount.value ?: 0) + 1
+            }
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                // W przypadku zmiany rekordu możemy to pominąć lub obsłużyć, jeśli jest potrzebne
+            }
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                // Zmniejszamy licznik, gdy rekord zostaje usunięty
+                _wantNewGameCount.value = (_wantNewGameCount.value ?: 0) - 1
+            }
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                // Możemy zignorować ten przypadek
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("TicTacToeGame", "Błąd podczas nasłuchiwania: ${error.message}")
+            }
+        }
+
+        // Dodaj nasłuchiwacz
+        Firebase.database.reference
+            .child("explicit_conversations")
+            .child(conversationId)
+            .child("games")
+            .child("tic-tac-toe")
+            .child("wantNewGame")
+            .addChildEventListener(wantNewGameListener!!)
+    }
+
+    // Funkcja usuwająca nasłuchiwacz
+    fun removeNewGameListener(conversationId: String) {
+        wantNewGameListener?.let {
+            Firebase.database.reference
+                .child("explicit_conversations")
+                .child(conversationId)
+                .child("games")
+                .child("tic-tac-toe")
+                .child("wantNewGame")
+                .removeEventListener(it)
+        }
+    }
+
     fun updateCurrentPlayerMessage(isPlayerTurn: Boolean) {
         _currentPlayerMessage.value = if (isPlayerTurn) "Twój ruch" else "Ruch przeciwnika"
+    }
+
+    fun setWantNewGame(userId: String) {
+        val wantNewGameRef = Firebase.database.reference
+            .child("explicit_conversations")
+            .child(conversationId)
+            .child("games")
+            .child("tic-tac-toe")
+            .child("wantNewGame")
+            .child(userId)
+
+        wantNewGameRef.setValue(true)
     }
 
 

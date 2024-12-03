@@ -104,6 +104,7 @@ fun ExplicitConversationScreen(
         gameWinner == currentUserID -> "Wygrałeś !!!"
         else -> "Przegrałeś! :("
     }
+    val wantNewGameCount by viewModel.wantNewGameCount.collectAsState()
 
     fun makeMove(positionX: Int, positionY: Int): Boolean {
         return viewModel.makeMove(conversationId, currentUserID.toString(), positionX, positionY)
@@ -113,6 +114,10 @@ fun ExplicitConversationScreen(
         viewModel.listenForMoves(conversationId, currentUserID.toString())
     }
 
+    fun setWantNewGame(){
+        viewModel.setWantNewGame(currentUserID.toString())
+    }
+
     BackHandler {
         onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
     }
@@ -120,11 +125,13 @@ fun ExplicitConversationScreen(
     DisposableEffect(Unit) {
         viewModel.listenForMessages(conversationID)
         viewModel.listenForGameWin(conversationID)
+        viewModel.listenForNewGameRequests(conversationID)
 
         onDispose {
             viewModel.resetMessages()
             viewModel.removeMessageListener()
             viewModel.removeGameWinListener(conversationID)
+            viewModel.removeNewGameListener(conversationID)
         }
     }
     val messages by viewModel.messages.collectAsState()
@@ -199,7 +206,9 @@ fun ExplicitConversationScreen(
         makeMove = ::makeMove,
         listenForMoves = ::listenForMoves,
         gameStatusMessage,
-        currentPlayerMessage
+        currentPlayerMessage,
+        setWantNewGame = ::setWantNewGame,
+        wantNewGameCount = wantNewGameCount
     )
 
 }
@@ -220,7 +229,9 @@ fun ExplicitConversationColumn(
     makeMove: (Int, Int) -> Boolean,
     listenForMoves: () -> Unit,
     gameStatusMessage: String? = null,
-    currentPlayerMessage: String = ""
+    currentPlayerMessage: String = "",
+    setWantNewGame: () -> Unit = {},
+    wantNewGameCount: Int = 0
 ){
     val isShowAiMenu = remember { mutableStateOf(false) }
     val isShowPrompt = remember { mutableStateOf(false) }
@@ -466,23 +477,37 @@ fun ExplicitConversationColumn(
                     .fillMaxWidth(),
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
-                    // Sprawdź, czy gra jest zakończona
-                    if (!gameStatusMessage.isNullOrEmpty()) {
-                        // Wyświetl komunikat o zakończeniu gry
-                        Text(
-                            text = gameStatusMessage,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = if (gameStatusMessage == "Wygrałeś!") Color.Green else Color.Red,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
-                    } else {
-                        // Wyświetl informację o obecnym graczu, jeśli gra trwa
-                        Text(
-                            text = currentPlayerMessage,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
+                    Row(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        // Sprawdź, czy gra jest zakończona
+                        if (!gameStatusMessage.isNullOrEmpty()) {
+                            // Wyświetl komunikat o zakończeniu gry
+                            Text(
+                                text = gameStatusMessage,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (gameStatusMessage == "Wygrałeś!") Color.Green else Color.Red,
+                            )
+                        } else {
+                            // Wyświetl informację o obecnym graczu, jeśli gra trwa
+                            Text(
+                                text = currentPlayerMessage,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Button(
+                            onClick = {
+                                setWantNewGame()
+                            },
+                            modifier = Modifier.padding(horizontal = 4.dp),
+
+                        ) {
+                            val wantNewGameDisplay = "Nowa gra ${wantNewGameCount}/2"
+                            Text(text = wantNewGameDisplay)
+                        }
                     }
                     TicTacToeGame(
                         board = board,
