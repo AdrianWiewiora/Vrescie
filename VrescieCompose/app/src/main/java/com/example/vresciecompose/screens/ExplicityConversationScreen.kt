@@ -94,6 +94,7 @@ fun ExplicitConversationScreen(
     val generativeModel = Firebase.vertexAI.generativeModel(modelName ="gemini-1.0-pro", generationConfig  = config)
     val (aiResponse, setAiResponse) = remember { mutableStateOf("") }
 
+    val currentPlayerMessage by viewModel.currentPlayerMessage.collectAsState()
     val board = viewModel.board
     val conversationId = viewModel.currentConversationId
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
@@ -197,7 +198,8 @@ fun ExplicitConversationScreen(
         board = board,
         makeMove = ::makeMove,
         listenForMoves = ::listenForMoves,
-        gameStatusMessage
+        gameStatusMessage,
+        currentPlayerMessage
     )
 
 }
@@ -217,7 +219,8 @@ fun ExplicitConversationColumn(
     board: MutableState<Array<Array<String>>> = mutableStateOf(Array(15) { Array(15) { "" } }),
     makeMove: (Int, Int) -> Boolean,
     listenForMoves: () -> Unit,
-    gameStatusMessage: String? = null
+    gameStatusMessage: String? = null,
+    currentPlayerMessage: String = ""
 ){
     val isShowAiMenu = remember { mutableStateOf(false) }
     val isShowPrompt = remember { mutableStateOf(false) }
@@ -462,24 +465,32 @@ fun ExplicitConversationColumn(
                     .padding(vertical = 8.dp)
                     .fillMaxWidth(),
             ) {
-                TicTacToeGame(
-                    board = board,
-                    onCellClick = { row, col ->
-                        val isWinningMove = makeMove(row, col)
-                        if (isWinningMove){
-                            Toast.makeText(
-                                context,
-                                "Wygrałeś!",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                Column(modifier = Modifier.padding(8.dp)) {
+                    Text(
+                        text = currentPlayerMessage,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    TicTacToeGame(
+                        board = board,
+                        onCellClick = { row, col ->
+                            val isWinningMove = makeMove(row, col)
+                            if (isWinningMove) {
+                                Toast.makeText(
+                                    context,
+                                    "Wygrałeś!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        listenForMoves = {
+                            listenForMoves()
                         }
-                    },
-                    listenForMoves = {
-                        listenForMoves()
-                    }
-                )
+                    )
+                }
             }
-            if(gameStatusMessage != null){
+            if (gameStatusMessage != null) {
                 Text(text = gameStatusMessage)
             }
         }

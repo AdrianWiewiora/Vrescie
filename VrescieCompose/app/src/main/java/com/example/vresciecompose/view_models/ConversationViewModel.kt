@@ -142,7 +142,7 @@ class ConversationViewModel(
 
             lastMoveByPlayer = true
             saveMoveToFirebase(conversationId, playerId, positionX, positionY)
-
+            updateCurrentPlayerMessage(!lastMoveByPlayer)
             // Sprawdź, czy gracz wygrał
             if (checkForWin(playerId, positionX, positionY)) {
                 updateGameStatistics(conversationId, playerId)
