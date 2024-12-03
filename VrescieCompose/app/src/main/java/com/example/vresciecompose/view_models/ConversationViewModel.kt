@@ -50,7 +50,7 @@ class ConversationViewModel(
     companion object {
         private const val CHANNEL_ID = "new_message_channel" // Unikalny identyfikator kanału
     }
-    var board: MutableState<Array<Array<String>>> = mutableStateOf(Array(15) { Array(15) { "" } })
+    var board: MutableState<Array<Array<String>>> = mutableStateOf(Array(10) { Array(10) { "" } })
     private var lastMoveByPlayer: Boolean = false
 
     private val _messages = MutableStateFlow<List<Pair<String, MessageType>>>(emptyList())
@@ -194,7 +194,7 @@ class ConversationViewModel(
             var currX = x + deltaX
             var currY = y + deltaY
 
-            while (currX in 0 until 15 && currY in 0 until 15 && boardState[currX][currY] == target) {
+            while (currX in 0 until 10 && currY in 0 until 10 && boardState[currX][currY] == target) {
                 count++
                 currX += deltaX
                 currY += deltaY
@@ -204,19 +204,19 @@ class ConversationViewModel(
 
         // Sprawdź w pionie
         val verticalCount = 1 + countInDirection(-1, 0) + countInDirection(1, 0)
-        if (verticalCount >= 5) return true
+        if (verticalCount >= 4) return true
 
         // Sprawdź w poziomie
         val horizontalCount = 1 + countInDirection(0, -1) + countInDirection(0, 1)
-        if (horizontalCount >= 5) return true
+        if (horizontalCount >= 4) return true
 
         // Sprawdź główny ukos
         val mainDiagonalCount = 1 + countInDirection(-1, -1) + countInDirection(1, 1)
-        if (mainDiagonalCount >= 5) return true
+        if (mainDiagonalCount >= 4) return true
 
         // Sprawdź przeciwny ukos
         val antiDiagonalCount = 1 + countInDirection(-1, 1) + countInDirection(1, -1)
-        if (antiDiagonalCount >= 5) return true
+        if (antiDiagonalCount >= 4) return true
 
         // Jeżeli żaden warunek nie został spełniony
         return false
@@ -258,7 +258,7 @@ class ConversationViewModel(
         movesRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 // Utwórz nową planszę na podstawie obecnej
-                val currentBoard = Array(15) { Array(15) { "" } }
+                val currentBoard = Array(10) { Array(10) { "" } }
 
                 for (childSnapshot in snapshot.children) {
                     val moveData = childSnapshot.getValue(MoveData::class.java)

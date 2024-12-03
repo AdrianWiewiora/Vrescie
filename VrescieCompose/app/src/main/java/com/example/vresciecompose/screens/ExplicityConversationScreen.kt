@@ -216,7 +216,7 @@ fun ExplicitConversationColumn(
     aiResponse: String = "",
     setAiResponse: (String) -> Unit = {},
     onAiButtonClick: (Int) -> Unit = {},
-    board: MutableState<Array<Array<String>>> = mutableStateOf(Array(15) { Array(15) { "" } }),
+    board: MutableState<Array<Array<String>>> = mutableStateOf(Array(10) { Array(10) { "" } }),
     makeMove: (Int, Int) -> Boolean,
     listenForMoves: () -> Unit,
     gameStatusMessage: String? = null,
