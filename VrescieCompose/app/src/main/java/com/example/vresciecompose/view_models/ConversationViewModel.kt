@@ -5,6 +5,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import androidx.compose.runtime.*
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Network
@@ -34,6 +35,7 @@ import androidx.lifecycle.asLiveData
 import com.example.vresciecompose.data.MessageEntity
 import com.example.vresciecompose.data.MoveData
 import com.example.vresciecompose.data.Stats
+import com.google.firebase.Firebase
 import kotlinx.coroutines.flow.asStateFlow
 
 class ConversationViewModel(
@@ -75,6 +77,56 @@ class ConversationViewModel(
         fetchAndStoreConversations()
     }
 
+    val _gameWinner = MutableStateFlow<String?>(null)
+    private var gameWinListener: ValueEventListener? = null
+
+    private val _currentPlayerMessage = MutableStateFlow("Twój ruch")
+    val currentPlayerMessage: StateFlow<String> = _currentPlayerMessage.asStateFlow()
+
+    fun updateCurrentPlayerMessage(isPlayerTurn: Boolean) {
+        _currentPlayerMessage.value = if (isPlayerTurn) "Twój ruch" else "Ruch przeciwnika"
+    }
+
+
+    fun listenForGameWin(conversationId: String) {
+        val databaseRef = Firebase.database.reference
+            .child("explicit_conversations")
+            .child(conversationId)
+            .child("games")
+            .child("tic-tac-toe")
+            .child("current-game-win")
+
+        gameWinListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // Jeśli wynik gry jest dostępny (nie null i nie pusty), ustawiamy go
+                val winnerId = snapshot.getValue(String::class.java)
+                if (!winnerId.isNullOrEmpty()) {
+                    _gameWinner.value = winnerId
+                } else {
+                    // Jeśli nie ma wyniku (np. rekord został usunięty), ustawiamy null
+                    _gameWinner.value = null
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("TicTacToeGame", "Błąd podczas nasłuchiwania: ${error.message}")
+            }
+        }
+        databaseRef.addValueEventListener(gameWinListener!!)
+    }
+
+    fun removeGameWinListener(conversationId: String) {
+        gameWinListener?.let {
+            Firebase.database.reference
+                .child("explicit_conversations")
+                .child(conversationId)
+                .child("games")
+                .child("tic-tac-toe")
+                .child("current-game-win")
+                .removeEventListener(it)
+        }
+    }
+
     fun makeMove(conversationId: String, playerId: String, positionX: Int, positionY: Int): Boolean {
         if (lastMoveByPlayer) {
             Log.d("TicTacToeGame", "Nie możesz teraz wykonać ruchu.")
@@ -93,11 +145,30 @@ class ConversationViewModel(
 
             // Sprawdź, czy gracz wygrał
             if (checkForWin(playerId, positionX, positionY)) {
-                updateGameStatistics(conversationId, playerId) // Zaktualizuj statystyki gry
+                updateGameStatistics(conversationId, playerId)
+                saveGameWinToFirebase(conversationId, playerId)
                 return true
             }
         }
         return false
+    }
+
+    private fun saveGameWinToFirebase(conversationId: String, winnerId: String) {
+        val databaseReference = FirebaseDatabase.getInstance().reference
+            .child("explicit_conversations")
+            .child(conversationId)
+            .child("games")
+            .child("tic-tac-toe")
+
+        val winData = mapOf("current-game-win" to winnerId)
+
+        databaseReference.updateChildren(winData)
+            .addOnSuccessListener {
+                Log.d("TicTacToeGame", "Zwycięstwo zostało zapisane w Firebase.")
+            }
+            .addOnFailureListener { exception ->
+                Log.e("TicTacToeGame", "Błąd podczas zapisywania zwycięstwa: ${exception.message}")
+            }
     }
 
 
@@ -139,6 +210,15 @@ class ConversationViewModel(
         val horizontalCount = 1 + countInDirection(0, -1) + countInDirection(0, 1)
         if (horizontalCount >= 5) return true
 
+        // Sprawdź główny ukos
+        val mainDiagonalCount = 1 + countInDirection(-1, -1) + countInDirection(1, 1)
+        if (mainDiagonalCount >= 5) return true
+
+        // Sprawdź przeciwny ukos
+        val antiDiagonalCount = 1 + countInDirection(-1, 1) + countInDirection(1, -1)
+        if (antiDiagonalCount >= 5) return true
+
+        // Jeżeli żaden warunek nie został spełniony
         return false
     }
 

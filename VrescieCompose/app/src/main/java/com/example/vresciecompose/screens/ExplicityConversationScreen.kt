@@ -2,6 +2,7 @@ package com.example.vresciecompose.screens
 
 import LocalContext
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -96,9 +97,15 @@ fun ExplicitConversationScreen(
     val board = viewModel.board
     val conversationId = viewModel.currentConversationId
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
+    val gameWinner by viewModel._gameWinner.collectAsState()
+    val gameStatusMessage = when {
+        gameWinner.isNullOrEmpty() -> null
+        gameWinner == currentUserID -> "Wygrałeś !!!"
+        else -> "Przegrałeś! :("
+    }
 
-    fun makeMove(positionX: Int, positionY: Int)  {
-        viewModel.makeMove(conversationId,currentUserID.toString(), positionX, positionY )
+    fun makeMove(positionX: Int, positionY: Int): Boolean {
+        return viewModel.makeMove(conversationId, currentUserID.toString(), positionX, positionY)
     }
 
     fun listenForMoves() {
@@ -111,10 +118,12 @@ fun ExplicitConversationScreen(
 
     DisposableEffect(Unit) {
         viewModel.listenForMessages(conversationID)
+        viewModel.listenForGameWin(conversationID)
 
         onDispose {
             viewModel.resetMessages()
             viewModel.removeMessageListener()
+            viewModel.removeGameWinListener(conversationID)
         }
     }
     val messages by viewModel.messages.collectAsState()
@@ -187,7 +196,8 @@ fun ExplicitConversationScreen(
         },
         board = board,
         makeMove = ::makeMove,
-        listenForMoves = ::listenForMoves
+        listenForMoves = ::listenForMoves,
+        gameStatusMessage
     )
 
 }
@@ -205,17 +215,16 @@ fun ExplicitConversationColumn(
     setAiResponse: (String) -> Unit = {},
     onAiButtonClick: (Int) -> Unit = {},
     board: MutableState<Array<Array<String>>> = mutableStateOf(Array(15) { Array(15) { "" } }),
-    makeMove: (Int, Int) -> Unit,
-    listenForMoves: () -> Unit
+    makeMove: (Int, Int) -> Boolean,
+    listenForMoves: () -> Unit,
+    gameStatusMessage: String? = null
 ){
     val isShowAiMenu = remember { mutableStateOf(false) }
     val isShowPrompt = remember { mutableStateOf(false) }
     val isShowGamesMenu = remember { mutableStateOf(false) }
     val isShowTicTacToe = remember { mutableStateOf(false) }
 
-    // Stan gry
-    var currentPlayer by remember { mutableStateOf("X") }
-
+    val context = LocalContext.current
 
     Column(
         modifier = modifier,
@@ -456,14 +465,25 @@ fun ExplicitConversationColumn(
                 TicTacToeGame(
                     board = board,
                     onCellClick = { row, col ->
-                        makeMove(row, col)
+                        val isWinningMove = makeMove(row, col)
+                        if (isWinningMove){
+                            Toast.makeText(
+                                context,
+                                "Wygrałeś!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     },
                     listenForMoves = {
                         listenForMoves()
                     }
                 )
             }
+            if(gameStatusMessage != null){
+                Text(text = gameStatusMessage)
+            }
         }
+
 
         MessageList(
             messages = messages,
@@ -566,7 +586,7 @@ fun TicTacToeGame(
 @Preview
 @Composable
 fun ExplicitConversationColumnPreview() {
-    fun makeMove(positionX: Int, positionY: Int) {}
+    fun makeMove(positionX: Int, positionY: Int): Boolean {return true}
     fun listenForMoves() {}
     ExplicitConversationColumn(makeMove = ::makeMove, listenForMoves = { listenForMoves() })
 }
