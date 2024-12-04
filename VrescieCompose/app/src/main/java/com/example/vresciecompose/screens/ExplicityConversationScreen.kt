@@ -68,6 +68,8 @@ import com.google.firebase.vertexai.vertexAI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun ExplicitConversationScreen(
@@ -137,6 +139,16 @@ fun ExplicitConversationScreen(
         }
     }
     val messages by viewModel.messages.collectAsState()
+
+    suspend fun getStats(): Triple<String, Int, Int> {
+        return currentUserID?.let { userId ->
+            suspendCoroutine { continuation ->
+                viewModel.fetchGameStats(userId) { name, games, wins ->
+                    continuation.resume(Triple(name, games, wins))
+                }
+            }
+        } ?: Triple("Brak użytkownika", 0, 0)
+    }
 
     // Funkcja wysyłająca prompt do Vertex AI
     suspend fun fetchAIResponse(numberOfButton: Int) {
@@ -210,7 +222,8 @@ fun ExplicitConversationScreen(
         gameStatusMessage,
         currentPlayerMessage,
         setWantNewGame = ::setWantNewGame,
-        wantNewGameCount = wantNewGameCount
+        wantNewGameCount = wantNewGameCount,
+        getStats = ::getStats
     )
 
 }
@@ -233,7 +246,9 @@ fun ExplicitConversationColumn(
     gameStatusMessage: String? = null,
     currentPlayerMessage: String = "",
     setWantNewGame: () -> Unit = {},
-    wantNewGameCount: Int = 0
+    wantNewGameCount: Int = 0,
+    getStats: suspend () -> Triple<String, Int, Int>
+
 ){
     val isShowAiMenu = remember { mutableStateOf(false) }
     val isShowPrompt = remember { mutableStateOf(false) }
@@ -241,6 +256,11 @@ fun ExplicitConversationColumn(
     val isShowTicTacToe = remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+
+    val isShowStats = remember { mutableStateOf(false) }
+    val gameName = remember { mutableStateOf("") }
+    val totalGames = remember { mutableStateOf(0) }
+    val userWins = remember { mutableStateOf(0) }
 
     Column(
         modifier = modifier,
@@ -268,10 +288,16 @@ fun ExplicitConversationColumn(
             ) {
                 IconButton(
                     onClick = {
-                        isShowGamesMenu.value = !isShowGamesMenu.value
                         isShowPrompt.value = false
                         isShowAiMenu.value = false
-                        isShowTicTacToe.value = false
+                        if (isShowTicTacToe.value) {
+                            isShowTicTacToe.value = false
+                            isShowGamesMenu.value = false
+                        }
+                        else {
+                            isShowGamesMenu.value = !isShowGamesMenu.value
+                        }
+                        isShowStats.value = false
                     },
                     modifier = Modifier
                         .size(dimensionResource(R.dimen.image_medium_size))
@@ -452,6 +478,7 @@ fun ExplicitConversationColumn(
                         onClick = {
                             isShowTicTacToe.value = !isShowTicTacToe.value
                             isShowGamesMenu.value = false
+                            isShowStats.value = false
                         },
                         modifier = Modifier.padding(horizontal = 4.dp)
                     ) {
@@ -459,7 +486,15 @@ fun ExplicitConversationColumn(
                     }
                     Button(
                         onClick = {
-
+                            isShowStats.value = !isShowStats.value
+                            if (isShowStats.value) {
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    val (name, games, wins) = getStats()
+                                    gameName.value = name
+                                    totalGames.value = games
+                                    userWins.value = wins
+                                }
+                            }
                         },
                         modifier = Modifier.padding(horizontal = 4.dp)
                     ) {
@@ -467,6 +502,29 @@ fun ExplicitConversationColumn(
                     }
                 }
 
+            }
+            if (isShowStats.value) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Statystyki dla gry: ${gameName.value}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    Text(
+                        text = "Rozegrane gry: ${totalGames.value}",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                    Text(
+                        text = "Twoje wygrane: ${userWins.value}",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
             }
         }
 
@@ -640,5 +698,6 @@ fun TicTacToeGame(
 fun ExplicitConversationColumnPreview() {
     fun makeMove(positionX: Int, positionY: Int): Boolean {return true}
     fun listenForMoves() {}
-    ExplicitConversationColumn(makeMove = ::makeMove, listenForMoves = { listenForMoves() })
+    fun getStats(): Triple<String, Int, Int> {return Triple("Brak użytkownika", 0, 0)}
+    ExplicitConversationColumn(makeMove = ::makeMove, listenForMoves = { listenForMoves() }, getStats = {getStats()})
 }

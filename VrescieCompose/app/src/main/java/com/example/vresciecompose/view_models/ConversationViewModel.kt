@@ -91,6 +91,20 @@ class ConversationViewModel(
     // Nasłuchiwacz Firebase
     private var wantNewGameListener: ChildEventListener? = null
 
+    fun fetchGameStats(currentUserId: String, onStatsFetched: (String, Int, Int) -> Unit) {
+        val statsRef = Firebase.database.reference
+            .child("explicit_conversations/$conversationId/games/tic-tac-toe/statistic")
+
+        statsRef.get().addOnSuccessListener { snapshot ->
+            val totalGames = snapshot.child("games").getValue(Int::class.java) ?: 0
+            val userWins = snapshot.child(currentUserId).getValue(Int::class.java) ?: 0
+
+            onStatsFetched("Kółko-krzyżyk", totalGames, userWins)
+        }.addOnFailureListener { error ->
+            Log.e("GameStats", "Failed to fetch stats: ${error.message}")
+        }
+    }
+
     // Funkcja nasłuchująca zmiany w kolekcji wantNewGame w Firebase
     fun listenForNewGameRequests(conversationId: String) {
         // Usuwamy poprzedni nasłuchiwacz (jeśli istnieje)
