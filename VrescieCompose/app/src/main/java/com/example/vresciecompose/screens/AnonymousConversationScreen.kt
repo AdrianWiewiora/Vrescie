@@ -122,6 +122,7 @@ fun AnonymousConversationScreen(
         else -> "Przegrałeś! :("
     }
     val wantNewGameCount by viewModel.wantNewGameCount.collectAsState()
+    val gameWinsState by viewModel.gameWins.collectAsState()
 
     fun makeMove(positionX: Int, positionY: Int): Boolean {
         return viewModel.makeMove(conversationId, currentUserID.toString(), positionX, positionY, isAnonymous = true)
@@ -180,6 +181,7 @@ fun AnonymousConversationScreen(
         viewModel.fetchOtherUserImage(conversationId) { bitmap ->
             imageState = bitmap
         }
+        viewModel.listenForGameWins(conversationId)
     }
 
     DisposableEffect(Unit) {
@@ -194,6 +196,8 @@ fun AnonymousConversationScreen(
             viewModel.removeGameWinListener(conversationID, isAnonymous = true)
             viewModel.removeNewGameListener(conversationID, isAnonymous = true)
             viewModel.resetMessages()
+
+            viewModel.removeGameWinListener()
         }
     }
 
@@ -201,10 +205,6 @@ fun AnonymousConversationScreen(
     if (showExitDialog.value) {
         SimpleAlertDialog(
             onConfirm = {
-                // Pobranie aktualnie zalogowanego użytkownika
-                val currentUser = FirebaseAuth.getInstance().currentUser
-                val currentUserID = currentUser?.uid
-
                 showExitDialog.value = false
                 // Aktualizacja wartości w Firebase Realtime Database
                 val database = FirebaseDatabase.getInstance()
@@ -246,11 +246,6 @@ fun AnonymousConversationScreen(
         SimpleAlertDialog(
             onConfirm = {
                 showDialogLikeNotification.value = false
-
-                // Pobranie aktualnie zalogowanego użytkownika
-                val currentUser = FirebaseAuth.getInstance().currentUser
-                val currentUserID = currentUser?.uid
-
                 val database = FirebaseDatabase.getInstance()
                 val conversationRef3 = database.reference
                     .child("conversations")
@@ -287,18 +282,34 @@ fun AnonymousConversationScreen(
                         .wrapContentHeight()
                         .padding(16.dp)
                 ) {
-                    imageState?.let { bitmap ->
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Zdjęcie rozmówcy",
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        val croppedImage = viewModel.getCroppedImage(imageState, gameWinsState)
+                        val imageDisplayState = viewModel.getImageDisplayState() // Pobieramy stan do wyświetlenia
+
+                        if (gameWinsState != 0L) {
+                            // Jeśli liczba wygranych jest większa niż 0, wyświetlamy odpowiednią część obrazu
+                            croppedImage?.let { bitmap ->
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = "Zdjęcie rozmówcy",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                )
+                            }
+                        }
+
+                        // Wyświetlamy komunikat o stanie obrazu (np. 1/3 odsłonięte)
+                        Text(
+                            text = imageDisplayState,
+                            style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(300.dp)
+                                .align(Alignment.CenterHorizontally)
+                                .padding(top = 16.dp) // Dodałem trochę miejsca między obrazem a tekstem
                         )
-                    } ?: Text(
-                        text = "Nie udało się załadować zdjęcia.",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    }
                 }
             }
         )

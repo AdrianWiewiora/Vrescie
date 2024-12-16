@@ -62,6 +62,11 @@ class ConversationViewModel(
     private val _messages = MutableStateFlow<List<Pair<String, MessageType>>>(emptyList())
     val messages: StateFlow<List<Pair<String, MessageType>>> = _messages
 
+    // Zmienna przechowująca liczbę wygranych drugiego użytkownika
+    private val _gameWins = MutableStateFlow(0L)
+    val gameWins: StateFlow<Long> = _gameWins
+    private var _gameWinListener: ValueEventListener? = null
+
     private var conversationId: String = ""
     val currentConversationId: String
         get() = conversationId
@@ -299,7 +304,7 @@ class ConversationViewModel(
             // Sprawdź, czy gracz wygrał
             if (checkForWin(positionX, positionY)) {
                 if (!isAnonymous) { updateGameStatistics(conversationId, playerId) } else {
-
+                    updateUnlockedStages(conversationId, playerId)
                 }
                 saveGameWinToFirebase(conversationId, playerId, isAnonymous)
                 return true
@@ -377,6 +382,37 @@ class ConversationViewModel(
 
         // Jeżeli żaden warunek nie został spełniony
         return false
+    }
+    private fun updateUnlockedStages(conversationId: String, playerId: String) {
+        val unlockedStagesRef = FirebaseDatabase.getInstance().reference
+            .child("conversations/$conversationId/unlockedStagesOfPhoto")
+
+        unlockedStagesRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                val dataSnapshot = currentData.value as? Map<*, *>
+
+                // Pobieramy liczbę wygranych tego gracza (jeśli istnieje)
+                val currentWins = (dataSnapshot?.get(playerId) as? Long) ?: 0L
+
+                // Jeśli liczba wygranych przekroczy 3, nie zmieniamy wartości
+                val newWins = if (currentWins < 3) currentWins + 1 else currentWins
+
+                // Zapisujemy nową liczbę wygranych w Firebase
+                currentData.value = dataSnapshot?.toMutableMap()?.apply {
+                    this[playerId] = newWins
+                } ?: mapOf(playerId to newWins)
+
+                return Transaction.success(currentData)
+            }
+
+            override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
+                if (error != null) {
+                    Log.e("UpdateUnlockedStages", "Transaction failed: ${error.message}")
+                } else if (committed) {
+                    Log.d("UpdateUnlockedStages", "Transaction successful!")
+                }
+            }
+        })
     }
 
 
@@ -1237,5 +1273,91 @@ class ConversationViewModel(
     }
 
 
+    fun listenForGameWins(conversationId: String) {
+        val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUserID == null) {
+            Log.e("GameWinsListener", "Failed to get current user ID")
+            return
+        }
+
+        val database = FirebaseDatabase.getInstance().reference
+        val conversationRef = database.child("conversations").child(conversationId).child("members")
+
+        Log.d("GameWinsListener", "Starting to listen for game wins in conversation: $conversationId")
+
+        // Pobieramy danych o członkach konwersacji
+        conversationRef.get().addOnSuccessListener { dataSnapshot ->
+            val members = dataSnapshot.children.mapNotNull { it.key }
+            val otherUserID = members.firstOrNull { it != currentUserID }
+
+            if (otherUserID != null) {
+                Log.d("GameWinsListener", "Found other user ID: $otherUserID")
+
+                val unlockedStagesRef = FirebaseDatabase.getInstance().reference
+                    .child("conversations/$conversationId/unlockedStagesOfPhoto")
+
+                val listener = object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val data = snapshot.value as? Map<*, *>
+                        val gameWins = (data?.get(otherUserID) as? Long) ?: 0L
+                        _gameWins.value = gameWins // Aktualizacja liczby wygranych
+                        Log.d("GameWinsListener", "Updated game wins for $otherUserID: $gameWins")
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e("GameWinsListener", "Error: ${error.message}")
+                    }
+                }
+
+                unlockedStagesRef.addValueEventListener(listener)
+
+                // Zachowujemy listener, żeby później móc go usunąć
+                _gameWinListener = listener
+
+                Log.d("GameWinsListener", "Listener added to unlockedStagesRef for conversation: $conversationId")
+            } else {
+                Log.e("GameWinsListener", "No other user ID found in conversation: $conversationId")
+            }
+        }.addOnFailureListener { exception ->
+            Log.e("GameWinsListener", "Failed to fetch conversation members for $conversationId", exception)
+        }
+    }
+
+
+
+    fun removeGameWinListener() {
+        _gameWinListener?.let {
+            FirebaseDatabase.getInstance().reference
+                .child("conversations/$conversationId/unlockedStagesOfPhoto")
+                .removeEventListener(it)
+        }
+        _gameWinListener = null
+    }
+
+    // Funkcja do obliczenia stanu wyświetlania zdjęcia
+    fun getImageDisplayState(): String {
+        return when (_gameWins.value) {
+            0L -> "Wygraj 3 gry aby wyświetlić całe zdjęcie. Wygraj jedną grę aby odsłonić część zdjęcia."
+            1L -> "Odsłonięta 1/3 zdjęcia. Wygraj jedną grę aby odsłonić następną część zdjęcia."
+            2L -> "Odsłonięta 2/3 zdjęcia. Wygraj jedną grę aby odsłonić ostatnią część."
+            3L -> "Zdjęcie odsłonięte w całości."
+            else -> "Zdjęcie odsłonięte w całości."
+        }
+    }
+
+    fun getCroppedImage(bitmap: Bitmap?, gameWins: Long): Bitmap? {
+        if (bitmap == null) return null
+
+        val height = bitmap.height
+        val width = bitmap.width
+
+        return when (gameWins) {
+            0L -> null // Nie wyświetlamy obrazu
+            1L -> Bitmap.createBitmap(bitmap, 0, 0, width, height / 3) // Pierwsza część
+            2L -> Bitmap.createBitmap(bitmap, 0, 0, width, (height * 2) / 3) // Druga część
+            3L -> bitmap // Cały obraz
+            else -> bitmap
+        }
+    }
 
 }
