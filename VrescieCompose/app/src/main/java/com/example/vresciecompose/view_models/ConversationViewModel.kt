@@ -7,6 +7,8 @@ import android.app.NotificationManager
 import android.content.Context
 import androidx.compose.runtime.*
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -37,7 +39,10 @@ import com.example.vresciecompose.data.MoveData
 import com.example.vresciecompose.data.Stats
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.tasks.await
 
 class ConversationViewModel(
     private val messageDao: MessageDao,
@@ -106,11 +111,13 @@ class ConversationViewModel(
     }
 
     // Funkcja nasłuchująca zmiany w kolekcji wantNewGame w Firebase
-    fun listenForNewGameRequests(conversationId: String) {
+    fun listenForNewGameRequests(conversationId: String, isAnonymous: Boolean = false) {
+        val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
+
         // Usuwamy poprzedni nasłuchiwacz (jeśli istnieje)
         wantNewGameListener?.let {
             Firebase.database.reference
-                .child("explicit_conversations")
+                .child(basePath)
                 .child(conversationId)
                 .child("games")
                 .child("tic-tac-toe")
@@ -142,7 +149,7 @@ class ConversationViewModel(
 
         // Dodaj nasłuchiwacz
         Firebase.database.reference
-            .child("explicit_conversations")
+            .child(basePath)
             .child(conversationId)
             .child("games")
             .child("tic-tac-toe")
@@ -151,10 +158,12 @@ class ConversationViewModel(
     }
 
     // Funkcja usuwająca nasłuchiwacz
-    fun removeNewGameListener(conversationId: String) {
+    fun removeNewGameListener(conversationId: String, isAnonymous: Boolean = false) {
+        val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
+
         wantNewGameListener?.let {
             Firebase.database.reference
-                .child("explicit_conversations")
+                .child(basePath)
                 .child(conversationId)
                 .child("games")
                 .child("tic-tac-toe")
@@ -167,10 +176,12 @@ class ConversationViewModel(
         _currentPlayerMessage.value = if (isPlayerTurn) "Twój ruch" else "Ruch przeciwnika"
     }
 
-    fun setWantNewGame(userId: String) {
+    fun setWantNewGame(userId: String, isAnonymous: Boolean = false) {
+        val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
+
         val database = Firebase.database.reference
         val wantNewGameRef = database
-            .child("explicit_conversations")
+            .child(basePath)
             .child(conversationId)
             .child("games")
             .child("tic-tac-toe")
@@ -184,7 +195,7 @@ class ConversationViewModel(
                 Log.d("TicTacToe", "User already marked as wanting a new game.")
             } else if (currentWantNewGame.size == 1 && currentWantNewGame.firstOrNull() != userId) {
                 // Jeśli jest dokładnie jeden gracz i nie jest to bieżący użytkownik
-                setNewGame() // Rozpocznij nową grę
+                setNewGame(isAnonymous) // Rozpocznij nową grę
             } else {
                 // Dodaj bieżącego użytkownika do listy
                 wantNewGameRef.child(userId).setValue(true)
@@ -195,9 +206,11 @@ class ConversationViewModel(
     }
 
 
-    private fun setNewGame() {
+    private fun setNewGame(isAnonymous: Boolean = false) {
+        val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
+
         val databaseRef = Firebase.database.reference
-            .child("explicit_conversations")
+            .child(basePath)
             .child(conversationId)
             .child("games")
             .child("tic-tac-toe")
@@ -219,9 +232,11 @@ class ConversationViewModel(
     }
 
 
-    fun listenForGameWin(conversationId: String) {
+    fun listenForGameWin(conversationId: String, isAnonymous: Boolean = false) {
+        val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
+
         val databaseRef = Firebase.database.reference
-            .child("explicit_conversations")
+            .child(basePath)
             .child(conversationId)
             .child("games")
             .child("tic-tac-toe")
@@ -246,10 +261,12 @@ class ConversationViewModel(
         databaseRef.addValueEventListener(gameWinListener!!)
     }
 
-    fun removeGameWinListener(conversationId: String) {
+    fun removeGameWinListener(conversationId: String, isAnonymous: Boolean = false) {
+        val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
+
         gameWinListener?.let {
             Firebase.database.reference
-                .child("explicit_conversations")
+                .child(basePath)
                 .child(conversationId)
                 .child("games")
                 .child("tic-tac-toe")
@@ -258,7 +275,7 @@ class ConversationViewModel(
         }
     }
 
-    fun makeMove(conversationId: String, playerId: String, positionX: Int, positionY: Int): Boolean {
+    fun makeMove(conversationId: String, playerId: String, positionX: Int, positionY: Int, isAnonymous: Boolean = false): Boolean {
         // Sprawdzamy, czy gra już się zakończyła
         if (_gameWinner.value != null) {
             Log.d("TicTacToeGame", "Gra zakończona, nie możesz wykonać ruchu.")
@@ -277,21 +294,24 @@ class ConversationViewModel(
             board.value = updatedBoard // Ustaw zaktualizowaną planszę
 
             lastMoveByPlayer = true
-            saveMoveToFirebase(conversationId, playerId, positionX, positionY)
+            saveMoveToFirebase(conversationId, playerId, positionX, positionY, isAnonymous)
             updateCurrentPlayerMessage(!lastMoveByPlayer)
             // Sprawdź, czy gracz wygrał
-            if (checkForWin(playerId, positionX, positionY)) {
-                updateGameStatistics(conversationId, playerId)
-                saveGameWinToFirebase(conversationId, playerId)
+            if (checkForWin(positionX, positionY)) {
+                if (!isAnonymous) { updateGameStatistics(conversationId, playerId) } else {
+
+                }
+                saveGameWinToFirebase(conversationId, playerId, isAnonymous)
                 return true
             }
         }
         return false
     }
 
-    private fun saveGameWinToFirebase(conversationId: String, winnerId: String) {
+    private fun saveGameWinToFirebase(conversationId: String, winnerId: String, isAnonymous: Boolean = false) {
+        val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
         val databaseReference = FirebaseDatabase.getInstance().reference
-            .child("explicit_conversations")
+            .child(basePath)
             .child(conversationId)
             .child("games")
             .child("tic-tac-toe")
@@ -308,19 +328,20 @@ class ConversationViewModel(
     }
 
 
-    private fun saveMoveToFirebase(conversationId: String, playerId: String, positionX: Int, positionY: Int) {
+    private fun saveMoveToFirebase(conversationId: String, playerId: String, positionX: Int, positionY: Int, isAnonymous: Boolean = false) {
+        val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
         val moveData = mapOf(
             "playerId" to playerId,
             "positionX" to positionX,
             "positionY" to positionY
         )
         FirebaseDatabase.getInstance().reference
-            .child("explicit_conversations/$conversationId/games/tic-tac-toe/moves")
+            .child("$basePath/$conversationId/games/tic-tac-toe/moves")
             .push()
             .setValue(moveData)
     }
 
-    private fun checkForWin(playerId: String, x: Int, y: Int): Boolean {
+    private fun checkForWin(x: Int, y: Int): Boolean {
         val target = if (lastMoveByPlayer) "X" else "O" // Sprawdź, jaki symbol gracz używa
         val boardState = board.value
 
@@ -399,9 +420,10 @@ class ConversationViewModel(
         })
     }
 
-    fun listenForMoves(conversationId: String, playerId: String) {
+    fun listenForMoves(conversationId: String, playerId: String, isAnonymous: Boolean = false) {
+        val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
         val movesRef = FirebaseDatabase.getInstance().reference
-            .child("explicit_conversations/$conversationId/games/tic-tac-toe/moves")
+            .child("$basePath/$conversationId/games/tic-tac-toe/moves")
 
         // Najpierw załaduj istniejące ruchy
         movesRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -1129,9 +1151,90 @@ class ConversationViewModel(
             Log.e("FirebaseUpdate", "Error updating messages seen status: ", exception)
         }
     }
+    // Pobieranie zdjęcia drugiego użytkownika z storage
+    fun getUserImageFromStorage(imageIdentifier: String, onResult: (Bitmap?) -> Unit) {
+        val storageRef = FirebaseStorage.getInstance().reference
+        val imageRef = storageRef.child("images/$imageIdentifier")
 
+        Log.d("UserImage", "Fetching image with identifier: $imageIdentifier")
 
+        imageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
+            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            Log.d("UserImage", "Image successfully fetched for identifier: $imageIdentifier")
+            onResult(bitmap)
+        }.addOnFailureListener { exception ->
+            Log.e("UserImage", "Failed to fetch image for identifier: $imageIdentifier", exception)
+            onResult(null)
+        }
+    }
 
+    fun getOtherUserProfileData(conversationId: String, onResult: (String?) -> Unit) {
+        val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUserID == null) {
+            Log.e("UserProfileData", "Failed to get current user ID")
+            onResult(null)
+            return
+        }
+
+        val database = Firebase.database.reference
+        val conversationRef = database.child("conversations").child(conversationId).child("members")
+
+        Log.d("UserProfileData", "Fetching other user ID for conversation: $conversationId")
+
+        conversationRef.get().addOnSuccessListener { dataSnapshot ->
+            val members = dataSnapshot.children.mapNotNull { it.key }
+            val otherUserID = members.firstOrNull { it != currentUserID }
+
+            if (otherUserID != null) {
+                Log.d("UserProfileData", "Other user ID found: $otherUserID")
+                // Fetch user profile data, such as photoUrl
+                fetchUserProfileData(otherUserID) { photoUrl ->
+                    onResult(photoUrl)
+                }
+            } else {
+                Log.d("UserProfileData", "No other user ID found for conversation: $conversationId")
+                onResult(null)
+            }
+        }.addOnFailureListener { exception ->
+            Log.e("UserProfileData", "Failed to fetch other user ID for conversation: $conversationId", exception)
+            onResult(null)
+        }
+    }
+
+    fun fetchUserProfileData(userId: String, onResult: (String?) -> Unit) {
+        val database = Firebase.database.reference
+        val userRef = database.child("user").child(userId)
+
+        userRef.get().addOnSuccessListener { dataSnapshot ->
+            val photoUrl = dataSnapshot.child("photoUrl").getValue(String::class.java)
+            if (photoUrl != null) {
+                Log.d("UserProfileData", "Fetched photoUrl: $photoUrl")
+                onResult(photoUrl)
+            } else {
+                Log.e("UserProfileData", "No photoUrl found for user: $userId")
+                onResult(null)
+            }
+        }.addOnFailureListener { exception ->
+            Log.e("UserProfileData", "Failed to fetch user profile data for user: $userId", exception)
+            onResult(null)
+        }
+    }
+
+    fun fetchOtherUserImage(conversationId: String, onResult: (Bitmap?) -> Unit) {
+        Log.d("FetchUserImage", "Starting fetch for conversation: $conversationId")
+
+        getOtherUserProfileData(conversationId) { photoUrl ->
+            if (photoUrl != null) {
+                Log.d("FetchUserImage", "Other user photo URL retrieved: $photoUrl")
+                // Extract image identifier from the URL, e.g., extract `1729537873669.jpg`
+                val imageIdentifier = photoUrl.split("images%2F")[1].split("?")[0]
+                getUserImageFromStorage(imageIdentifier, onResult)
+            } else {
+                Log.e("FetchUserImage", "Failed to retrieve photo URL for conversation: $conversationId")
+                onResult(null)
+            }
+        }
+    }
 
 
 
