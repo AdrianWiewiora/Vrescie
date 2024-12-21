@@ -106,16 +106,53 @@ async function matchUsers(userId) {
     const otherUserKey = Object.keys(usersData)[randomIndex];
     if (otherUserKey !== userId) {
       const otherUserData = usersData[otherUserKey];
-      if (
+      const userData = usersData[userId];
+
+      const userAge = parseInt(userData.info.age, 10); // wiek użytkownika
+      const otherUserAge = parseInt(otherUserData.info.age, 10);
+
+      // Sprawdzamy, czy użytkownicy pasują do siebie po płci
+      const genderMatch =
       // eslint-disable-next-line max-len
-        ((usersData[userId].info.gender === "male" && (otherUserData.pref.gender_pref === "FM" || otherUserData.pref.gender_pref === "M")) ||
+        (userData.info.gender === "male" && (otherUserData.pref.gender_pref === "FM" || otherUserData.pref.gender_pref === "M")) ||
         // eslint-disable-next-line max-len
-        (usersData[userId].info.gender === "female" && (otherUserData.pref.gender_pref === "FM" || otherUserData.pref.gender_pref === "F"))) &&
+        (userData.info.gender === "female" && (otherUserData.pref.gender_pref === "FM" || otherUserData.pref.gender_pref === "F"));
+
+      const reverseGenderMatch =
+      // eslint-disable-next-line max-len
+        (otherUserData.info.gender === "male" && (userData.pref.gender_pref === "FM" || userData.pref.gender_pref === "M")) ||
         // eslint-disable-next-line max-len
-        ((otherUserData.info.gender === "male" && (usersData[userId].pref.gender_pref === "FM" || usersData[userId].pref.gender_pref === "M")) ||
+        (otherUserData.info.gender === "female" && (userData.pref.gender_pref === "FM" || userData.pref.gender_pref === "F"));
+
+      const ageMatch =
+      // eslint-disable-next-line max-len
+        (otherUserAge >= userData.pref.age_min_pref &&
         // eslint-disable-next-line max-len
-        (otherUserData.info.gender === "female" && (usersData[userId].pref.gender_pref === "FM" || usersData[userId].pref.gender_pref === "F")))
-      ) {
+        (userData.pref.age_max_pref === 50 || otherUserAge <= userData.pref.age_max_pref)) &&
+
+        (userAge >= otherUserData.pref.age_min_pref &&
+        // eslint-disable-next-line max-len
+        (otherUserData.pref.age_max_pref === 50 || userAge <= otherUserData.pref.age_max_pref));
+
+      // eslint-disable-next-line max-len
+      const relationMatch = userData.pref.relation_pref === otherUserData.pref.relation_pref;
+
+      // Obliczamy odległość, jeśli obaj użytkownicy podali współrzędne
+      const userLat = userData.info.latitude;
+      const userLon = userData.info.longitude;
+      const otherUserLat = otherUserData.info.latitude;
+      const otherUserLon = otherUserData.info.longitude;
+
+      // Obliczanie odległości w km
+      // eslint-disable-next-line max-len
+      const distance = calculateDistance(userLat, userLon, otherUserLat, otherUserLon);
+
+      // Sprawdzamy, czy odległość mieści się w granicach preferencji
+      // eslint-disable-next-line max-len
+      const locationMatch = distance <= userData.pref.location_max_pref && distance <= otherUserData.pref.location_max_pref;
+      // Sprawdzamy, czy wiek i płeć pasują
+      // eslint-disable-next-line max-len
+      if (genderMatch && reverseGenderMatch && ageMatch && relationMatch && locationMatch) {
         otherUserId = otherUserKey;
       }
     }
@@ -143,3 +180,20 @@ async function matchUsers(userId) {
   return null;
 }
 
+// Funkcja do obliczania odległości między dwoma punktami geograficznymi
+// eslint-disable-next-line require-jsdoc
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Promień Ziemi w km
+  const rad = Math.PI / 180; // Przemiana stopni na radiany
+
+  const deltaLat = (lat2 - lat1) * rad; // Różnica szerokości w radianach
+  const deltaLon = (lon2 - lon1) * rad; // Różnica długości w radianach
+
+  const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+            Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+            Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  // Odległość w kilometrach
+  return R * c;
+}

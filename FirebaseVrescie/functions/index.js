@@ -9,9 +9,11 @@ exports.notifyNewMessage = notifyNewMessage;
 
 exports.checkAndRemoveConversations = functions.database
     .ref("/conversations/{conversationId}/members")
-    .onWrite(async (change, context) => {
+    .onUpdate(async (change, context) => {
       const conversationId = context.params.conversationId;
-      const conversationSnapshot = change.after;
+
+      // eslint-disable-next-line max-len
+      const conversationSnapshot = await admin.database().ref(`/conversations/${conversationId}`).once("value");
 
       if (conversationSnapshot.exists()) {
         const conversationData = conversationSnapshot.val();
