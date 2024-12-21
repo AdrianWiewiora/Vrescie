@@ -163,12 +163,12 @@ fun AnonymousChatConfigurationScreen(
 
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
 
-            ProfilePrefSelectionRow(
-                modifier = Modifier,
-                isProfileVerified = isProfileVerified,
-                setProfileVerified = setProfileVerified,
-                updateProfileVerifiedPreferences = ::updateProfileVerifiedPreferences
-            )
+//            ProfilePrefSelectionRow(
+//                modifier = Modifier,
+//                isProfileVerified = isProfileVerified,
+//                setProfileVerified = setProfileVerified,
+//                updateProfileVerifiedPreferences = ::updateProfileVerifiedPreferences
+//            )
 
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
 
@@ -591,7 +591,7 @@ fun LocationPrefSelectionRowPreview() {
 private fun saveUserDataToDatabase(
     selectedGenders: String,
     ageRange: ClosedFloatingPointRange<Float>,
-    isProfileVerified: Boolean,
+    isProfileVerified: Boolean = false,
     relationshipPreference: Boolean,
     maxDistance: Float,
     latitude: Double?,

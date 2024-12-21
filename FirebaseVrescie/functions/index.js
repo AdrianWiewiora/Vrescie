@@ -1,4 +1,4 @@
-const functions = require("firebase-functions");
+const functions = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 const {assignUsersToConversation} = require("./conversationFunctions");
 const {notifyNewMessage} = require("./notificationFunctions");
@@ -8,7 +8,7 @@ exports.assignUsersToConversation = assignUsersToConversation;
 exports.notifyNewMessage = notifyNewMessage;
 
 exports.checkAndRemoveConversations = functions.database
-    .ref("/conversations/{conversationId}")
+    .ref("/conversations/{conversationId}/members")
     .onWrite(async (change, context) => {
       const conversationId = context.params.conversationId;
       const conversationSnapshot = change.after;
@@ -46,13 +46,11 @@ exports.removeInactiveUsers = functions.database
 
       // Sprawdź, czy to dodanie nowego użytkownika
       if (!change.before.exists()) {
-        // console.log("Nowy użytkownik został dodany:", userId);
         return null;
       }
 
       // Sprawdź, czy to usunięcie użytkownika
       if (!change.after.exists()) {
-        // console.log("Użytkownik został usunięty:", userId);
         return null;
       }
 

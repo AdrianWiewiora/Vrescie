@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const functions = require("firebase-functions");
+const functions = require("firebase-functions/v1");
 
 // eslint-disable-next-line max-len
 // Globalna zmienna do przechowywania informacji o ostatnich użytkownikach w ciągu ostatnich 3 sekund
@@ -11,8 +11,7 @@ exports.assignUsersToConversation = functions.database
       const userId = context.params.userId;
 
       if (recentUsers[userId]) {
-        // eslint-disable-next-line max-len
-        console.log("Użytkownik dopiero został przydzielony do konwersacji");
+        // Użytkownik dopiero został przydzielony do konwersacji
         return null;
       }
 
@@ -20,7 +19,12 @@ exports.assignUsersToConversation = functions.database
 
       // Sprawdź, czy użytkownik jest już w jakiejkolwiek konwersacji
       // eslint-disable-next-line max-len
-      const conversationsSnapshot = await admin.database().ref(`/conversations`).once("value");
+      const conversationsSnapshot = await admin.database()
+          .ref(`/conversations`)
+          .orderByChild(`members/${userId}`)
+          .equalTo(true)
+          .once("value");
+
       const conversationsData = conversationsSnapshot.val();
 
       let isInConversation = false;
@@ -48,10 +52,10 @@ exports.assignUsersToConversation = functions.database
           recentUsers[userId] = false;
           return null;
         } else {
-          await recreateConversation(userId);
+          await matchUsers(userId);
         }
       } else {
-        await recreateConversation(userId);
+        await matchUsers(userId);
       }
     });
 
@@ -87,9 +91,9 @@ async function createConversation(userId1, userId2) {
 }
 
 
-// Funkcja do tworzenia unikalnego identyfikatora konwersacji
+// Funkcja do szukania partnera wedle preferencji
 // eslint-disable-next-line require-jsdoc
-async function recreateConversation(userId) {
+async function matchUsers(userId) {
   const usersSnapshot = await admin.database().ref("/vChatUsers").once("value");
   const usersData = usersSnapshot.val();
 
@@ -119,9 +123,6 @@ async function recreateConversation(userId) {
   }
 
   if (!otherUserId) {
-    // eslint-disable-next-line max-len
-    console.log("Nie można znaleźć odpowiedniego użytkownika spełniającego preferencje płciowe.");
-    // eslint-disable-next-line max-len
     setTimeout(() => {
       delete recentUsers[userId];
       delete recentUsers[otherUserId];
