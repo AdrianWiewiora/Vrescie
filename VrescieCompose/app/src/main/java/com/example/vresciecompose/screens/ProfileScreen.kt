@@ -1,6 +1,5 @@
 package com.example.vresciecompose.screens
 
-import LocalContext
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -11,13 +10,16 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -34,23 +36,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
+import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.data.UserProfile
 import com.example.vresciecompose.view_models.ProfileViewModel
-import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
-fun ProfileScreen(isConnected: Boolean, profileViewModel: ProfileViewModel) {
+fun ProfileScreen(
+    isConnected: Boolean,
+    profileViewModel: ProfileViewModel,
+    onClick: (String) -> Unit
+) {
     val localUserProfile = profileViewModel.getStoredProfile()
     val userProfile = profileViewModel.userProfile.observeAsState()
     var dataLoaded by remember { mutableStateOf(false) }
@@ -81,7 +86,7 @@ fun ProfileScreen(isConnected: Boolean, profileViewModel: ProfileViewModel) {
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(),
-        verticalArrangement = Arrangement.Top
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
         if (!isConnected) {
             Card(
@@ -133,8 +138,32 @@ fun ProfileScreen(isConnected: Boolean, profileViewModel: ProfileViewModel) {
                 }
             }
         }
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
+
+        Button(
+            onClick = {
+                onClick(Navigation.Destinations.FIRST_CONFIGURATION + "/1")
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 20.dp,
+                bottomEnd = 20.dp
+            ),
+            enabled = isConnected
+        ) {
+            Text(
+                text = if (isConnected) "Zmień zdjęcie" else stringResource(R.string.no_internet_connection),
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+
     }
 }
+
 
 @Composable
 fun ProfileContent(userProfile: UserProfile, localImagePath: String? = null) {

@@ -1,14 +1,18 @@
 package com.example.vresciecompose.view_models
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.database.*
+import com.google.firebase.storage.FirebaseStorage
 
 class ConfigurationProfileViewModel : ViewModel() {
     private val database = Firebase.database
     private val auth = Firebase.auth
+    private val storage = FirebaseStorage.getInstance()
 
     fun saveUserData(name: String, age: String, gender: String, photoUrl: String?, onComplete: () -> Unit) {
         val userId = auth.currentUser?.uid ?: return

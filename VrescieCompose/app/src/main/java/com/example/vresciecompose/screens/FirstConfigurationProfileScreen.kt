@@ -1,86 +1,90 @@
 package com.example.vresciecompose.screens
 
+import android.Manifest
+import android.content.ContentValues
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Matrix
 import android.net.Uri
-import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.exifinterface.media.ExifInterface
+import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
+import com.example.vresciecompose.ui.components.ExitConfirmationDialog
 import com.example.vresciecompose.ui.components.FilledButton
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
-import com.example.vresciecompose.Navigation
-import com.example.vresciecompose.ui.components.ExitConfirmationDialog
 import com.example.vresciecompose.view_models.ProfileViewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import android.graphics.Bitmap
-import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.core.content.ContextCompat
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-import android.Manifest
-import android.content.ContentValues
-import android.content.Context
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Matrix
-import androidx. exifinterface. media. ExifInterface
-import android.os.Environment
-import android.provider.MediaStore
-import android.util.Log
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.IntSize
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.database.database
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import java.io.ByteArrayOutputStream
+import java.io.File
 
 @Composable
 fun FirstConfigurationProfileScreen(
     onClick: (String) -> Unit,
     configurationProfileViewModel: ConfigurationProfileViewModel,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel,
+    isChangePhoto: Int = 0,
 ) {
-    val numberOfConfigurationStage = remember { mutableStateOf(1) }
+    val numberOfConfigurationStage = remember { mutableStateOf(if (isChangePhoto == 1) 2 else 1) }
 
     val nameState = remember { mutableStateOf("") }
     val ageState = remember { mutableStateOf("") }
@@ -151,6 +155,72 @@ fun FirstConfigurationProfileScreen(
         }
     }
 
+    fun sendNewPhoto(context: Context, selectedImageUri: Uri?) {
+        val userId = Firebase.auth.currentUser?.uid ?: return
+        val database = Firebase.database
+        val storage = FirebaseStorage.getInstance()
+        val storageRef: StorageReference = storage.reference
+
+        // Odczytaj URL starego zdjęcia z Firebase
+        val userRef = database.getReference("user").child(userId)
+        userRef.child("photoUrl").get().addOnSuccessListener { snapshot ->
+            val oldPhotoUrl = snapshot.value as? String
+
+            // Usuń stare zdjęcie w Firebase
+            oldPhotoUrl?.let {
+                val oldPhotoRef = storage.getReferenceFromUrl(it)
+                oldPhotoRef.delete()
+                    .addOnSuccessListener { Log.d("Firebase", "Old photo deleted successfully") }
+                    .addOnFailureListener { exception ->
+                        Log.e("Firebase", "Failed to delete old photo: ${exception.message}")
+                    }
+            }
+
+            // Usuń stare zdjęcie lokalnie
+            val localFile = File(context.filesDir, "$userId.jpg")
+            if (localFile.exists()) {
+                if (localFile.delete()) {
+                    Log.d("LocalFile", "Old local photo deleted successfully")
+                } else {
+                    Log.e("LocalFile", "Failed to delete old local photo")
+                }
+            }
+
+            // Jeśli użytkownik wybrał nowe zdjęcie, prześlij je
+            selectedImageUri?.let { uri ->
+                val fileName = "images/${System.currentTimeMillis()}.jpg"
+                val imageRef = storageRef.child(fileName)
+
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                val baos = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                val data = baos.toByteArray()
+
+                val uploadTask = imageRef.putBytes(data)
+                uploadTask.addOnSuccessListener {
+                    imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                        userRef.child("photoUrl").setValue(downloadUri.toString())
+                            .addOnSuccessListener {
+                                Log.d("Firebase", "New photo URL saved successfully")
+
+                                // Zapisz zdjęcie lokalnie
+                                profileViewModel.saveImageLocally(downloadUri.toString(), userId)
+
+                                onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
+                            }
+                            .addOnFailureListener { exception ->
+                                Log.e("Firebase", "Failed to save new photo URL: ${exception.message}")
+                            }
+                    }
+                }.addOnFailureListener { exception ->
+                    Log.e("Firebase", "Failed to upload new photo: ${exception.message}")
+                }
+            }
+        }.addOnFailureListener { exception ->
+            Log.e("Firebase", "Failed to get old photo URL: ${exception.message}")
+        }
+    }
 
 
 
@@ -168,7 +238,7 @@ fun FirstConfigurationProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            sendData = ::sendData,
+            sendData = if (isChangePhoto == 1) ::sendNewPhoto else ::sendData,
         )
     }
 

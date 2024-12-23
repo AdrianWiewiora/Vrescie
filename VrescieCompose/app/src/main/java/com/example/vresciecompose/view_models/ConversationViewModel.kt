@@ -830,7 +830,9 @@ class ConversationViewModel(
                 .child(conversationId)
                 .child("messages")
 
-            conversationMessagesRef.push().setValue(messageData)
+            if(senderId2 != "system"){
+                conversationMessagesRef.push().setValue(messageData)
+            }
         }
     }
 

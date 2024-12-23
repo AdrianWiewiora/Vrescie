@@ -1,9 +1,5 @@
 package com.example.vresciecompose.screens
 
-import LocalContext
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.Network
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.clickable
@@ -32,29 +28,17 @@ import androidx.compose.ui.res.dimensionResource
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContract
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
-import androidx.core.app.ActivityOptionsCompat
-import com.example.vresciecompose.AppDatabase
 import com.example.vresciecompose.Navigation
-import com.example.vresciecompose.data.UserChatPrefs
-import com.example.vresciecompose.data.UserChatPrefsDao
 import com.example.vresciecompose.ui.components.ExitConfirmationDialog
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
@@ -95,7 +79,7 @@ fun MainMenuScreen(
     LaunchedEffect(isProfileConfigured) {
         if (!isProfileConfigured) {
             Log.d("MainMenuScreen", "Navigating to FIRST_CONFIGURATION because profile is not configured") // Loguje, że następuje przekierowanie
-            onClick(Navigation.Destinations.FIRST_CONFIGURATION)
+            onClick(Navigation.Destinations.FIRST_CONFIGURATION+ "/0")
         } else {
             Log.d("MainMenuScreen", "Profile is configured, no navigation needed")
         }
@@ -214,7 +198,7 @@ fun MiddleCard(
                 when (target) {
                     1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, onClick, userChatPrefsViewModel, isConnected)
                     2 -> ImplicitChatsScreen(onClick, conversationViewModel, isConnected)
-                    3 -> ProfileScreen(isConnected, profileViewModel)
+                    3 -> ProfileScreen(isConnected, profileViewModel, onClick)
                     else ->  Column(
                         modifier = Modifier
                             .fillMaxWidth()

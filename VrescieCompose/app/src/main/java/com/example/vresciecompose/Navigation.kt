@@ -130,7 +130,7 @@ fun AppNavigation(
                             "Sign in successful",
                             Toast.LENGTH_LONG
                         ).show()
-                        navController.navigate(Navigation.Destinations.FIRST_CONFIGURATION)
+                        navController.navigate(Navigation.Destinations.FIRST_CONFIGURATION+ "/0")
                     } else {
                         Toast.makeText(
                             applicationContext,
@@ -159,11 +159,15 @@ fun AppNavigation(
                 }
             )
         }
-        composable(Navigation.Destinations.FIRST_CONFIGURATION) {
+        composable(Navigation.Destinations.FIRST_CONFIGURATION + "/{isChangePhoto}",
+            arguments = listOf(navArgument("isChangePhoto") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val isChangePhoto = backStackEntry.arguments?.getString("isChangePhoto") ?: "0"
             FirstConfigurationProfileScreen(
                 onClick = { navController.navigate(route = it) },
                 configurationProfileViewModel = configurationProfileViewModel,
-                profileViewModel = profileViewModel
+                profileViewModel = profileViewModel,
+                isChangePhoto = isChangePhoto.toInt(),
             )
         }
         composable(Navigation.Destinations.REGISTRATION) {
@@ -190,7 +194,7 @@ fun AppNavigation(
             val conversationID = backStackEntry.arguments?.getString("conversationID") ?: ""
             AnonymousConversationScreen(
                 conversationID = conversationID,
-                onNavigate = { route -> navController.navigate(route); Log.d("Navigation3", "Dupa Composed"); Log.d("Navigation3", "Dupa $route") },
+                onNavigate = { route -> navController.navigate(route);},
                 conversationViewModel,
                 settingsViewModel = settingsViewModel
             )

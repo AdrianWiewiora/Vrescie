@@ -2,6 +2,7 @@ package com.example.vresciecompose.view_models
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -11,6 +12,7 @@ import com.example.vresciecompose.data.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
+import com.google.firebase.storage.FirebaseStorage
 import okhttp3.OkHttpClient
 import java.io.File
 import java.io.FileOutputStream
@@ -102,7 +104,7 @@ class ProfileViewModel(private val appContext: Context) : ViewModel() {
         }
     }
 
-    private fun saveImageLocally(imageUrl: String, userId: String) {
+    fun saveImageLocally(imageUrl: String, userId: String) {
         val client = OkHttpClient()
         val request = Request.Builder().url(imageUrl).build()
 
