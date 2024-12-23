@@ -70,6 +70,7 @@ import com.example.vresciecompose.ui.components.FilledButton
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.database.database
 import com.google.firebase.storage.FirebaseStorage
@@ -85,7 +86,7 @@ fun FirstConfigurationProfileScreen(
     isChangePhoto: Int = 0,
 ) {
     val numberOfConfigurationStage = remember { mutableStateOf(if (isChangePhoto == 1) 2 else 1) }
-
+    val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
     val nameState = remember { mutableStateOf("") }
     val ageState = remember { mutableStateOf("") }
     val genderState = remember { mutableStateOf("") }
@@ -117,7 +118,7 @@ fun FirstConfigurationProfileScreen(
             val storageRef: StorageReference = storage.reference
 
             // Unikalna nazwa pliku
-            val fileName = "images/${System.currentTimeMillis()}.jpg"
+            val fileName = "images/$currentUserID.jpg"
             val imageRef = storageRef.child(fileName)
 
             // Wczytaj obraz jako bajty
@@ -188,7 +189,7 @@ fun FirstConfigurationProfileScreen(
 
             // Jeśli użytkownik wybrał nowe zdjęcie, prześlij je
             selectedImageUri?.let { uri ->
-                val fileName = "images/${System.currentTimeMillis()}.jpg"
+                val fileName = "images/$userId.jpg"
                 val imageRef = storageRef.child(fileName)
 
                 val inputStream = context.contentResolver.openInputStream(uri)
@@ -358,6 +359,7 @@ fun FirstConfigurationStage(
 fun SecondConfigurationStage(
     modifier: Modifier = Modifier,
     sendData: (Context, Uri?) -> Unit,
+    currentUserID: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 ) {
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val cameraPermissionGranted = remember { mutableStateOf(false) }
@@ -445,7 +447,7 @@ fun SecondConfigurationStage(
                 val savedUri = MediaStore.Images.Media.insertImage(
                     context.contentResolver,
                     croppedBitmap,
-                    "Cropped Image ${System.currentTimeMillis()}",
+                    "Cropped Image $currentUserID",
                     null
                 )
 
@@ -503,7 +505,7 @@ fun SecondConfigurationStage(
         // Przycisk do robienia zdjęcia
         FilledButton(
             onClick = {
-                photoUri.value = createImageUri(context)
+                photoUri.value = createImageUri(context,currentUserID )
                 when {
                     ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
                         cameraLauncher.launch(photoUri.value!!)
@@ -588,9 +590,9 @@ fun rotateBitmap(bitmap: Bitmap, orientation: Int): Bitmap {
 }
 
 // Funkcja do tworzenia URI do zapisu zdjęcia
-private fun createImageUri(context: Context): Uri {
+private fun createImageUri(context: Context, currentUserID: String): Uri {
     val contentValues = ContentValues().apply {
-        put(MediaStore.Images.Media.DISPLAY_NAME, "Photo_${System.currentTimeMillis()}.jpg")
+        put(MediaStore.Images.Media.DISPLAY_NAME, "Photo_$currentUserID.jpg")
         put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
         put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
     }
