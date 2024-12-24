@@ -64,6 +64,7 @@
     <string name="loading">Ładowanie…</string>
     <string name="forgot_my_password">Nie pamiętam hasła</string>
     <string name="login_error">Błąd logowania</string>
+    <string name="enter_email_to_reset_password">Wprowadź adres e-mail, aby zresetować hasło</string>
     <!--  RegistrationScreen and ProfileScreen-->
     <string name="loading_data">Ładowanie danych</string>
     <string name="name">Imię</string>
@@ -78,5 +79,5 @@
     <string name="sign_up">Zarejestruj się</string>
     <string name="no_internet_connection">Brak połączenia z internetem</string>
 
-
+    <string name="logout">Wyloguj się</string>
 </resources>

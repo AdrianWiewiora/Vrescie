@@ -46,7 +46,7 @@ fun LoginScreen(
     var showErrorDialog by rememberSaveable { mutableStateOf(false) } // Flaga dialogu
     var errorMessage by rememberSaveable { mutableStateOf("") }
     var isLoading by rememberSaveable { mutableStateOf(false) } // Flaga ładowania
-
+    var showSuccessDialog by rememberSaveable { mutableStateOf(false) } // Dialog sukcesu
 
     BackHandler {
         onClick(Navigation.Destinations.START)
@@ -159,10 +159,29 @@ fun LoginScreen(
                     .fillMaxWidth(),
                 enabled = !isLoading
             )
-
+            val errorMessageStr3 = stringResource(R.string.enter_email_to_reset_password)
             // Forgot password button
             OutlinedButton(
-                onClick = { /*TODO*/ },
+                onClick = {
+                    if (email.isBlank()) {
+                        errorMessage = errorMessageStr3
+                        showErrorDialog = true
+                    } else {
+                        isLoading = true
+                        loginViewModel.resetPassword(
+                            email = email,
+                            onSuccess = {
+                                isLoading = false
+                                showSuccessDialog = true
+                            },
+                            onFailure = { error ->
+                                isLoading = false
+                                errorMessage = error
+                                showErrorDialog = true
+                            }
+                        )
+                    }
+                },
                 text = stringResource(R.string.forgot_my_password),
                 modifier = Modifier
                     .padding(horizontal = 8.dp, vertical = 5.dp)
@@ -176,6 +195,13 @@ fun LoginScreen(
                 onDismiss = { showErrorDialog = false },
                 text1 = stringResource(R.string.login_error),
                 text2 = errorMessage // Wyświetl wiadomość o błędzie (np. niezweryfikowany e-mail)
+            )
+        }
+        if (showSuccessDialog) {
+            ErrorAlertDialog(
+                onDismiss = { showSuccessDialog = false },
+                text1 = "Sprawdź email",
+                text2 = "Na podany email został wysłany link restujacy hasło"
             )
         }
     }

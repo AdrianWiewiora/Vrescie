@@ -51,6 +51,16 @@ class LoginViewModel : ViewModel() {
             }
     }
 
+    fun resetPassword(email: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onFailure(task.exception?.message ?: "Unknown error")
+                }
+            }
+    }
 
 }
 

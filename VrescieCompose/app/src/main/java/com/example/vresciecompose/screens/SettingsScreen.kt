@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,11 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.BrightnessMedium
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,8 +35,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.view_models.SettingsViewModel
 
@@ -52,6 +58,9 @@ fun SettingsScreen(
     fun saveMessageSizeVM(size: Int){
         settingsViewModel.saveMessageSize(size)
     }
+    fun logoutVM(){
+        settingsViewModel.logout { onNavigate(Navigation.Destinations.START)}
+    }
 
     Settings(
         modifier = Modifier
@@ -60,7 +69,8 @@ fun SettingsScreen(
         currentTheme = currentTheme,
         saveThemeVM = ::saveThemeVM,
         currentMessageSize = currentMessageSize,
-        saveMessageSizeVM = ::saveMessageSizeVM
+        saveMessageSizeVM = ::saveMessageSizeVM,
+        logoutVM = ::logoutVM
     )
 }
 
@@ -72,7 +82,8 @@ fun Settings(
     currentTheme: Int,
     saveThemeVM: (Int) -> Unit,
     currentMessageSize: Int = 1,
-    saveMessageSizeVM: (Int) -> Unit
+    saveMessageSizeVM: (Int) -> Unit,
+    logoutVM: () -> Unit
 ){
     Column(
         modifier = modifier
@@ -99,7 +110,8 @@ fun Settings(
             saveThemeVM,
             currentTheme,
             currentMessageSize,
-            saveMessageSizeVM
+            saveMessageSizeVM,
+            logoutVM
         )
     }
 }
@@ -110,7 +122,8 @@ fun SettingsContent(
     saveThemeVM: (Int) -> Unit,
     currentTheme: Int,
     currentMessageSize: Int,
-    saveMessageSizeVM: (Int) -> Unit
+    saveMessageSizeVM: (Int) -> Unit,
+    logoutVM: () -> Unit,
 ){
     val (currentContent, setCurrentContent) = remember { mutableStateOf("settingsList") }
 
@@ -137,6 +150,27 @@ fun SettingsContent(
                                 .height(40.dp)
                                 .clickable { setCurrentContent("appearanceSettings")}
                         )
+                    }
+                    // Dodanie przycisku Wyloguj się na dole
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp)) // Odstęp
+                        OutlinedButton(
+                            onClick = {
+                                logoutVM()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(25.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                contentDescription = stringResource(R.string.logout),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(text = stringResource(R.string.logout))
+                        }
                     }
                 }
 
@@ -358,7 +392,8 @@ fun SettingsPreview(){
         saveThemeVM = {},
         currentTheme = 0,
         currentMessageSize = 1,
-        saveMessageSizeVM = {}
+        saveMessageSizeVM = {},
+        logoutVM = {}
     )
 }
 
