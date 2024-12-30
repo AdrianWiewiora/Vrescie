@@ -1,9 +1,6 @@
 package com.example.vresciecompose.screens
 
 import LocalContext
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.Network
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -37,7 +34,6 @@ import androidx.compose.material.icons.filled.SocialDistance
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.dimensionResource
@@ -47,30 +43,22 @@ import com.example.vresciecompose.R
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.android.gms.location.LocationServices
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
-import java.util.Calendar
-
-
-private const val TAG = "AnonymousChatConfig"
 
 @Composable
 fun AnonymousChatConfigurationScreen(
-    viewModel: LocationViewModel,
+    locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
     onClick: (String) -> Unit,
     userChatPrefsViewModel: UserChatPrefsViewModel,
     isConnected: Boolean
 ) {
     val allChatPrefs by userChatPrefsViewModel.allChatPrefs.observeAsState(emptyList())
-
-
     var latitude by remember { mutableStateOf<Double?>(null) }
     var longitude by remember { mutableStateOf<Double?>(null) }
     val context = LocalContext.current
     val fusedLocationProviderClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     LaunchedEffect(key1 = Unit) {
-        viewModel.getLocation(
+        locationViewModel.getLocation(
             fusedLocationProviderClient = fusedLocationProviderClient,
             context = context,
             requestPermissionLauncher = requestPermissionLauncher,
@@ -93,11 +81,11 @@ fun AnonymousChatConfigurationScreen(
     val (maxDistance, setMaxDistance) = remember { mutableStateOf(allChatPrefs.firstOrNull()?.maxDistance ?: 10f) }
 
 
-    // Odczyt danych z bazy
+    // Odczyt danych z lokalnych danych
     LaunchedEffect(Unit) {
         userChatPrefsViewModel.fetchChatPrefs()
     }
-    // Jeżeli dane są dostępne, ustaw wartości
+    // Jeżeli dane są dostępne, ustawia wartości
     LaunchedEffect(allChatPrefs) {
         allChatPrefs.firstOrNull()?.let {
             setSelectedGenders(it.selectedGenders)
@@ -105,6 +93,26 @@ fun AnonymousChatConfigurationScreen(
             setProfileVerified(it.isProfileVerified)
             setRelationshipPreference(it.relationshipPreference)
             setMaxDistance(it.maxDistance)
+        }
+    }
+
+    val saveUserInfoAndPreferencesToFirebase: (String, ClosedFloatingPointRange<Float>, Boolean, Boolean, Float, Double?, Double?) -> Unit = { genders, range, isVerified, relationship, distance, latitudeParam, longitudeParam ->
+        try {
+            userChatPrefsViewModel.saveUserDataToDatabase(
+                genders,
+                range,
+                isVerified,
+                relationship,
+                distance,
+                latitudeParam,
+                longitudeParam
+            )
+        } catch (e: RuntimeException) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.problem_with_sending_your_data),
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -194,14 +202,14 @@ fun AnonymousChatConfigurationScreen(
         Button(
             onClick = {
                 if (latitude == null || longitude == null) {
-                    viewModel.getLocation(
+                    locationViewModel.getLocation(
                         fusedLocationProviderClient = fusedLocationProviderClient,
                         context = context,
                         requestPermissionLauncher = requestPermissionLauncher,
                         onSuccess = { location ->
                             latitude = location.latitude
                             longitude = location.longitude
-                            saveUserDataToDatabase(
+                            saveUserInfoAndPreferencesToFirebase(
                                 selectedGenders,
                                 ageRange,
                                 isProfileVerified,
@@ -213,7 +221,6 @@ fun AnonymousChatConfigurationScreen(
                             onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
                         },
                         onFailure = {
-                            Log.e(TAG, "Failed to get location")
                             Toast.makeText(
                                 context,
                                 context.getString(R.string.problem_with_determining_the_location),
@@ -222,7 +229,7 @@ fun AnonymousChatConfigurationScreen(
                         }
                     )
                 } else {
-                    saveUserDataToDatabase(
+                    saveUserInfoAndPreferencesToFirebase(
                         selectedGenders,
                         ageRange,
                         isProfileVerified,
@@ -584,85 +591,4 @@ fun LocationPrefSelectionRowPreview() {
         setMaxDistance = setMaxDistance,
         updateMaxDistancePreferences = {  }
     )
-}
-
-
-// Funkcja do zapisywania danych użytkownika i preferencji do bazy danych
-private fun saveUserDataToDatabase(
-    selectedGenders: String,
-    ageRange: ClosedFloatingPointRange<Float>,
-    isProfileVerified: Boolean = false,
-    relationshipPreference: Boolean,
-    maxDistance: Float,
-    latitude: Double?,
-    longitude: Double?
-) {
-    // Pobiera zalogowanego użytkownika z Firebase Auth
-    val currentUser = FirebaseAuth.getInstance().currentUser
-
-    // Sprawdź, czy użytkownik jest zalogowany
-    currentUser?.let { user ->
-        val userId = user.uid
-
-        // Pobierz bieżącą datę jako lastSeen
-        val lastSeen = Calendar.getInstance().timeInMillis
-
-        // Pobierz referencję do bazy danych
-        val database = FirebaseDatabase.getInstance()
-        val userRef = database.getReference("user/$userId")
-
-        // Referencja do gałęzi vChatUsers/<userId>/info
-        val userInfoRef = database.getReference("vChatUsers/$userId/info")
-
-        userRef.get().addOnSuccessListener { dataSnapshot ->
-            val age = dataSnapshot.child("age").getValue(String::class.java)
-            val gender = dataSnapshot.child("gender").getValue(String::class.java)
-
-            // Dodaj warunek sprawdzający, czy wiek i płeć zostały pobrane poprawnie
-            if (age != null && gender != null) {
-                // Zapisz dane użytkownika
-                userInfoRef.setValue(
-                    mapOf(
-                        "age" to age,
-                        "email" to user.email,
-                        "gender" to gender,
-                        "lastSeen" to lastSeen,
-                        "latitude" to latitude,
-                        "longitude" to longitude
-                    )
-                ).addOnCompleteListener { userInfoTask ->
-                    if (userInfoTask.isSuccessful) {
-                        // Referencja do gałęzi vChatUsers/<userId>/pref
-                        val userPrefRef = database.getReference("vChatUsers/$userId/pref")
-
-                        // Zapisz preferencje użytkownika
-                        userPrefRef.setValue(
-                            mapOf(
-                                "age_min_pref" to ageRange.start.toInt(),
-                                "age_max_pref" to ageRange.endInclusive.toInt(),
-                                "gender_pref" to selectedGenders,
-                                "location_max_pref" to maxDistance.toInt(),
-                                "verification_pref" to isProfileVerified,
-                                "relation_pref" to relationshipPreference
-                            )
-                        ).addOnCompleteListener { userPrefTask ->
-                            if (userPrefTask.isSuccessful) {
-                                // Jeżeli zapis danych użytkownika i preferencji zakończył się sukcesem
-                                // możesz wykonać dodatkowe czynności tutaj
-                                // np. przejście do kolejnego ekranu, wyświetlenie powiadomienia itp.
-                            } else {
-                                // Jeżeli wystąpił błąd podczas zapisu preferencji
-                                // możesz obsłużyć ten błąd tutaj
-                            }
-                        }
-                    } else {
-                        // Jeżeli wystąpił błąd podczas zapisu danych użytkownika
-                        // możesz obsłużyć ten błąd tutaj
-                    }
-                }
-            }
-        }.addOnFailureListener { exception ->
-
-        }
-    }
 }

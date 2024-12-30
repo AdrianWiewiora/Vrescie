@@ -15,6 +15,7 @@
     <!--  AnonymousChatConfigurationScreen -->
     <string name="profile_ac">Profile:</string>
     <string name="problem_with_determining_the_location">Problem with determining the location</string>
+    <string name="problem_with_sending_your_data">Problem with sending your data</string>
     <string name="draw">DRAW</string>
     <string name="gender">Gender</string>
     <string name="woman">Woman</string>
