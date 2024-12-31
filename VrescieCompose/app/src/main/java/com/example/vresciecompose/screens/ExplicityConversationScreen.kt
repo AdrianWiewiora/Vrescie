@@ -88,7 +88,6 @@ fun ExplicitConversationScreen(
     }.value.sp // Konwersja na TextUnit
 
     val (messageText, setMessageText) = remember { mutableStateOf("") }
-    val context = LocalContext.current
     val config = generationConfig {
         maxOutputTokens = 300
         temperature = 0.2f
@@ -193,12 +192,12 @@ fun ExplicitConversationScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.setConversationIdExplicit(conversationID, context)
+        viewModel.setConversationId(conversationID)
         viewModel.updateMessagesAsSeen(conversationID)
     }
 
     fun sendMessage(message: String) {
-        viewModel.sendMessageExp(message)
+        viewModel.sendMessage(message)
     }
 
     ExplicitConversationColumn(

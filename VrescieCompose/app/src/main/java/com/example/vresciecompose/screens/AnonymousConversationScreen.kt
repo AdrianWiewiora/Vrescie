@@ -2,7 +2,6 @@ package com.example.vresciecompose.screens
 
 import android.graphics.Bitmap
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,9 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -34,7 +30,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AddReaction
 import androidx.compose.material.icons.filled.HighlightOff
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.Button
@@ -67,16 +62,10 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,17 +73,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 fun AnonymousConversationScreen(
     conversationID: String,
     onNavigate: (String) -> Unit,
-    viewModel: ConversationViewModel,
+    conversationViewModel: ConversationViewModel,
     settingsViewModel: SettingsViewModel,
 ) {
-    Log.d("AnonymousConversationScreen", "AnonymousConversationScreen Composed")
-    // Pobieranie zdjęcia
-    var imageState by remember { mutableStateOf<Bitmap?>(null) }
-    val showImageDialog = remember { mutableStateOf(false) }
-
-
+    // Rozmiar wiadomości w zależności od ustawień
     val currentMessageSize by settingsViewModel.messageSizeFlow.observeAsState(1)
-    // Mapowanie rozmiarów czcionek na TextUnit
     val messageFontSize = when (currentMessageSize) {
         0 -> dimensionResource(id = R.dimen.message_small_size) // 10sp
         1 -> dimensionResource(id = R.dimen.message_normal_size) // 14sp
@@ -103,110 +86,81 @@ fun AnonymousConversationScreen(
         else -> dimensionResource(id = R.dimen.message_normal_size) // Domyślny rozmiar
     }.value.sp // Konwersja na TextUnit
 
+    // Inicjalizacja konwersacji oraz zmienna zawierająca jej wiadomości
+    conversationViewModel.setConversationId(conversationID, isAnonymous = true)
+    val messages by conversationViewModel.messages.collectAsState()
+
+    // Zmienne do wyśweitlania zdjęcia
+    var imageState by remember { mutableStateOf<Bitmap?>(null) }
+    val showImageDialog = remember { mutableStateOf(false) }
+
     // Pole tekstowe do wprowadzania wiadomości
     val (messageText, setMessageText) = remember { mutableStateOf("") }
+    // Wyskakujące okienka dla polubień i wyjścia
     val showDialogLike = remember { mutableStateOf(false) }
-    val showDialogLikeNotification = remember { mutableStateOf(false) }
+    val showDialogLikeNotification by conversationViewModel.likesNotification.observeAsState(false)
     val showExitDialog = remember { mutableStateOf(false) }
-    var conversationRef by remember { mutableStateOf<DatabaseReference?>(null) }
 
-    // Games - tic tac toe
-    val currentPlayerMessage by viewModel.currentPlayerMessage.collectAsState()
-    val board = viewModel.board
-    val conversationId = viewModel.currentConversationId
+    // Zmienne dla  Tic tac toe
+    val currentPlayerMessage by conversationViewModel.currentPlayerMessage.collectAsState()
+    val board = conversationViewModel.board
+    val conversationId = conversationViewModel.currentConversationId
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
-    val gameWinner by viewModel._gameWinner.collectAsState()
+    val gameWinner by conversationViewModel._gameWinner.collectAsState()
     val gameStatusMessage = when {
         gameWinner.isNullOrEmpty() -> null
         gameWinner == currentUserID -> "Wygrałeś !!!"
         else -> "Przegrałeś! :("
     }
-    val wantNewGameCount by viewModel.wantNewGameCount.collectAsState()
-    val gameWinsState by viewModel.gameWins.collectAsState()
+    val wantNewGameCount by conversationViewModel.wantNewGameCount.collectAsState()
+    val gameWinsState by conversationViewModel.gameWins.collectAsState()
 
+    // Rzutowanie na funkcje z view modelu dla TicTacToe
     fun makeMove(positionX: Int, positionY: Int): Boolean {
-        return viewModel.makeMove(conversationId, currentUserID.toString(), positionX, positionY, isAnonymous = true)
+        return conversationViewModel.makeMove(conversationId, currentUserID.toString(), positionX, positionY, isAnonymous = true)
     }
-
     fun listenForMoves() {
-        viewModel.listenForMoves(conversationId, currentUserID.toString(), isAnonymous = true)
+        conversationViewModel.listenForMoves(conversationId, currentUserID.toString(), isAnonymous = true)
     }
-
     fun setWantNewGame(){
-        viewModel.setWantNewGame(currentUserID.toString(), isAnonymous = true)
+        conversationViewModel.setWantNewGame(currentUserID.toString(), isAnonymous = true)
     }
 
-    // Zdefiniuj likeEventListener
-    val likeEventListener = object : ChildEventListener {
-        override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-            checkIfBothLiked()
-        }
-
-        private fun checkIfBothLiked() {
-            conversationRef!!.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val likesCount = snapshot.childrenCount.toInt()
-                    // Sprawdź, czy są dwa lajki
-                    if (likesCount >= 2) {
-                        showDialogLikeNotification.value = true
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("LikeEventListener", "Database error: ${error.message}")
-                }
-            })
-        }
-
-
-        override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
-        override fun onChildRemoved(snapshot: DataSnapshot) {}
-        override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
-        override fun onCancelled(error: DatabaseError) {
-            Log.e("LikeEventListener", "Database error: ${error.message}")
-        }
+    // Wysyłanie wiadomości do baz danych
+    fun sendMessageToDb(message: String) {
+        conversationViewModel.sendMessage(message, isAnonymous = true)
     }
-
-    conversationRef = FirebaseDatabase.getInstance().reference
-        .child("conversations")
-        .child(conversationID)
-        .child("likes")
-    conversationRef!!.addChildEventListener(likeEventListener)
 
     BackHandler {
         showExitDialog.value = true
     }
 
     LaunchedEffect(conversationId) {
-        viewModel.fetchOtherUserImage(conversationId) { bitmap ->
+        conversationViewModel.fetchOtherUserImage(conversationId) { bitmap ->
             imageState = bitmap
         }
-        viewModel.listenForGameWins(conversationId)
+        conversationViewModel.listenForGameWins(conversationId)
     }
 
     DisposableEffect(Unit) {
-        Log.d("DisposableEffect", "Effect started2")  // Log przy inicjalizacji
-        viewModel.listenForGameWin(conversationID, isAnonymous = true)
-        viewModel.listenForNewGameRequests(conversationID, isAnonymous = true)
+        conversationViewModel.listenForGameWin(conversationID, isAnonymous = true)
+        conversationViewModel.listenForNewGameRequests(conversationID, isAnonymous = true)
+        conversationViewModel.startListeningForLikes(conversationID)
 
         onDispose {
-            Log.d("DisposableEffect", "Effect disposed2")  // Log przy wywołaniu onDispose
-
-            conversationRef?.removeEventListener(likeEventListener)
-            viewModel.removeGameWinListener(conversationID, isAnonymous = true)
-            viewModel.removeNewGameListener(conversationID, isAnonymous = true)
-            viewModel.resetMessages()
-
-            viewModel.removeGameWinListener()
+            conversationViewModel.stopListeningForLikes()
+            conversationViewModel.removeGameWinListener(conversationID, isAnonymous = true)
+            conversationViewModel.removeNewGameListener(conversationID, isAnonymous = true)
+            conversationViewModel.resetMessages()
+            conversationViewModel.removeGameWinListener()
         }
     }
 
-    val userDisconnectedMessage = stringResource(R.string.user_disconnected)
     if (showExitDialog.value) {
+        val userDisconnectedMessage = stringResource(R.string.user_disconnected)
         SimpleAlertDialog(
             onConfirm = {
                 showExitDialog.value = false
-                // Aktualizacja wartości w Firebase Realtime Database
                 val database = FirebaseDatabase.getInstance()
                 val conversationRef2 = database.reference
                     .child("conversations")
@@ -215,9 +169,7 @@ fun AnonymousConversationScreen(
                 if (currentUserID != null) {
                     conversationRef2.child("members").child(currentUserID).setValue(false)
                 }
-
-                viewModel.sendMessage(userDisconnectedMessage, senderId = "system")
-                // Przejście do głównego menu
+                conversationViewModel.sendMessage(userDisconnectedMessage, senderId = "system")
                 onNavigate("${Navigation.Destinations.MAIN_MENU}/${1}")
             },
             onDismiss = {
@@ -232,7 +184,7 @@ fun AnonymousConversationScreen(
         SimpleAlertDialog(
             onConfirm = {
                 showDialogLike.value = false
-                addLike(conversationID)
+                conversationViewModel.addLike(conversationID)
             },
             onDismiss = {
                 showDialogLike.value = false
@@ -242,34 +194,17 @@ fun AnonymousConversationScreen(
         )
     }
 
-    if (showDialogLikeNotification.value) {
+    if (showDialogLikeNotification) {
         SimpleAlertDialog(
             onConfirm = {
-                showDialogLikeNotification.value = false
-                val database = FirebaseDatabase.getInstance()
-                val conversationRef3 = database.reference
-                    .child("conversations")
-                    .child(conversationID)
-                conversationRef3.child("canConnected").setValue(false)
-                if (currentUserID != null) {
-                    conversationRef3.child("members").child(currentUserID).setValue(false)
-                }
-
                 onNavigate("${Navigation.Destinations.MAIN_MENU}/${2}")
             },
             onDismiss = {
-                showDialogLikeNotification.value = false
+                conversationViewModel.resetLikesNotification()
             },
             text1 = stringResource(R.string.bravo_user_liked_you),
             text2 = stringResource(R.string.would_you_like_to_go_public_conversation)
         )
-    }
-
-    viewModel.setConversationId(conversationID)
-    val messages by viewModel.messages.collectAsState()
-
-    fun sendMessageToDb(message: String) {
-        viewModel.sendMessage(message)
     }
 
     if (showImageDialog.value) {
@@ -286,11 +221,11 @@ fun AnonymousConversationScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        val croppedImage = viewModel.getCroppedImage(imageState, gameWinsState)
-                        val imageDisplayState = viewModel.getImageDisplayState() // Pobieramy stan do wyświetlenia
+                        val croppedImage = conversationViewModel.getCroppedImage(imageState, gameWinsState)
+                        val imageDisplayState = conversationViewModel.getImageDisplayState()
 
                         if (gameWinsState != 0L) {
-                            // Jeśli liczba wygranych jest większa niż 0, wyświetlamy odpowiednią część obrazu
+                            // Jeśli liczba wygranych jest większa niż 0, wyświetlamie odpowiedniej części obrazu
                             croppedImage?.let { bitmap ->
                                 Image(
                                     bitmap = bitmap.asImageBitmap(),
@@ -301,13 +236,13 @@ fun AnonymousConversationScreen(
                             }
                         }
 
-                        // Wyświetlamy komunikat o stanie obrazu (np. 1/3 odsłonięte)
+                        // Wyświetlanie komunikatu o stanie obrazu (np. 1/3 odsłonięte)
                         Text(
                             text = imageDisplayState,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
-                                .padding(top = 16.dp) // Dodałem trochę miejsca między obrazem a tekstem
+                                .padding(top = 16.dp)
                         )
                     }
                 }
@@ -443,7 +378,6 @@ fun AnonymousConversationColumn(
             }
         }
 
-        // Wyświetlenie Menu gier
         if (isShowGamesMenu.value) {
             Column(
                 modifier = Modifier
@@ -470,7 +404,6 @@ fun AnonymousConversationColumn(
             }
         }
 
-        // Wyświetlenie gry Kółko-krzyżyk
         if (isShowTicTacToe.value) {
             ElevatedCard(
                 modifier = Modifier
@@ -597,17 +530,6 @@ fun AnonymousConversationColumn(
     }
 }
 
-
-fun addLike(conversationID : String) {
-    val conversationRef = FirebaseDatabase.getInstance().reference
-        .child("conversations")
-        .child(conversationID)
-    val currentUser = FirebaseAuth.getInstance().currentUser
-    val currentUserID = currentUser?.uid
-    currentUserID?.let { userId ->
-        conversationRef.child("likes").child(userId).setValue(true)
-    }
-}
 
 @Preview
 @Composable
