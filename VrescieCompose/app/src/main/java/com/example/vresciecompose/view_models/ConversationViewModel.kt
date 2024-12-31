@@ -1,24 +1,14 @@
 package com.example.vresciecompose.view_models
 
-import android.app.ActivityManager
-import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
-import androidx.compose.runtime.*
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -34,46 +24,45 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.google.firebase.database.*
 import kotlinx.coroutines.launch
-import androidx.lifecycle.asLiveData
 import com.example.vresciecompose.data.MessageEntity
 import com.example.vresciecompose.data.MoveData
-import com.example.vresciecompose.data.Stats
 import com.google.firebase.Firebase
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.storage
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.tasks.await
 
 class ConversationViewModel(
     private val messageDao: MessageDao,
     private val conversationDao: ConversationDao
 ) : ViewModel() {
-
-    private val _isConnected = MutableStateFlow(true)
-    val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
-    private var networkCallback: ConnectivityManager.NetworkCallback? = null
-
-    companion object {
-        private const val CHANNEL_ID = "new_message_channel" // Unikalny identyfikator kanału
-    }
-    var board: MutableState<Array<Array<String>>> = mutableStateOf(Array(10) { Array(10) { "" } })
-    private var lastMoveByPlayer: Boolean = false
-
-    private val _messages = MutableStateFlow<List<Pair<String, MessageType>>>(emptyList())
-    val messages: StateFlow<List<Pair<String, MessageType>>> = _messages
-
-    // Zmienna przechowująca liczbę wygranych drugiego użytkownika
-    private val _gameWins = MutableStateFlow(0L)
-    val gameWins: StateFlow<Long> = _gameWins
-    private var _gameWinListener: ValueEventListener? = null
-
+    // Podstawowe zmienne id konwersacji i użytkownika
     private var conversationId: String = ""
     val currentConversationId: String
         get() = conversationId
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
-    private var messageListener: ChildEventListener? = null  // Nowa zmienna
-    private var explicitMessageListener: ChildEventListener? = null
+
+    // Zmienne dotyczące połączenia z internetem
+    private val _isConnected = MutableStateFlow(true)
+    val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+
+    // Zmienne TicTacToe
+    var board: MutableState<Array<Array<String>>> = mutableStateOf(Array(10) { Array(10) { "" } })
+    private var lastMoveByPlayer: Boolean = false
+    val _gameWinner = MutableStateFlow<String?>(null)
+    private var gameWinListener: ValueEventListener? = null
+    private val _currentPlayerMessage = MutableStateFlow("Twój ruch")
+    val currentPlayerMessage: StateFlow<String> = _currentPlayerMessage.asStateFlow()
+    // Zmienna przechowująca liczbę wygranych drugiego użytkownika
+    private val _gameWins = MutableStateFlow(0L)
+    val gameWins: StateFlow<Long> = _gameWins
+    private var _gameWinListener: ValueEventListener? = null
+    // Pole wantNewGame przechowuje liczbę osób, które chcą rozpocząć nową grę
+    private val _wantNewGameCount = MutableStateFlow(0)
+    val wantNewGameCount: StateFlow<Int> = _wantNewGameCount
+
+    // Lista wiadomości
+    private val _messages = MutableStateFlow<List<Pair<String, MessageType>>>(emptyList())
+    val messages: StateFlow<List<Pair<String, MessageType>>> = _messages
 
     // Lista konwersacji
     private val _conversationList = MutableStateFlow<List<Conversation>>(emptyList())
@@ -83,24 +72,22 @@ class ConversationViewModel(
     private val _lastMessageMap = MutableStateFlow<Map<String, Triple<String, Boolean, String>>>(emptyMap())
     val lastMessageMap: StateFlow<Map<String, Triple<String, Boolean, String>>> = _lastMessageMap
 
-    private var conversationListener: ValueEventListener? = null
+    // Nasłuchiwacze
+    private var explicitMessageListener: ChildEventListener? = null // Wiadomości
+    private var conversationListener: ValueEventListener? = null // Konwersacji
+    private var wantNewGameListener: ChildEventListener? = null // chęci nowej gry TicTactoe
+
+    // Zmienne dotyczące polubień
+    private val _likesNotification = MutableLiveData<Boolean>()
+    val likesNotification: LiveData<Boolean> get() = _likesNotification
+    private var conversationLikesRef: DatabaseReference? = null
+    private var likeEventListener: ChildEventListener? = null
+
 
     init {
         fetchAndStoreConversations()
     }
 
-    val _gameWinner = MutableStateFlow<String?>(null)
-    private var gameWinListener: ValueEventListener? = null
-
-    private val _currentPlayerMessage = MutableStateFlow("Twój ruch")
-    val currentPlayerMessage: StateFlow<String> = _currentPlayerMessage.asStateFlow()
-
-    // Pole wantNewGame przechowuje liczbę osób, które chcą rozpocząć nową grę
-    private val _wantNewGameCount = MutableStateFlow(0)  // Zmienna przechowująca liczbę rekordów
-    val wantNewGameCount: StateFlow<Int> = _wantNewGameCount
-
-    // Nasłuchiwacz Firebase
-    private var wantNewGameListener: ChildEventListener? = null
 
     fun fetchGameStats(currentUserId: String, onStatsFetched: (String, Int, Int) -> Unit) {
         val statsRef = Firebase.database.reference
@@ -517,17 +504,17 @@ class ConversationViewModel(
     }
 
 
-
+    // Funkcje monitorujące połączenie z internetem
     fun monitorNetworkConnection(context: Context) {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork
         val isConnectedInitially = network != null && connectivityManager.getNetworkCapabilities(network)?.hasCapability(
             NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
 
-        // Ustaw początkowy stan połączenia
+        // Ustawia początkowy stan połączenia
         _isConnected.value = isConnectedInitially
 
-        // Zarejestruj nasłuchiwanie, aby monitorować zmiany w stanie połączenia
+        // Nasłuchiwanie, aby monitorować zmiany w stanie połączenia
         networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 _isConnected.value = true
@@ -540,12 +527,12 @@ class ConversationViewModel(
         connectivityManager.registerDefaultNetworkCallback(networkCallback!!)
     }
 
-
     fun stopMonitoringNetworkConnection(context: Context) {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         networkCallback?.let { connectivityManager.unregisterNetworkCallback(it) }
         networkCallback = null
     }
+
 
     private fun startListeningForConversations(userId: String) {
         val database = FirebaseDatabase.getInstance()
@@ -844,7 +831,7 @@ class ConversationViewModel(
         _messages.value = emptyList()
     }
 
-    // Funkcja do ustawiania conversationId
+    // Funkcja do ustawiania conversationId i inicjalizacji konwersacji wraz z nasłuchiwaczami
     fun setConversationId(id: String, isAnonymous: Boolean = false) {
         conversationId = id
         initializeDatabaseRef(isAnonymous)
@@ -865,18 +852,18 @@ class ConversationViewModel(
             viewModelScope.launch {
 
                 if (explicitMessageListener != null) {
-                    removeExplicitListener() // Funkcja, która usuwa listenera z Firebase
+                    removeExplicitListener() // Funkcja, która usuwa listenera z Firebase gdyby taki istniał
                 }
 
-                // Pobierz lokalne konwersacje na podstawie firebaseConversationId
-                val conversation = conversationDao.getAllConversations() // Pobierz wszystkie konwersacje
+                // Pobiera lokalne konwersacje na podstawie firebaseConversationId
+                val conversation = conversationDao.getAllConversations()
 
                 val localConversationId = conversation.firstOrNull { it.firebaseConversationId == conversationId }?.localConversationId
                     ?: run {
                         return@launch
                     }
 
-                // Ładujemy wiadomości z Room Database na podstawie localConversationId
+                // Ładuje wiadomości z Room Database na podstawie localConversationId
                 val localMessages = messageDao.getMessagesByConversationId(localConversationId.toString())
 
                 // Generowanie listy wiadomości do wyświetlenia, korzystając z istniejącej wartości messageSeen
@@ -903,9 +890,6 @@ class ConversationViewModel(
                             viewModelScope.launch {
                                 val existingMessage = messageDao.getMessageById(messageId)
                                 if (existingMessage != null) {
-                                    // Aktualizuj status messageSeen na true
-                                    val updatedMessage = existingMessage.copy(messageSeen = true)
-                                    messageDao.updateMessage(updatedMessage)
                                     return@launch // Nie dodawaj wiadomości, jeśli już istnieje
                                 }
 
@@ -939,11 +923,30 @@ class ConversationViewModel(
 
                                 // Zapisz wiadomość w Room
                                 messageDao.insertMessage(messageEntity)
+
+                            }
+                        }
+                        message?.let {
+                            // Tylko dla wiadomości od innych użytkowników
+                            if (!it.messageSeen && it.senderId != currentUserID) {
+                                updateMessageSeenStatus(snapshot.key)
                             }
                         }
                     }
 
-                    override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) { }
+                    override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                        val message = snapshot.getValue(Message::class.java)
+                        message?.let {
+                            // Uaktualniamy stan wiadomości, np. zmiana messageSeen
+                            _messages.value = _messages.value.map { pair ->
+                                if (pair.first == it.text) {
+                                    Pair(it.text, pair.second.copy(isSeen = it.messageSeen))
+                                } else {
+                                    pair
+                                }
+                            }
+                        }
+                    }
 
                     override fun onChildRemoved(snapshot: DataSnapshot) {
                         val messageId = snapshot.key ?: return  // Użyj klucza snapshotu jako ID wiadomości
@@ -986,6 +989,11 @@ class ConversationViewModel(
 
                             // Zaktualizuj _messages z wiadomościami z Room
                             _messages.value = roomMessages3
+                        }
+
+                        val message = snapshot.getValue(Message::class.java)
+                        message?.let {
+                            _messages.value = _messages.value.filterNot { pair -> pair.first == it.text }
                         }
                     }
 
@@ -1039,75 +1047,11 @@ class ConversationViewModel(
         }
     }
 
-    private fun removeExplicitListener() {
+    fun removeExplicitListener() {
         explicitMessageListener?.let {
             val messagesRef = FirebaseDatabase.getInstance().getReference("explicit_conversations/$conversationId/messages")
             messagesRef.removeEventListener(it)
             explicitMessageListener = null  // Ustaw na null po usunięciu
-        }
-    }
-
-    fun listenForMessages(conversationId: String) {
-        val messagesRef = FirebaseDatabase.getInstance().getReference("explicit_conversations/$conversationId/messages")
-
-        // Usuwamy poprzedni nasłuchiwacz, jeśli istnieje
-        messageListener?.let { messagesRef.removeEventListener(it) }
-
-        messageListener = object : ChildEventListener {
-            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                // Pobieramy wiadomość z bazy
-                val message = snapshot.getValue(Message::class.java)
-                message?.let {
-                    // Tylko dla wiadomości od innych użytkowników
-                    if (!it.messageSeen && it.senderId != currentUserID) {
-                        updateMessageSeenStatus(snapshot.key)
-                    }
-                }
-            }
-
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                // Obsługuje zmiany wiadomości, np. aktualizacje messageSeen
-                val message = snapshot.getValue(Message::class.java)
-                message?.let {
-                    // Uaktualniamy stan wiadomości, np. zmiana messageSeen
-                    _messages.value = _messages.value.map { pair ->
-                        if (pair.first == it.text) {
-                            Pair(it.text, pair.second.copy(isSeen = it.messageSeen))
-                        } else {
-                            pair
-                        }
-                    }
-                }
-            }
-
-            override fun onChildRemoved(snapshot: DataSnapshot) {
-                // Obsługuje usunięcie wiadomości
-                val message = snapshot.getValue(Message::class.java)
-                message?.let {
-                    _messages.value = _messages.value.filterNot { pair -> pair.first == it.text }
-                }
-            }
-
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-                // Obsługuje przeniesienie wiadomości
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Obsługuje błąd
-                Log.e("FirebaseListener", "Error while listening for messages: ", error.toException())
-            }
-        }
-
-
-        messagesRef.addChildEventListener(messageListener!!)
-    }
-
-    // Funkcja do usuwania nasłuchiwacza
-    fun removeMessageListener() {
-        messageListener?.let {
-            val messagesRef = FirebaseDatabase.getInstance().getReference("explicit_conversations/$conversationId/messages")
-            messagesRef.removeEventListener(it)
-            messageListener = null
         }
     }
 
@@ -1123,7 +1067,6 @@ class ConversationViewModel(
                 Log.e("FirebaseUpdate", "Error updating message seen status: ", exception)
             }
     }
-
 
     fun updateMessagesAsSeen(conversationId: String) {
         val messagesRef = FirebaseDatabase.getInstance().getReference("explicit_conversations/$conversationId/messages")
@@ -1155,6 +1098,7 @@ class ConversationViewModel(
             Log.e("FirebaseUpdate", "Error updating messages seen status: ", exception)
         }
     }
+
     // Pobieranie zdjęcia drugiego użytkownika z storage
     fun getUserImageFromStorage(imageIdentifier: String, onResult: (Bitmap?) -> Unit) {
         val storageRef = FirebaseStorage.getInstance().reference
@@ -1328,15 +1272,10 @@ class ConversationViewModel(
         }
     }
 
-    private val _likesNotification = MutableLiveData<Boolean>()
-    val likesNotification: LiveData<Boolean> get() = _likesNotification
-
-    private var conversationRef: DatabaseReference? = null
-    private var likeEventListener: ChildEventListener? = null
 
     // Function to listen for likes in a conversation
     fun startListeningForLikes(conversationID: String) {
-        conversationRef = FirebaseDatabase.getInstance().reference
+        conversationLikesRef = FirebaseDatabase.getInstance().reference
             .child("conversations")
             .child(conversationID)
             .child("likes")
@@ -1349,7 +1288,7 @@ class ConversationViewModel(
 
             // Function to check if both users have liked the conversation
             private fun checkIfBothLiked() {
-                conversationRef!!.addListenerForSingleValueEvent(object : ValueEventListener {
+                conversationLikesRef!!.addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val likesCount = snapshot.childrenCount.toInt()
                         // Check if there are two likes
@@ -1374,13 +1313,13 @@ class ConversationViewModel(
         }
 
         // Add the listener to the database reference
-        conversationRef!!.addChildEventListener(likeEventListener!!)
+        conversationLikesRef!!.addChildEventListener(likeEventListener!!)
     }
 
     // Function to stop listening for likes
     fun stopListeningForLikes() {
         likeEventListener?.let { listener ->
-            conversationRef?.removeEventListener(listener)
+            conversationLikesRef?.removeEventListener(listener)
             likeEventListener = null
         }
     }

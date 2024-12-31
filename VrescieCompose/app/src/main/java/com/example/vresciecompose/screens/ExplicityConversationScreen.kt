@@ -43,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,6 +57,7 @@ import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.MessageList
 import com.example.vresciecompose.ui.components.MessageType
+import com.example.vresciecompose.ui.components.TicTacToeGame
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.example.vresciecompose.view_models.SettingsViewModel
 import com.google.firebase.Firebase
@@ -75,9 +75,10 @@ import kotlin.coroutines.suspendCoroutine
 fun ExplicitConversationScreen(
     conversationID: String,
     onClick: (String) -> Unit,
-    viewModel: ConversationViewModel,
+    conversationViewModel: ConversationViewModel,
     settingsViewModel: SettingsViewModel,
 ) {
+    // Rozmiar wiadomości w zależności od ustawień
     val currentMessageSize by settingsViewModel.messageSizeFlow.observeAsState(1)
     val messageFontSize = when (currentMessageSize) {
         0 -> dimensionResource(id = R.dimen.message_small_size) // 10sp
@@ -86,8 +87,12 @@ fun ExplicitConversationScreen(
         3 -> dimensionResource(id = R.dimen.message_huge_size) // 22sp
         else -> dimensionResource(id = R.dimen.message_normal_size) // Domyślny rozmiar
     }.value.sp // Konwersja na TextUnit
-
+    // Pole tekstowe do wprowadzania wiadomości
     val (messageText, setMessageText) = remember { mutableStateOf("") }
+    // Inicjalizacja konwersacji oraz zmienna zawierająca jej wiadomości
+    val messages by conversationViewModel.messages.collectAsState()
+
+    // Zmienne dla VertexAI
     val config = generationConfig {
         maxOutputTokens = 300
         temperature = 0.2f
@@ -97,28 +102,33 @@ fun ExplicitConversationScreen(
     val generativeModel = Firebase.vertexAI.generativeModel(modelName ="gemini-1.0-pro", generationConfig  = config)
     val (aiResponse, setAiResponse) = remember { mutableStateOf("") }
 
-    val currentPlayerMessage by viewModel.currentPlayerMessage.collectAsState()
-    val board = viewModel.board
-    val conversationId = viewModel.currentConversationId
+    // Zmienne dla Tic Tac Toe
+    val currentPlayerMessage by conversationViewModel.currentPlayerMessage.collectAsState()
+    val board = conversationViewModel.board
+    val conversationId = conversationViewModel.currentConversationId
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
-    val gameWinner by viewModel._gameWinner.collectAsState()
+    val gameWinner by conversationViewModel._gameWinner.collectAsState()
     val gameStatusMessage = when {
         gameWinner.isNullOrEmpty() -> null
         gameWinner == currentUserID -> "Wygrałeś !!!"
         else -> "Przegrałeś! :("
     }
-    val wantNewGameCount by viewModel.wantNewGameCount.collectAsState()
+    val wantNewGameCount by conversationViewModel.wantNewGameCount.collectAsState()
 
     fun makeMove(positionX: Int, positionY: Int): Boolean {
-        return viewModel.makeMove(conversationId, currentUserID.toString(), positionX, positionY)
+        return conversationViewModel.makeMove(conversationId, currentUserID.toString(), positionX, positionY)
     }
 
     fun listenForMoves() {
-        viewModel.listenForMoves(conversationId, currentUserID.toString())
+        conversationViewModel.listenForMoves(conversationId, currentUserID.toString())
     }
 
     fun setWantNewGame(){
-        viewModel.setWantNewGame(currentUserID.toString())
+        conversationViewModel.setWantNewGame(currentUserID.toString())
+    }
+
+    fun sendMessage(message: String) {
+        conversationViewModel.sendMessage(message)
     }
 
     BackHandler {
@@ -126,23 +136,25 @@ fun ExplicitConversationScreen(
     }
 
     DisposableEffect(Unit) {
-        viewModel.listenForMessages(conversationID)
-        viewModel.listenForGameWin(conversationID)
-        viewModel.listenForNewGameRequests(conversationID)
+        conversationViewModel.removeExplicitListener()
+        conversationViewModel.setConversationId(conversationID)
+        conversationViewModel.updateMessagesAsSeen(conversationID)
+        conversationViewModel.listenForGameWin(conversationID)
+        conversationViewModel.listenForNewGameRequests(conversationID)
 
         onDispose {
-            viewModel.resetMessages()
-            viewModel.removeMessageListener()
-            viewModel.removeGameWinListener(conversationID)
-            viewModel.removeNewGameListener(conversationID)
+            conversationViewModel.resetMessages()
+            conversationViewModel.removeExplicitListener()
+            conversationViewModel.removeGameWinListener(conversationID)
+            conversationViewModel.removeNewGameListener(conversationID)
         }
     }
-    val messages by viewModel.messages.collectAsState()
+
 
     suspend fun getStats(): Triple<String, Int, Int> {
         return currentUserID?.let { userId ->
             suspendCoroutine { continuation ->
-                viewModel.fetchGameStats(userId) { name, games, wins ->
+                conversationViewModel.fetchGameStats(userId) { name, games, wins ->
                     continuation.resume(Triple(name, games, wins))
                 }
             }
@@ -159,7 +171,7 @@ fun ExplicitConversationScreen(
             }
         )
 
-        // Formatuj wiadomości
+        // Formatuje wiadomości
         val formattedMessages = messagesList.joinToString("\n") { (text, messageType) ->
             when (messageType.type) {
                 MessageType.Type.Received -> "Znajomy: $text"
@@ -189,15 +201,6 @@ fun ExplicitConversationScreen(
             Log.e("AIResponseError", "Błąd podczas pobierania odpowiedzi AI: ${e.message}")
             setAiResponse("Wystąpił błąd. Spróbuj ponownie.")
         }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.setConversationId(conversationID)
-        viewModel.updateMessagesAsSeen(conversationID)
-    }
-
-    fun sendMessage(message: String) {
-        viewModel.sendMessage(message)
     }
 
     ExplicitConversationColumn(
@@ -641,51 +644,6 @@ fun ExplicitConversationColumn(
                     modifier = Modifier
                         .size(50.dp)
                 )
-            }
-        }
-    }
-}
-
-@Composable
-fun TicTacToeGame(
-    modifier: Modifier = Modifier,
-    board: MutableState<Array<Array<String>>>,
-    onCellClick: (Int, Int) -> Unit,
-    listenForMoves: () -> Unit
-) {
-    // Rozpocznij nasłuchiwanie na ruchy, kiedy komponent jest aktywny
-    LaunchedEffect(Unit) {
-        listenForMoves()
-    }
-
-    Column(modifier = modifier) {
-        board.value.forEachIndexed { rowIndex, row -> // Użyj board.value
-            Row(modifier = Modifier.fillMaxWidth()) {
-                row.forEachIndexed { colIndex, cell -> // Użyj board.value
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
-                            .border(1.dp, Color.Gray)
-                            .clickable { onCellClick(rowIndex, colIndex) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        when (cell) {
-                            "X" -> Icon(
-                                imageVector = Icons.Outlined.Close,
-                                contentDescription = "Player X",
-                                tint = Color.Blue,
-                                modifier = Modifier.size(48.dp)
-                            )
-                            "O" -> Icon(
-                                imageVector = Icons.Outlined.Circle,
-                                contentDescription = "Player O",
-                                tint = Color.Red,
-                                modifier = Modifier.size(48.dp)
-                            )
-                        }
-                    }
-                }
             }
         }
     }
