@@ -156,6 +156,7 @@ fun AnonymousConversationScreen(
         SimpleAlertDialog(
             onConfirm = {
                 showExitDialog.value = false
+                conversationViewModel.sendMessage(userDisconnectedMessage, senderId = "system", isAnonymous = true)
                 val database = FirebaseDatabase.getInstance()
                 val conversationRef2 = database.reference
                     .child("conversations")
@@ -164,7 +165,6 @@ fun AnonymousConversationScreen(
                 if (currentUserID != null) {
                     conversationRef2.child("members").child(currentUserID).setValue(false)
                 }
-                conversationViewModel.sendMessage(userDisconnectedMessage, senderId = "system")
                 onNavigate("${Navigation.Destinations.MAIN_MENU}/${1}")
             },
             onDismiss = {

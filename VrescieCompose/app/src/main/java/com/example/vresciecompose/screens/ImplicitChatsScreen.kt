@@ -98,7 +98,6 @@ fun ImplicitChatsScreen(
         conversationViewModel.fetchConversationsAndListen(userId)
     }
 
-    // Usuń słuchacza Firebase, gdy composable zostanie zniszczony
     DisposableEffect(Unit) {
         onDispose {
             conversationViewModel.stopListeningForConversations()
@@ -135,7 +134,6 @@ fun ImplicitChatsScreen(
                     onClick("${Navigation.Destinations.EXPLICIT_CONVERSATION}/${conversation.id}")
                 },
                 lastMessageMap = lastMessageMap,
-                userProfiles = userProfiles,
                 imagePaths = imagePaths,
                 userId = userId,
                 localImagePathMap = localImagePathMap
@@ -160,7 +158,6 @@ fun ImplicitChats(
     conversationList: List<Conversation>,
     onItemClick: (Conversation) -> Unit,
     lastMessageMap: Map<String, Triple<String, Boolean, String>>,
-    userProfiles: Map<String, UserProfile>,
     imagePaths: Map<String, String?>,
     userId: String,
     localImagePathMap: Map<String, String?>
@@ -171,7 +168,6 @@ fun ImplicitChats(
     ) {
         items(conversationList) { conversation ->
             val (lastMessage, isSeen, senderId) = lastMessageMap[conversation.id] ?: Triple("", true, "")
-            val userProfile = userProfiles[conversation.secondParticipantId]
             val imagePath = imagePaths[conversation.secondParticipantId]
 
             // Pobieramy lokalną ścieżkę obrazu dla secondParticipantId
@@ -184,7 +180,6 @@ fun ImplicitChats(
                 senderId = senderId,
                 onItemClick = onItemClick,
                 userId = userId,
-                userProfile = userProfile,
                 imagePath = imagePath,
                 localImagePath = localImagePath
             )
@@ -201,7 +196,6 @@ fun ConversationItem(
     senderId: String,
     onItemClick: (Conversation) -> Unit,
     userId: String,
-    userProfile: UserProfile?,
     imagePath: String?,
     localImagePath: String?
 ) {
@@ -287,7 +281,6 @@ fun PreviewImplicitChatsScreen() {
         conversationList = sampleConversations,
         onItemClick = { conversation -> mockOnClick(conversation.id) },
         lastMessageMap = sampleLastMessages,
-        userProfiles = emptyMap(),
         imagePaths = emptyMap(),
         userId = "1",
         localImagePathMap =emptyMap()

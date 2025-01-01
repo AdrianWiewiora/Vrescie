@@ -827,13 +827,15 @@ class ConversationViewModel(
             // Define the reference path for messages
             val conversationMessagesRef = FirebaseDatabase.getInstance().reference
                 .child(basePath)
-                .child(conversationId) // Ensure you have a `conversationId` value
+                .child(conversationId)
                 .child("messages")
 
-            // Push the message to the selected conversation node
-            if (senderId2 != "system") {
-                conversationMessagesRef.push().setValue(messageData)
+            val lastMessage = _messages.value.lastOrNull()?.second
+            if (lastMessage?.type == MessageType.Type.System) {
+                Log.d("sendMessage", "Message not sent because the last message was sent by 'system'.")
+                return
             }
+            conversationMessagesRef.push().setValue(messageData)
         }
     }
 
@@ -1028,10 +1030,40 @@ class ConversationViewModel(
         conversationRef.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 val message = snapshot.getValue(Message::class.java)
-                message?.let { addMessageToList(it) }
+                message?.let {
+                    addMessageToList(it)
+                    if (it.senderId != currentUserID) {
+                        snapshot.ref.child("messageSeen").setValue(true)
+                    }
+                }
+
             }
 
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) { }
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                val message = snapshot.getValue(Message::class.java)
+                message?.let {
+                    // Znajdź wiadomość w lokalnej liście
+                    val messageType = getMessageType(it)
+
+                    // Wyszukaj indeks wiadomości w liście
+                    val index = _messages.value.indexOfFirst { pair -> pair.first == it.text && pair.second.type == messageType.type }
+
+                    if (index != -1) {
+                        // Zaktualizuj status `messageSeen` w lokalnej liście
+                        val updatedMessageType = messageType.copy(isSeen = it.messageSeen)
+
+                        // Zaktualizuj listę wiadomości
+                        _messages.value = _messages.value.mapIndexed { i, pair ->
+                            if (i == index) {
+                                // Zaktualizuj status w danej pozycji
+                                pair.copy(second = updatedMessageType)
+                            } else {
+                                pair
+                            }
+                        }
+                    }
+                }
+            }
             override fun onChildRemoved(snapshot: DataSnapshot) { }
             override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) { }
             override fun onCancelled(error: DatabaseError) { }

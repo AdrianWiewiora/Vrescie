@@ -43,6 +43,7 @@ import com.example.vresciecompose.data.UserChatPrefsDao
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.ConversationViewModel
+import com.example.vresciecompose.view_models.LoadingToAnonymousChatViewModel
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.MainViewModel
@@ -77,6 +78,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var conversationViewModel: ConversationViewModel
     private lateinit var settingsViewModel: SettingsViewModel
+    private lateinit var loadingToAnonymousChatViewModel: LoadingToAnonymousChatViewModel
 
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(getSharedPreferences("MyPrefs", Context.MODE_PRIVATE))
@@ -248,6 +250,8 @@ class MainActivity : ComponentActivity() {
         }
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
+        loadingToAnonymousChatViewModel = ViewModelProvider(this).get(LoadingToAnonymousChatViewModel::class.java)
+
         if (viewModel.isReady.value) {
             val startDestination = when {
                 viewModel.isFirstRun() -> Navigation.Destinations.FIRST_LAUNCH
@@ -276,7 +280,8 @@ class MainActivity : ComponentActivity() {
                                 conversationViewModel,
                                 database = database,
                                 userChatPrefsViewModel,
-                                settingsViewModel = settingsViewModel
+                                settingsViewModel = settingsViewModel,
+                                loadingToAnonymousChatViewModel = loadingToAnonymousChatViewModel
                             )
                         }
                     }

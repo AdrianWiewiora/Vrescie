@@ -33,6 +33,7 @@ import com.example.vresciecompose.screens.SettingsScreen
 import com.example.vresciecompose.screens.StartScreen
 import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.ConversationViewModel
+import com.example.vresciecompose.view_models.LoadingToAnonymousChatViewModel
 import com.example.vresciecompose.view_models.LocationViewModel
 import com.example.vresciecompose.view_models.LoginViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
@@ -74,7 +75,8 @@ fun AppNavigation(
     conversationViewModel: ConversationViewModel,
     database: AppDatabase,
     userChatPrefsViewModel: UserChatPrefsViewModel,
-    settingsViewModel: SettingsViewModel
+    settingsViewModel: SettingsViewModel,
+    loadingToAnonymousChatViewModel: LoadingToAnonymousChatViewModel
     ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Navigation.Destinations.SETTINGS) {
@@ -184,7 +186,8 @@ fun AppNavigation(
         }
         composable(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT) {
             LoadingToAnonymousChatScreen(
-                onClick = { route -> navController.navigate(route) }
+                onClick = { route -> navController.navigate(route) },
+                loadingToAnonymousChatViewModel
             )
         }
 
