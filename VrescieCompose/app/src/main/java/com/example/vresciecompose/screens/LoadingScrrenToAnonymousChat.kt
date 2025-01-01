@@ -51,28 +51,20 @@ fun LoadingToAnonymousChatScreen(
 ) {
     val hasNavigated = remember { mutableStateOf(false) }
     val currentUser = FirebaseAuth.getInstance().currentUser
-    val timer = remember { Timer() }
-
-    DisposableEffect(true) {
-        val task = object : TimerTask() {
-            override fun run() {
-                currentUser?.uid?.let { userId ->
-                    loadingToAnonymousChatViewModel.updateUserLastSeen(userId)
-                }
-            }
-        }
-        timer.schedule(task, 0, 10000)
-        onDispose {
-            timer.cancel()
-            currentUser?.uid?.let { userId ->
-                loadingToAnonymousChatViewModel.removeUserFromFirebaseDatabase(userId)
-            }
-        }
-    }
 
     LaunchedEffect(currentUser) {
         currentUser?.uid?.let { userId ->
             loadingToAnonymousChatViewModel.listenForNewConversations(userId)
+            loadingToAnonymousChatViewModel.startTimer(userId)
+        }
+    }
+
+    DisposableEffect(true) {
+        onDispose {
+            currentUser?.uid?.let { userId ->
+                loadingToAnonymousChatViewModel.stopTimer()  // Zatrzymujemy timer
+                loadingToAnonymousChatViewModel.removeUserFromFirebaseDatabase(userId)
+            }
         }
     }
 

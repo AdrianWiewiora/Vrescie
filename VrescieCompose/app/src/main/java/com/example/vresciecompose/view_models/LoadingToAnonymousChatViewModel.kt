@@ -21,6 +21,25 @@ class LoadingToAnonymousChatViewModel : ViewModel() {
     private val _navigateToConversation = MutableLiveData<String?>()
     val navigateToConversation: LiveData<String?> = _navigateToConversation
 
+    private var timer: Timer? = null
+
+    // Funkcja uruchamiająca timer w celu aktualizacji "lastSeen"
+    fun startTimer(userId: String) {
+        timer = Timer().apply {
+            schedule(object : TimerTask() {
+                override fun run() {
+                    updateUserLastSeen(userId)
+                }
+            }, 0, 10000) // 10 sekund
+        }
+    }
+
+    // Funkcja zatrzymująca timer
+    fun stopTimer() {
+        timer?.cancel()
+        timer = null
+    }
+
     fun removeUserFromFirebaseDatabase(userId: String) {
         val database = com.google.firebase.ktx.Firebase.database
         val usersRef = database.getReference("vChatUsers")
