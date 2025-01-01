@@ -453,14 +453,14 @@ fun SecondConfigurationStage(
 
                 if (savedUri != null) {
                     Log.d("SavePhoto", "Image successfully saved to gallery: $savedUri")
-                    return Uri.parse(savedUri) // Zwracamy zapisane URI
+                    return Uri.parse(savedUri)
                 } else {
                     Log.e("SavePhoto", "Failed to save image")
                 }
             } else {
                 Log.e("SavePhoto", "Failed to decode image from URI")
             }
-            null // Zwracamy null, jeśli coś poszło nie tak
+            null
         }
     }
 

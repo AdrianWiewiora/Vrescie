@@ -2,12 +2,19 @@ package com.example.vresciecompose.view_models
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.example.vresciecompose.Navigation
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import java.io.ByteArrayOutputStream
+import java.io.File
 
 class ConfigurationProfileViewModel : ViewModel() {
     private val database = Firebase.database

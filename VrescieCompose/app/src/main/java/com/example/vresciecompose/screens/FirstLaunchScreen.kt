@@ -145,9 +145,9 @@ fun FirstLaunchColumn(
 fun FirstLaunchPreview() {
     FirstLaunchColumn(
         modifier = Modifier.fillMaxSize(),
-        alphaText = remember { Animatable(1f) }, // Ustaw animację tekstu na 1 (widoczna)
-        alphaImage = remember { Animatable(1f) }, // Ustaw animację obrazu na 1 (widoczna)
+        alphaText = remember { Animatable(1f) },
+        alphaImage = remember { Animatable(1f) },
         textArray = arrayOf(" ","Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi"),
-        currentStep = 0 // Pierwszy tekst z listy
+        currentStep = 0
     )
 }

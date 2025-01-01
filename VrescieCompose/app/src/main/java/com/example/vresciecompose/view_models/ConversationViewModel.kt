@@ -26,9 +26,19 @@ import com.google.firebase.database.*
 import kotlinx.coroutines.launch
 import com.example.vresciecompose.data.MessageEntity
 import com.example.vresciecompose.data.MoveData
+import com.example.vresciecompose.data.UserProfile
 import com.google.firebase.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.asStateFlow
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import androidx.compose.runtime.State
 
 class ConversationViewModel(
     private val messageDao: MessageDao,
@@ -1337,6 +1347,87 @@ class ConversationViewModel(
         val currentUserID = currentUser?.uid
         currentUserID?.let { userId ->
             conversationRef.child("likes").child(userId).setValue(true)
+        }
+    }
+
+
+    // Implicit ChatsScreen
+    private val _userProfiles = MutableStateFlow<Map<String, UserProfile>>(emptyMap())
+    val userProfiles: StateFlow<Map<String, UserProfile>> = _userProfiles
+
+    private val _imagePaths = MutableStateFlow<Map<String, String?>>(emptyMap())
+    val imagePaths: StateFlow<Map<String, String?>> = _imagePaths
+
+    fun fetchUserProfile(conversation: Conversation, context: Context) {
+        val userId = conversation.secondParticipantId
+        if (_userProfiles.value.containsKey(userId)) return // Jeśli dane są już załadowane
+
+        val database = FirebaseDatabase.getInstance()
+        val userRef = database.getReference("user/$userId")
+
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val name = snapshot.child("name").getValue(String::class.java) ?: ""
+                    val profileImageUrl = snapshot.child("photoUrl").getValue(String::class.java) ?: ""
+                    _userProfiles.value += (userId to UserProfile(
+                        name,
+                        profileImageUrl = profileImageUrl
+                    ))
+
+                    // Sprawdzenie i zapisanie zdjęcia lokalnie
+                    if (!isImageLocallySaved(userId, context)) {
+                        saveImageLocally(profileImageUrl, userId, context)
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Obsłuż błąd
+            }
+        })
+    }
+
+    // Funkcja do sprawdzania, czy zdjęcie jest zapisane lokalnie
+    private fun isImageLocallySaved(userId: String, context: Context): Boolean {
+        // Sprawdź, czy lokalny plik zdjęcia istnieje
+        return getLocalImagePath(userId, context) != null
+    }
+
+    // Funkcja do zapisywania zdjęcia w pamięci wewnętrznej
+    fun saveImageLocally(imageUrl: String, userId: String, context: Context) {
+        val client = OkHttpClient()
+        val request = Request.Builder().url(imageUrl).build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // Obsłuż błąd
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.body?.let { responseBody ->
+                    val inputStream = responseBody.byteStream()
+                    // Ścieżka do pliku w pamięci wewnętrznej aplikacji
+                    val localFile = File(context.filesDir, "$userId.jpg") // Możesz dostosować nazwę pliku
+                    val outputStream = FileOutputStream(localFile)
+
+                    inputStream.use { input ->
+                        outputStream.use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    // Funkcja do odczytywania lokalnej ścieżki do zdjęcia
+    fun getLocalImagePath(userId: String, context: Context): String? {
+        val localFile = File(context.filesDir, "$userId.jpg")
+        return if (localFile.exists()) {
+            localFile.absolutePath // Zwróć ścieżkę do lokalnego pliku
+        } else {
+            null // Zwróć null, jeśli plik nie istnieje
         }
     }
 }

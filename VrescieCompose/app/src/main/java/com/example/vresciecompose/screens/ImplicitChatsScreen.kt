@@ -1,19 +1,16 @@
 package com.example.vresciecompose.screens
 
 import LocalContext
-import android.content.Context
-import androidx.compose.foundation.BorderStroke
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,22 +25,20 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -57,30 +52,49 @@ import com.example.vresciecompose.data.Conversation
 import com.example.vresciecompose.data.UserProfile
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import okhttp3.OkHttpClient
-import java.io.File
-import java.io.FileOutputStream
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.Request
-import okhttp3.Response
-import java.io.IOException
 
 
 @Composable
-fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: ConversationViewModel, isConnected: Boolean) {
+fun ImplicitChatsScreen(
+    onClick: (String) -> Unit,
+    conversationViewModel: ConversationViewModel,
+    isConnected: Boolean
+) {
     val conversationList by conversationViewModel.conversationList.collectAsState()
     val lastMessageMap by conversationViewModel.lastMessageMap.collectAsState()
+
+    val userProfiles by conversationViewModel.userProfiles.collectAsState()
+    val imagePaths by conversationViewModel.imagePaths.collectAsState()
+
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid ?: ""
+    val localContext = LocalContext.current
 
-    // Dodaj słuchacza Firebase
+    // Używamy mutableStateOf, aby przechować lokalną ścieżkę obrazu
+    var localImagePathMap by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
+
+    LaunchedEffect(conversationList) {
+        conversationList.forEach { conversation ->
+            // Dla każdego uczestnika rozmowy (secondParticipantId) załaduj lokalny obraz
+            val secondParticipantId = conversation.secondParticipantId
+            val localImagePath = conversationViewModel.getLocalImagePath(secondParticipantId, localContext)
+
+            // Logowanie przed aktualizacją mapy
+            Log.d("ImplicitChatsScreen", "Before update: localImagePathMap = $localImagePathMap")
+            Log.d("ImplicitChatsScreen", "For participant: $secondParticipantId, localImagePath = $localImagePath")
+
+            // Zaktualizuj mapę ścieżek lokalnych obrazów
+            localImagePathMap = localImagePathMap + (secondParticipantId to localImagePath)
+
+            // Logowanie po aktualizacji mapy
+            Log.d("ImplicitChatsScreen", "After update: localImagePathMap = $localImagePathMap")
+
+            // Ładowanie profilu użytkownika
+            conversationViewModel.fetchUserProfile(conversation, localContext)
+        }
+    }
+
     LaunchedEffect(key1 = userId) {
-        //conversationViewModel.startListeningForConversations(userId)
         conversationViewModel.fetchConversationsAndListen(userId)
     }
 
@@ -115,9 +129,17 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: Conver
         }
 
         if (conversationList.isNotEmpty()) {
-            ImplicitChats(conversationList, onItemClick = { conversation ->
-                onClick("${Navigation.Destinations.EXPLICIT_CONVERSATION}/${conversation.id}")
-            }, lastMessageMap = lastMessageMap, userId = userId)
+            ImplicitChats(
+                conversationList = conversationList,
+                onItemClick = { conversation ->
+                    onClick("${Navigation.Destinations.EXPLICIT_CONVERSATION}/${conversation.id}")
+                },
+                lastMessageMap = lastMessageMap,
+                userProfiles = userProfiles,
+                imagePaths = imagePaths,
+                userId = userId,
+                localImagePathMap = localImagePathMap
+            )
         } else {
             Text(
                 text = stringResource(R.string.nothing_here_yet),
@@ -132,13 +154,16 @@ fun ImplicitChatsScreen(onClick: (String) -> Unit, conversationViewModel: Conver
 }
 
 
+
 @Composable
 fun ImplicitChats(
     conversationList: List<Conversation>,
     onItemClick: (Conversation) -> Unit,
     lastMessageMap: Map<String, Triple<String, Boolean, String>>,
+    userProfiles: Map<String, UserProfile>,
+    imagePaths: Map<String, String?>,
     userId: String,
-    context: Context = LocalContext.current
+    localImagePathMap: Map<String, String?>
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -146,6 +171,12 @@ fun ImplicitChats(
     ) {
         items(conversationList) { conversation ->
             val (lastMessage, isSeen, senderId) = lastMessageMap[conversation.id] ?: Triple("", true, "")
+            val userProfile = userProfiles[conversation.secondParticipantId]
+            val imagePath = imagePaths[conversation.secondParticipantId]
+
+            // Pobieramy lokalną ścieżkę obrazu dla secondParticipantId
+            val localImagePath = localImagePathMap[conversation.secondParticipantId]
+
             ConversationItem(
                 conversation = conversation,
                 lastMessage = lastMessage,
@@ -153,7 +184,9 @@ fun ImplicitChats(
                 senderId = senderId,
                 onItemClick = onItemClick,
                 userId = userId,
-                context = context
+                userProfile = userProfile,
+                imagePath = imagePath,
+                localImagePath = localImagePath
             )
         }
     }
@@ -164,42 +197,16 @@ fun ImplicitChats(
 fun ConversationItem(
     conversation: Conversation,
     lastMessage: String,
-    isSeen: Boolean, // Dodajemy isSeen jako parametr
-    senderId: String, // Dodajemy senderId jako parametr
+    isSeen: Boolean,
+    senderId: String,
     onItemClick: (Conversation) -> Unit,
     userId: String,
-    context: Context
+    userProfile: UserProfile?,
+    imagePath: String?,
+    localImagePath: String?
 ) {
-    val secondUserProfile = remember { mutableStateOf<UserProfile?>(null) }
-
-    // Pobierz dane użytkownika po ID
-    LaunchedEffect(conversation.secondParticipantId) {
-        val database = FirebaseDatabase.getInstance()
-        val userRef = database.getReference("user/${conversation.secondParticipantId}")
-
-        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    val name = snapshot.child("name").getValue(String::class.java) ?: ""
-                    val profileImageUrl = snapshot.child("photoUrl").getValue(String::class.java) ?: ""
-                    secondUserProfile.value = UserProfile(name = name, profileImageUrl = profileImageUrl)
-
-                    // Sprawdź, czy zdjęcie jest już zapisane lokalnie
-                    if (!isImageLocallySaved(conversation.secondParticipantId, context)) {
-                        // Zapisz zdjęcie lokalnie, jeśli nie zostało zapisane
-                        saveImageLocally(profileImageUrl, conversation.secondParticipantId, context)
-                    }
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Obsłuż błąd
-            }
-        })
-    }
-
-    // Sprawdzenie, czy wiadomość nie jest od bieżącego użytkownika i nie została wyświetlona
     val shouldBoldMessage = !isSeen && senderId != userId
+    val imageUrl = localImagePath ?: imagePath
 
     ElevatedCard(
         modifier = Modifier
@@ -216,10 +223,6 @@ fun ConversationItem(
             modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Odczytaj lokalne zdjęcie, jeśli dostępne
-            val localImagePath = getLocalImagePath(conversation.secondParticipantId, context)
-            val imageUrl = localImagePath ?: secondUserProfile.value?.profileImageUrl
-
             if (imageUrl != null) {
                 Image(
                     painter = rememberAsyncImagePainter(imageUrl),
@@ -257,48 +260,6 @@ fun ConversationItem(
         }
     }
 }
-// Funkcja do sprawdzania, czy zdjęcie jest zapisane lokalnie
-private fun isImageLocallySaved(userId: String, context: Context): Boolean {
-    // Sprawdź, czy lokalny plik zdjęcia istnieje
-    return getLocalImagePath(userId, context) != null
-}
-
-// Funkcja do zapisywania zdjęcia w pamięci wewnętrznej
-fun saveImageLocally(imageUrl: String, userId: String, context: Context) {
-    val client = OkHttpClient()
-    val request = Request.Builder().url(imageUrl).build()
-
-    client.newCall(request).enqueue(object : Callback {
-        override fun onFailure(call: Call, e: IOException) {
-            // Obsłuż błąd
-        }
-
-        override fun onResponse(call: Call, response: Response) {
-            response.body?.let { responseBody ->
-                val inputStream = responseBody.byteStream()
-                // Ścieżka do pliku w pamięci wewnętrznej aplikacji
-                val localFile = File(context.filesDir, "$userId.jpg") // Możesz dostosować nazwę pliku
-                val outputStream = FileOutputStream(localFile)
-
-                inputStream.use { input ->
-                    outputStream.use { output ->
-                        input.copyTo(output)
-                    }
-                }
-            }
-        }
-    })
-}
-
-// Funkcja do odczytywania lokalnej ścieżki do zdjęcia
-fun getLocalImagePath(userId: String, context: Context): String? {
-    val localFile = File(context.filesDir, "$userId.jpg")
-    return if (localFile.exists()) {
-        localFile.absolutePath // Zwróć ścieżkę do lokalnego pliku
-    } else {
-        null // Zwróć null, jeśli plik nie istnieje
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
@@ -320,15 +281,15 @@ fun PreviewImplicitChatsScreen() {
     val mockOnClick: (String) -> Unit = { conversationId ->
         println("Clicked on conversation with id: $conversationId")
     }
-    // Uzyskaj lokalny kontekst
-    val context = LocalContext.current
 
     // Wywołanie ImplicitChats z przykładowymi danymi
     ImplicitChats(
         conversationList = sampleConversations,
         onItemClick = { conversation -> mockOnClick(conversation.id) },
         lastMessageMap = sampleLastMessages,
+        userProfiles = emptyMap(),
+        imagePaths = emptyMap(),
         userId = "1",
-        context
+        localImagePathMap =emptyMap()
     )
 }
