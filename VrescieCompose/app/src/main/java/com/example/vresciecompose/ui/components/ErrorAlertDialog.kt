@@ -13,8 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.vresciecompose.R
 
 @Composable
 fun ErrorAlertDialog(
@@ -31,7 +33,9 @@ fun ErrorAlertDialog(
                 Icon(
                     imageVector = Icons.Default.Error,
                     contentDescription = null,
-                    modifier = Modifier.size(40.dp).padding(end = 8.dp)
+                    modifier = Modifier
+                        .size(40.dp)
+                        .padding(end = 8.dp)
                 )
                 Text(
                     text = text1,
@@ -49,7 +53,7 @@ fun ErrorAlertDialog(
             Button(
                 onClick = onDismiss
             ) {
-                Text("Ok") // Przycisk "OK"
+                Text(stringResource(R.string.ok))
             }
         },
         containerColor = MaterialTheme.colorScheme.errorContainer

@@ -60,22 +60,19 @@ fun ProfileScreen(
     val userProfile = profileViewModel.userProfile.observeAsState()
     var dataLoaded by remember { mutableStateOf(false) }
 
-    // Jeśli nie ma połączenia, ustaw dane lokalne
+    // Brak połączenia
     if (!isConnected) {
         if (localUserProfile != null) {
             profileViewModel.setProfileConfigured(true)
             profileViewModel._userProfile.value = localUserProfile
             dataLoaded = true
         } else {
-            // Możesz wyświetlić komunikat o braku danych lokalnych
             dataLoaded = false
         }
     } else {
-        // Jeśli połączenie jest dostępne, załaduj dane z Firebase
         profileViewModel.loadUserProfile()
     }
 
-    // Obserwuj zmiany w userProfile i aktualizuj dataLoaded
     LaunchedEffect(userProfile.value) {
         if (userProfile.value != null) {
             dataLoaded = true
@@ -112,13 +109,9 @@ fun ProfileScreen(
             if (isLoaded) {
                 val profile = userProfile.value
                 if (profile != null) {
-                    // Dodanie logu dla ścieżki lokalnego obrazu
                     val localImagePath = profileViewModel.getLocalImagePath()
-                    Log.d("ProfileScreen", "Local image path: $localImagePath")
-
                     ProfileContent(profile, localImagePath = localImagePath)
                 } else {
-                    // Możesz wyświetlić komunikat o błędzie lub inny widok
                     Text(
                         text = stringResource(R.string.loading_data),
                         modifier = Modifier.padding(16.dp),
@@ -156,7 +149,7 @@ fun ProfileScreen(
             enabled = isConnected
         ) {
             Text(
-                text = if (isConnected) "Zmień zdjęcie" else stringResource(R.string.no_internet_connection),
+                text = if (isConnected) stringResource(R.string.change_photo) else stringResource(R.string.no_internet_connection),
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -173,7 +166,6 @@ fun ProfileContent(userProfile: UserProfile, localImagePath: String? = null) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            // Jeśli lokalna ścieżka nie jest pusta, wyświetl lokalny obrazek
             if (!localImagePath.isNullOrEmpty()) {
                 Image(
                     painter = rememberAsyncImagePainter(localImagePath),
@@ -185,7 +177,6 @@ fun ProfileContent(userProfile: UserProfile, localImagePath: String? = null) {
                     contentScale = ContentScale.Crop,
                 )
             } else if (userProfile.profileImageUrl.isNotEmpty()) {
-                // Alternatywnie, wyświetl obrazek z URL, jeśli nie ma lokalnego
                 Image(
                     painter = rememberAsyncImagePainter(userProfile.profileImageUrl),
                     contentDescription = null,
@@ -240,7 +231,7 @@ fun PreviewProfileScreen() {
         email = "jan.kowalski@example.com",
         gender = "Mężczyzna",
         joinDate = System.currentTimeMillis().toString(),
-        profileImageUrl = "https://example.com/sample-profile-image.jpg" // Przykładowy URL
+        profileImageUrl = null.toString()
     )
 
     val userProfileState = remember { mutableStateOf(sampleUserProfile) }

@@ -73,7 +73,6 @@ fun AppNavigation(
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
     conversationViewModel: ConversationViewModel,
-    database: AppDatabase,
     userChatPrefsViewModel: UserChatPrefsViewModel,
     settingsViewModel: SettingsViewModel,
     loadingToAnonymousChatViewModel: LoadingToAnonymousChatViewModel

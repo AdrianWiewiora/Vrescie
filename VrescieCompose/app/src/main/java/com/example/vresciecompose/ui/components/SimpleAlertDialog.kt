@@ -4,6 +4,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.vresciecompose.R
 
 @Composable
 fun SimpleAlertDialog(
@@ -28,7 +30,7 @@ fun SimpleAlertDialog(
                     onConfirm()
                 }
             ) {
-                Text(text = "Tak")
+                Text(text = stringResource(R.string.yes))
             }
         },
         dismissButton = {
@@ -37,7 +39,7 @@ fun SimpleAlertDialog(
                     onDismiss()
                 }
             ) {
-                Text(text = "Nie")
+                Text(text = stringResource(R.string.no))
             }
         }
     )

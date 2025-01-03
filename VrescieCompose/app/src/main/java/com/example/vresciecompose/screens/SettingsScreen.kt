@@ -65,7 +65,6 @@ fun SettingsScreen(
     Settings(
         modifier = Modifier
             .fillMaxSize(),
-        onNavigate = onNavigate,
         currentTheme = currentTheme,
         saveThemeVM = ::saveThemeVM,
         currentMessageSize = currentMessageSize,
@@ -78,7 +77,6 @@ fun SettingsScreen(
 @Composable
 fun Settings(
     modifier: Modifier,
-    onNavigate: (String) -> Unit,
     currentTheme: Int,
     saveThemeVM: (Int) -> Unit,
     currentMessageSize: Int = 1,
@@ -148,12 +146,11 @@ fun SettingsContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(40.dp)
-                                .clickable { setCurrentContent("appearanceSettings")}
+                                .clickable { setCurrentContent("appearanceSettings") }
                         )
                     }
-                    // Dodanie przycisku Wyloguj się na dole
                     item {
-                        Spacer(modifier = Modifier.height(16.dp)) // Odstęp
+                        Spacer(modifier = Modifier.height(16.dp))
                         OutlinedButton(
                             onClick = {
                                 logoutVM()
@@ -207,7 +204,7 @@ fun AppearanceSettingsItem(
                 .padding(end = dimensionResource(R.dimen.padding_small))
         )
         Text(
-            text = "Wygląd",
+            text = stringResource(R.string.appearance),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier
                 .padding(start = dimensionResource(R.dimen.padding_small))
@@ -224,7 +221,6 @@ fun AppearanceSettings(
     currentMessageSize: Int = 1,
     saveMessageSizeVM: (Int) -> Unit
 ){
-    // Zmienna sterująca widocznością AlertDialog
     var showDialogTheme by remember { mutableStateOf(false) }
     var showDialogMessageSize by remember { mutableStateOf(false) }
     BackHandler {
@@ -236,14 +232,14 @@ fun AppearanceSettings(
         verticalArrangement = Arrangement.Top
     ){
         Text(
-            text = "Motyw",
+            text = stringResource(R.string.theme),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier
                 .clickable { showDialogTheme = true }
                 .padding(bottom = dimensionResource(R.dimen.padding_medium))
         )
         Text(
-            text = "Rozmiar czcionki dla wiadomości",
+            text = stringResource(R.string.font_size_for_messages),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier
                 .clickable { showDialogMessageSize = true }
@@ -254,7 +250,7 @@ fun AppearanceSettings(
         if (showDialogTheme) {
             AlertDialog(
                 onDismissRequest = { showDialogTheme = false },
-                title = { Text(text = "Motyw") },
+                title = { Text(text = stringResource(R.string.theme)) },
                 text = {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -265,7 +261,7 @@ fun AppearanceSettings(
                                     showDialogTheme = false
                                 }
                             )
-                            Text(text = "Domyślny systemowy")
+                            Text(text = stringResource(R.string.system_default))
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
@@ -275,7 +271,7 @@ fun AppearanceSettings(
                                     showDialogTheme = false
                                 }
                             )
-                            Text(text = "Jasny")
+                            Text(text = stringResource(R.string.light))
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
@@ -285,7 +281,7 @@ fun AppearanceSettings(
                                     showDialogTheme = false
                                 }
                             )
-                            Text(text = "Ciemny")
+                            Text(text = stringResource(R.string.dark))
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
@@ -295,7 +291,7 @@ fun AppearanceSettings(
                                     showDialogTheme = false
                                 }
                             )
-                            Text(text = "Wysoki kontrast - Ciemny")
+                            Text(text = stringResource(R.string.high_contrast_dark))
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
@@ -305,7 +301,7 @@ fun AppearanceSettings(
                                     showDialogTheme = false
                                 }
                             )
-                            Text(text = "Wysoki kontrast - Jasny")
+                            Text(text = stringResource(R.string.high_contrast_light))
                         }
                     }
                 },
@@ -317,7 +313,7 @@ fun AppearanceSettings(
         if (showDialogMessageSize) {
             AlertDialog(
                 onDismissRequest = { showDialogMessageSize = false },
-                title = { Text(text = "Motyw") },
+                title = { Text(text = stringResource(R.string.font_size)) },
                 text = {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -328,7 +324,7 @@ fun AppearanceSettings(
                                     showDialogMessageSize = false
                                 }
                             )
-                            Text(text = "Mały")
+                            Text(text = stringResource(R.string.small))
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
@@ -338,7 +334,7 @@ fun AppearanceSettings(
                                     showDialogMessageSize = false
                                 }
                             )
-                            Text(text = "Normalny")
+                            Text(text = stringResource(R.string.normal))
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
@@ -348,7 +344,7 @@ fun AppearanceSettings(
                                     showDialogMessageSize = false
                                 }
                             )
-                            Text(text = "Duży")
+                            Text(text = stringResource(R.string.large))
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
@@ -358,7 +354,7 @@ fun AppearanceSettings(
                                     showDialogMessageSize = false
                                 }
                             )
-                            Text(text = "Bardzo duży")
+                            Text(text = stringResource(R.string.very_large))
                         }
                     }
                 },
@@ -388,7 +384,6 @@ fun SettingsAppearancePreview(){
 fun SettingsPreview(){
     Settings(
         modifier = Modifier,
-        onNavigate = {},
         saveThemeVM = {},
         currentTheme = 0,
         currentMessageSize = 1,

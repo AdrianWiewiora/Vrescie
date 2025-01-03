@@ -104,8 +104,8 @@ fun AnonymousConversationScreen(
     val gameWinner by conversationViewModel._gameWinner.collectAsState()
     val gameStatusMessage = when {
         gameWinner.isNullOrEmpty() -> null
-        gameWinner == currentUserID -> "Wygrałeś !!!"
-        else -> "Przegrałeś! :("
+        gameWinner == currentUserID -> stringResource(R.string.you_won)
+        else -> stringResource(R.string.you_lost)
     }
     val wantNewGameCount by conversationViewModel.wantNewGameCount.collectAsState()
     val gameWinsState by conversationViewModel.gameWins.collectAsState()

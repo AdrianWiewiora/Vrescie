@@ -62,34 +62,19 @@ fun ImplicitChatsScreen(
 ) {
     val conversationList by conversationViewModel.conversationList.collectAsState()
     val lastMessageMap by conversationViewModel.lastMessageMap.collectAsState()
-
-    val userProfiles by conversationViewModel.userProfiles.collectAsState()
     val imagePaths by conversationViewModel.imagePaths.collectAsState()
 
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid ?: ""
     val localContext = LocalContext.current
 
-    // Używamy mutableStateOf, aby przechować lokalną ścieżkę obrazu
     var localImagePathMap by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
 
     LaunchedEffect(conversationList) {
         conversationList.forEach { conversation ->
-            // Dla każdego uczestnika rozmowy (secondParticipantId) załaduj lokalny obraz
             val secondParticipantId = conversation.secondParticipantId
             val localImagePath = conversationViewModel.getLocalImagePath(secondParticipantId, localContext)
-
-            // Logowanie przed aktualizacją mapy
-            Log.d("ImplicitChatsScreen", "Before update: localImagePathMap = $localImagePathMap")
-            Log.d("ImplicitChatsScreen", "For participant: $secondParticipantId, localImagePath = $localImagePath")
-
-            // Zaktualizuj mapę ścieżek lokalnych obrazów
             localImagePathMap = localImagePathMap + (secondParticipantId to localImagePath)
-
-            // Logowanie po aktualizacji mapy
-            Log.d("ImplicitChatsScreen", "After update: localImagePathMap = $localImagePathMap")
-
-            // Ładowanie profilu użytkownika
             conversationViewModel.fetchUserProfile(conversation, localContext)
         }
     }

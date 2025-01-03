@@ -33,6 +33,7 @@ import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.ErrorAlertDialog
 import com.example.vresciecompose.ui.components.FilledButton
 import com.example.vresciecompose.ui.components.OutlinedButton
+import com.example.vresciecompose.ui.components.SimpleAlertDialog
 import com.example.vresciecompose.view_models.LoginViewModel
 
 @Composable
@@ -194,14 +195,15 @@ fun LoginScreen(
             ErrorAlertDialog(
                 onDismiss = { showErrorDialog = false },
                 text1 = stringResource(R.string.login_error),
-                text2 = errorMessage // Wyświetl wiadomość o błędzie (np. niezweryfikowany e-mail)
+                text2 = errorMessage
             )
         }
         if (showSuccessDialog) {
-            ErrorAlertDialog(
+            SimpleAlertDialog(
+                onConfirm = { showSuccessDialog = false },
                 onDismiss = { showSuccessDialog = false },
-                text1 = "Sprawdź email",
-                text2 = "Na podany email został wysłany link restujacy hasło"
+                text1 = stringResource(R.string.check_your_email),
+                text2 = stringResource(R.string.password_reset_link),
             )
         }
     }

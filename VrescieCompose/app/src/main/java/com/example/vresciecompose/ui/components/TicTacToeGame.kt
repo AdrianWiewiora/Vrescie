@@ -27,15 +27,14 @@ fun TicTacToeGame(
     onCellClick: (Int, Int) -> Unit,
     listenForMoves: () -> Unit
 ) {
-    // Rozpocznij nasłuchiwanie na ruchy, kiedy komponent jest aktywny
     LaunchedEffect(Unit) {
         listenForMoves()
     }
 
     Column(modifier = modifier) {
-        board.value.forEachIndexed { rowIndex, row -> // Użyj board.value
+        board.value.forEachIndexed { rowIndex, row ->
             Row(modifier = Modifier.fillMaxWidth()) {
-                row.forEachIndexed { colIndex, cell -> // Użyj board.value
+                row.forEachIndexed { colIndex, cell ->
                     Box(
                         modifier = Modifier
                             .weight(1f)

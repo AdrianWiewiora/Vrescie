@@ -66,6 +66,8 @@
     <string name="forgot_my_password">Nie pamiętam hasła</string>
     <string name="login_error">Błąd logowania</string>
     <string name="enter_email_to_reset_password">Wprowadź adres e-mail, aby zresetować hasło</string>
+    <string name="check_your_email">Sprawdź email</string>
+    <string name="password_reset_link">Na podany e mail został wysłany link resetujący hasło</string>
     <!--  RegistrationScreen and ProfileScreen-->
     <string name="loading_data">Ładowanie danych</string>
     <string name="name">Imię</string>
@@ -79,6 +81,43 @@
     <string name="repeat_password">Powtórz hasło</string>
     <string name="sign_up">Zarejestruj się</string>
     <string name="no_internet_connection">Brak połączenia z internetem</string>
+    <string name="hide_password">Ukryj hasło</string>
+    <string name="show_password">Pokaż hasło</string>
+    <string name="change_photo">Zmień zdjęcie</string>
 
+    <!--  SettingsScreen-->
     <string name="logout">Wyloguj się</string>
+    <string name="appearance">Wygląd</string>
+    <string name="theme">Motyw</string>
+    <string name="font_size_for_messages">Rozmiar czcionki dla wiadomości</string>
+    <string name="system_default">Domyślny systemowy</string>
+    <string name="light">Jasny</string>
+    <string name="dark">Ciemny</string>
+    <string name="high_contrast_dark">Wysoki kontrast - Ciemny</string>
+    <string name="high_contrast_light">Wysoki kontrast - Jasny</string>
+    <string name="font_size">Rozmiar czcionki</string>
+    <string name="small">Mały</string>
+    <string name="normal">Normalny</string>
+    <string name="large">Duży</string>
+    <string name="very_large">Bardzo duży</string>
+    <string name="yes">Tak</string>
+    <string name="no">Nie</string>
+    <string name="confirm_closing">Potwierdź zamknięcie</string>
+    <string name="do_you_really_want_to_apply_the_application">Czy koniecznie chcesz zastosować aplikację?</string>
+    <string name="ok">Ok</string>
+    <string name="you_won">Wygrałeś !!!</string>
+    <string name="you_lost">Przegrałeś! :(</string>
+    <string name="friend">Znajomy</string>
+    <string name="me">Ja</string>
+    <string name="system">System</string>
+    <string name="no_user">Brak użytkownika</string>
+    <string name="problem_generating_the_response">Wystąpił problem z generowaniem odpowiedzi. Spróbuj ponownie.</string>
+    <string name="an_error_occurred_please_try_again">Wystąpił błąd. Spróbuj ponownie.</string>
+    <string name="prompt1">Odpowiedz maksymalnie jednym zdaniem. Po prostu napisz odpowiedź jaką proponujesz jak mogę odpisać znajomemu w tej rozmowie? Ostatnie 10 wiadomości tej konwersacji prezentują się następująco:%1$s. Moje wiadomości podpisałem jako Ja a mojego rozmówcy jako Znajomy. Podpowiedz co mam odpisać na ostatnią wiadomość znajomego a nie na moje własne, zwróć jedną najlepszą według Ciebie propozycję.</string>
+    <string name="prompt2">Podaj tylko dwie propozycje ciekawych tematów do rozmowy i nic więcej. Odpowiedź ma być krótka, nie rozwijaj jej.</string>
+    <string name="prompt3">Zaproponuj tylko dwa oryginalne powitania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n%1$s. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy.</string>
+    <string name="prompt4">Zaproponuj tylko dwa oryginalne pożegnania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n%1$s. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy.</string>
+    <string name="prompt5">Zaproponuj tylko dwa pytania jakie ja mógłbym zadać obcemu dotyczące ostatnich wiadomości w mojej rozmowie:\n%1$s. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy. Odpowiedź ma być krótka, maksymalnie dwa zdania</string>
+
+
 </resources>

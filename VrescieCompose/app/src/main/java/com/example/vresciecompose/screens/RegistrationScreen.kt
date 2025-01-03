@@ -144,8 +144,7 @@ fun RegistrationScreen(
                     Icons.Filled.Visibility
                 else Icons.Filled.VisibilityOff
 
-                // Please provide localized description for accessibility services
-                val description = if (passwordVisible) "Hide password" else "Show password"
+                val description = if (passwordVisible) stringResource(R.string.hide_password) else stringResource(R.string.show_password)
 
                 IconButton(onClick = {passwordVisible = !passwordVisible}){
                     Icon(imageVector  = image, description)
@@ -169,8 +168,7 @@ fun RegistrationScreen(
                     Icons.Filled.Visibility
                 else Icons.Filled.VisibilityOff
 
-                // Please provide localized description for accessibility services
-                val description = if (repeatPasswordVisible) "Hide password" else "Show password"
+                val description = if (repeatPasswordVisible) stringResource(R.string.hide_password) else stringResource(R.string.show_password)
 
                 IconButton(onClick = {repeatPasswordVisible = !repeatPasswordVisible}){
                     Icon(imageVector  = image, description)

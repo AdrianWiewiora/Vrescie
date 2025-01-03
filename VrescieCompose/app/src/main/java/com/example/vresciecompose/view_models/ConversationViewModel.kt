@@ -132,19 +132,15 @@ class ConversationViewModel(
         wantNewGameListener = object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 // Zliczamy nowe rekordy
-                _wantNewGameCount.value = (_wantNewGameCount.value ?: 0) + 1
+                _wantNewGameCount.value += 1
             }
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                // W przypadku zmiany rekordu możemy to pominąć lub obsłużyć, jeśli jest potrzebne
-            }
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) { }
             override fun onChildRemoved(snapshot: DataSnapshot) {
                 // Zmniejszamy licznik, gdy rekord zostaje usunięty
                 setNewGame()
-                _wantNewGameCount.value = (_wantNewGameCount.value ?: 0) - 1
+                _wantNewGameCount.value -= 1
             }
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-                // Możemy zignorować ten przypadek
-            }
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) { }
             override fun onCancelled(error: DatabaseError) {
                 Log.e("TicTacToeGame", "Błąd podczas nasłuchiwania: ${error.message}")
             }
@@ -583,9 +579,9 @@ class ConversationViewModel(
                                 .children.sortedByDescending { it.child("timestamp").value as? Long }
                                 .firstOrNull()
 
-                            var lastMessageDisplay = "Brak wiadomości"
-                            var isSeen = true
-                            var senderId = ""
+                            var lastMessageDisplay: String
+                            var isSeen: Boolean
+                            var senderId: String
 
                             if (lastMessageSnapshot != null) {
                                 val firebaseLastMessageText = lastMessageSnapshot.child("text").value?.toString() ?: ""
@@ -861,7 +857,7 @@ class ConversationViewModel(
             addAnonymousMessageListener(conversationRef)
         } else {
 
-            viewModelScope.launch {
+            viewModelScope.launch mainLaunch@ {
 
                 if (explicitMessageListener != null) {
                     removeExplicitListener() // Funkcja, która usuwa listenera z Firebase gdyby taki istniał
@@ -872,7 +868,7 @@ class ConversationViewModel(
 
                 val localConversationId = conversation.firstOrNull { it.firebaseConversationId == conversationId }?.localConversationId
                     ?: run {
-                        return@launch
+                        return@mainLaunch
                     }
 
                 // Ładuje wiadomości z Room Database na podstawie localConversationId
@@ -969,11 +965,11 @@ class ConversationViewModel(
                         }
 
                         // Zaktualizuj stan wiadomości w Room na messageSeen = true
-                        viewModelScope.launch {
+                        viewModelScope.launch innerLaunch@{
                             // Pobierz lokalną konwersację na podstawie conversationId
                             val localConversationId3 = conversationDao.getAllConversations()
                                 .firstOrNull { it.firebaseConversationId == conversationId }
-                                ?.localConversationId ?: return@launch
+                                ?.localConversationId ?: return@innerLaunch
 
                             // Pobierz wiadomość z Room na podstawie messageId
                             val localMessage = messageDao.getMessageById(messageId)
@@ -1385,7 +1381,6 @@ class ConversationViewModel(
 
     // Implicit ChatsScreen
     private val _userProfiles = MutableStateFlow<Map<String, UserProfile>>(emptyMap())
-    val userProfiles: StateFlow<Map<String, UserProfile>> = _userProfiles
 
     private val _imagePaths = MutableStateFlow<Map<String, String?>>(emptyMap())
     val imagePaths: StateFlow<Map<String, String?>> = _imagePaths

@@ -7,6 +7,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.example.vresciecompose.R
 
 @Composable
 fun ExitConfirmationDialog(
@@ -18,10 +20,10 @@ fun ExitConfirmationDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "Potwierdź zamknięcie")
+            Text(text = stringResource(R.string.confirm_closing))
         },
         text = {
-            Text(text = "Czy na pewno chcesz zamknąć aplikację?")
+            Text(text = stringResource(R.string.do_you_really_want_to_apply_the_application))
         },
         confirmButton = {
             Button(
@@ -30,7 +32,7 @@ fun ExitConfirmationDialog(
                     exitApplication(context)
                 }
             ) {
-                Text(text = "Tak")
+                Text(text = stringResource(R.string.yes))
             }
         },
         dismissButton = {
@@ -39,7 +41,7 @@ fun ExitConfirmationDialog(
                     onDismiss()
                 }
             ) {
-                Text(text = "Nie")
+                Text(text = stringResource(R.string.no))
             }
         }
     )

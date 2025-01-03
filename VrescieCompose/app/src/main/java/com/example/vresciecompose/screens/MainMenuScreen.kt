@@ -53,8 +53,6 @@ fun MainMenuScreen(
     userChatPrefsViewModel: UserChatPrefsViewModel,
     conversationViewModel: ConversationViewModel
 ) {
-    Log.d("MainMenuScreen", "Default Fragment received: $defaultFragment")
-
     val isConnected by conversationViewModel.isConnected.collectAsState()
     val (currentFragment, setCurrentFragment) = remember { mutableIntStateOf(defaultFragment.toInt()) }
     val showDialog = remember { mutableStateOf(false) }
@@ -78,10 +76,7 @@ fun MainMenuScreen(
     val isProfileConfigured by profileViewModel.isProfileConfigured.observeAsState(initial = true)
     LaunchedEffect(isProfileConfigured) {
         if (!isProfileConfigured) {
-            Log.d("MainMenuScreen", "Navigating to FIRST_CONFIGURATION because profile is not configured") // Loguje, że następuje przekierowanie
             onClick(Navigation.Destinations.FIRST_CONFIGURATION+ "/0")
-        } else {
-            Log.d("MainMenuScreen", "Profile is configured, no navigation needed")
         }
     }
 
@@ -271,50 +266,6 @@ fun MenuItem(
         Text(text = text,style = MaterialTheme.typography.labelSmall,color = color)
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewWholeMenu() {
-//    // Przykładowe dane do podglądu
-//    val mockOnClick: (String) -> Unit = { println("Clicked: $it") }
-//    // Tworzenie mockowanej wersji DAO i ViewModelu
-//    val mockUserChatPrefsDao = object : UserChatPrefsDao {
-//        override suspend fun getAllUserChatPrefs(): List<UserChatPrefs> {
-//            return listOf(
-//                UserChatPrefs(1, "Male", 18f, 30f, true, true, 10f),
-//                UserChatPrefs(2, "Female", 25f, 35f, false, true, 20f)
-//            )
-//        }
-//
-//        override suspend fun insert(userChatPrefs: UserChatPrefs) {}
-//        override suspend fun getUserChatPrefs(): UserChatPrefs? {
-//            TODO("Not yet implemented")
-//        }
-//
-//        override suspend fun getUserChatPrefsById(id: Long): UserChatPrefs {
-//            return UserChatPrefs(id, "Other", 20f, 40f, true, false, 20f)
-//        }
-//
-//        override suspend fun update(userChatPrefs: UserChatPrefs) {}
-//    }
-//
-//    // Tworzenie mockowanego UserChatPrefsViewModel
-//    val userChatPrefsViewModel = UserChatPrefsViewModel(mockUserChatPrefsDao)
-//
-//    WholeMenu(
-//        modifier = Modifier.fillMaxSize(),
-//        currentFragment = 5,  // Zmień to na 1 lub 3, aby przetestować inne ekrany
-//        onClick = mockOnClick,
-//        locationViewModel = LocationViewModel(),  // Dodaj mockowane dane
-//        requestPermissionLauncher = rememberLauncherForActivityResult(
-//            contract = ActivityResultContracts.RequestPermission(),
-//            onResult = { /* Obsłuż wynik */ }
-//        ),
-//        setCurrentFragment = {},
-//        userChatPrefsViewModel = userChatPrefsViewModel,
-//        conversationViewModel =
-//    )
-//}
 
 @Preview
 @Composable
