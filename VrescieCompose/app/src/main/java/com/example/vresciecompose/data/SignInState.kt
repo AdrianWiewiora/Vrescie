@@ -1,4 +1,4 @@
-package com.example.vresciecompose.authentication
+package com.example.vresciecompose.data
 
 data class SignInState(
     val isSignedSuccessful: Boolean = false,

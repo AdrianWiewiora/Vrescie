@@ -1,7 +1,8 @@
-package com.example.vresciecompose.authentication
+package com.example.vresciecompose.view_models
 
 import androidx.lifecycle.ViewModel
 import com.example.vresciecompose.data.SignInResult
+import com.example.vresciecompose.data.SignInState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -20,6 +21,6 @@ class SignInViewModel: ViewModel() {
     }
 
     fun resetState() {
-        _state.update { SignInState()}
+        _state.update { SignInState() }
     }
 }

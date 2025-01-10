@@ -2,7 +2,6 @@ package com.example.vresciecompose
 
 import android.app.Activity.RESULT_OK
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -20,7 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.vresciecompose.authentication.GoogleAuthentication
-import com.example.vresciecompose.authentication.SignInViewModel
+import com.example.vresciecompose.view_models.SignInViewModel
 import com.example.vresciecompose.screens.AnonymousConversationScreen
 import com.example.vresciecompose.screens.ExplicitConversationScreen
 import com.example.vresciecompose.screens.FirstConfigurationProfileScreen

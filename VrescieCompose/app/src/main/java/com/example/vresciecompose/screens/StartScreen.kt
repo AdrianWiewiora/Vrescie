@@ -21,7 +21,7 @@ import com.example.vresciecompose.ui.components.OutlinedButton
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.vresciecompose.Navigation
-import com.example.vresciecompose.authentication.SignInState
+import com.example.vresciecompose.data.SignInState
 import com.example.vresciecompose.ui.components.ExitConfirmationDialog
 
 
