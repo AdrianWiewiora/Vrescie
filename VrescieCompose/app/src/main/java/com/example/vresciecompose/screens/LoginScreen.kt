@@ -6,9 +6,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
@@ -18,7 +16,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -27,7 +24,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.ErrorAlertDialog
@@ -39,7 +35,7 @@ import com.example.vresciecompose.view_models.LoginViewModel
 @Composable
 fun LoginScreen(
     loginViewModel: LoginViewModel,
-    onClick:(String) -> Unit,
+    navigateTo:(String) -> Unit,
 ) {
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var password by rememberSaveable { mutableStateOf("") }
@@ -50,7 +46,7 @@ fun LoginScreen(
     var showSuccessDialog by rememberSaveable { mutableStateOf(false) } // Dialog sukcesu
 
     BackHandler {
-        onClick(Navigation.Destinations.START)
+        navigateTo(Navigation.Destinations.START)
     }
 
     Column(
@@ -128,9 +124,9 @@ fun LoginScreen(
                                         onSuccess = { isProfileConfigured ->
                                             isLoading = false // Wyłączenie stanu ładowania
                                             if (isProfileConfigured) {
-                                                onClick(Navigation.Destinations.MAIN_MENU + "/1")
+                                                navigateTo(Navigation.Destinations.MAIN_MENU + "/1")
                                             } else {
-                                                onClick(Navigation.Destinations.FIRST_CONFIGURATION)
+                                                navigateTo(Navigation.Destinations.FIRST_CONFIGURATION)
                                             }
                                         },
                                         onFailure = { error ->
@@ -217,7 +213,7 @@ fun LoginScreenPreview() {
 
     LoginScreen(
         loginViewModel = loginViewModel,
-        onClick = {}
+        navigateTo = {}
     )
 }
 

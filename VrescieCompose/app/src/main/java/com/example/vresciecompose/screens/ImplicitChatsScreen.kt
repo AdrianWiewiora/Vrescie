@@ -1,7 +1,6 @@
 package com.example.vresciecompose.screens
 
 import LocalContext
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,14 +48,13 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.data.Conversation
-import com.example.vresciecompose.data.UserProfile
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
 fun ImplicitChatsScreen(
-    onClick: (String) -> Unit,
+    navigateTo: (String) -> Unit,
     conversationViewModel: ConversationViewModel,
     isConnected: Boolean
 ) {
@@ -116,7 +114,7 @@ fun ImplicitChatsScreen(
             ImplicitChats(
                 conversationList = conversationList,
                 onItemClick = { conversation ->
-                    onClick("${Navigation.Destinations.EXPLICIT_CONVERSATION}/${conversation.id}")
+                    navigateTo("${Navigation.Destinations.EXPLICIT_CONVERSATION}/${conversation.id}")
                 },
                 lastMessageMap = lastMessageMap,
                 imagePaths = imagePaths,

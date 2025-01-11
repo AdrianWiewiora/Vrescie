@@ -80,7 +80,7 @@ import java.io.File
 
 @Composable
 fun FirstConfigurationProfileScreen(
-    onClick: (String) -> Unit,
+    navigateTo: (String) -> Unit,
     configurationProfileViewModel: ConfigurationProfileViewModel,
     profileViewModel: ProfileViewModel,
     isChangePhoto: Int = 0,
@@ -140,7 +140,7 @@ fun FirstConfigurationProfileScreen(
                         configurationProfileViewModel.setProfileConfigured()
                     }
                     profileViewModel.setProfileConfigured(true)
-                    onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
+                    navigateTo("${Navigation.Destinations.MAIN_MENU}/${1}")
                 }
             }.addOnFailureListener { exception ->
                 Log.e("Firebase", "Upload failed", exception)
@@ -152,7 +152,7 @@ fun FirstConfigurationProfileScreen(
                 configurationProfileViewModel.setProfileConfigured()
             }
             profileViewModel.setProfileConfigured(true)
-            onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
+            navigateTo("${Navigation.Destinations.MAIN_MENU}/${1}")
         }
     }
 
@@ -208,7 +208,7 @@ fun FirstConfigurationProfileScreen(
                                 // Zapisz zdjęcie lokalnie
                                 profileViewModel.saveImageLocally(downloadUri.toString(), userId)
 
-                                onClick("${Navigation.Destinations.MAIN_MENU}/${1}")
+                                navigateTo("${Navigation.Destinations.MAIN_MENU}/${1}")
                             }
                             .addOnFailureListener { exception ->
                                 Log.e("Firebase", "Failed to save new photo URL: ${exception.message}")

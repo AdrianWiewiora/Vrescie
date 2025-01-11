@@ -67,7 +67,7 @@ import com.example.vresciecompose.ui.components.TicTacToeGame
 @Composable
 fun AnonymousConversationScreen(
     conversationID: String,
-    onNavigate: (String) -> Unit,
+    navigateTo: (String) -> Unit,
     conversationViewModel: ConversationViewModel,
     settingsViewModel: SettingsViewModel,
 ) {
@@ -165,7 +165,7 @@ fun AnonymousConversationScreen(
                 if (currentUserID != null) {
                     conversationRef2.child("members").child(currentUserID).setValue(false)
                 }
-                onNavigate("${Navigation.Destinations.MAIN_MENU}/${1}")
+                navigateTo("${Navigation.Destinations.MAIN_MENU}/${1}")
             },
             onDismiss = {
                 showExitDialog.value = false
@@ -192,7 +192,7 @@ fun AnonymousConversationScreen(
     if (showDialogLikeNotification) {
         SimpleAlertDialog(
             onConfirm = {
-                onNavigate("${Navigation.Destinations.MAIN_MENU}/${2}")
+                navigateTo("${Navigation.Destinations.MAIN_MENU}/${2}")
             },
             onDismiss = {
                 conversationViewModel.resetLikesNotification()

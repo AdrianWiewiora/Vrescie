@@ -1,6 +1,5 @@
 package com.example.vresciecompose.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,7 +13,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,8 +24,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -37,8 +33,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.ErrorAlertDialog
@@ -48,7 +42,7 @@ import com.example.vresciecompose.view_models.RegistrationViewModel
 
 @Composable
 fun RegistrationScreen(
-    onClick:(String) -> Unit,
+    navigateTo:(String) -> Unit,
     registrationViewModel: RegistrationViewModel
 ) {
 
@@ -71,7 +65,7 @@ fun RegistrationScreen(
 
     if (registrationSuccess) {
         AlertDialog(
-            onDismissRequest = { onClick(Navigation.Destinations.LOGIN)  },
+            onDismissRequest = { navigateTo(Navigation.Destinations.LOGIN)  },
             title = {
                 Text(text = stringResource(R.string.you_have_registered))
             },
@@ -79,7 +73,7 @@ fun RegistrationScreen(
                 Text(text = stringResource(R.string.remember_to_confirm_your_account))
             },
             confirmButton = {
-                Button(onClick = {onClick(Navigation.Destinations.LOGIN) }) {
+                Button(onClick = {navigateTo(Navigation.Destinations.LOGIN) }) {
                     Text("Ok")
                 }
             }
@@ -194,5 +188,5 @@ fun RegistrationScreen(
 @Composable
 fun RegistrationScreenPreview() {
     val viewModel = RegistrationViewModel() // Tworzenie instancji view model
-    RegistrationScreen(onClick = {}, registrationViewModel = viewModel)
+    RegistrationScreen(navigateTo = {}, registrationViewModel = viewModel)
 }

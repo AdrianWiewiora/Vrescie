@@ -28,7 +28,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LoadingToAnonymousChatScreen(
-    onClick: (String) -> Unit,
+    navigateTo: (String) -> Unit,
     loadingToAnonymousChatViewModel: LoadingToAnonymousChatViewModel
 ) {
     val hasNavigated = remember { mutableStateOf(false) }
@@ -53,7 +53,7 @@ fun LoadingToAnonymousChatScreen(
     val navigateToConversation by loadingToAnonymousChatViewModel.navigateToConversation.observeAsState()
     navigateToConversation?.let { conversationId ->
         if (!hasNavigated.value) {
-            onClick("${Navigation.Destinations.ANONYMOUS_CONVERSATION}/$conversationId")
+            navigateTo("${Navigation.Destinations.ANONYMOUS_CONVERSATION}/$conversationId")
             hasNavigated.value = true
             loadingToAnonymousChatViewModel.resetNavigation()
         }

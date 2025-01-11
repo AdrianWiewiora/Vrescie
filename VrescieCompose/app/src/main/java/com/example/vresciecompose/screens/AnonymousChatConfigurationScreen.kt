@@ -48,7 +48,7 @@ import com.google.android.gms.location.LocationServices
 fun AnonymousChatConfigurationScreen(
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
-    onClick: (String) -> Unit,
+    navigateTo: (String) -> Unit,
     userChatPrefsViewModel: UserChatPrefsViewModel,
     isConnected: Boolean
 ) {
@@ -218,7 +218,7 @@ fun AnonymousChatConfigurationScreen(
                                 latitude,
                                 longitude
                             )
-                            onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
+                            navigateTo(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
                         },
                         onFailure = {
                             Toast.makeText(
@@ -238,7 +238,7 @@ fun AnonymousChatConfigurationScreen(
                         latitude,
                         longitude
                     )
-                    onClick(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
+                    navigateTo(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT)
                 }
             },
             modifier = Modifier

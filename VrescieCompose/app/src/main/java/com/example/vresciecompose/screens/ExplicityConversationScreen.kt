@@ -1,17 +1,10 @@
 package com.example.vresciecompose.screens
 
-import LocalContext
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,8 +18,6 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.SportsEsports
-import androidx.compose.material.icons.outlined.Circle
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -36,13 +27,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -74,7 +65,7 @@ import kotlin.coroutines.suspendCoroutine
 @Composable
 fun ExplicitConversationScreen(
     conversationID: String,
-    onClick: (String) -> Unit,
+    navigateTo: (String) -> Unit,
     conversationViewModel: ConversationViewModel,
     settingsViewModel: SettingsViewModel,
 ) {
@@ -91,6 +82,8 @@ fun ExplicitConversationScreen(
     val (messageText, setMessageText) = remember { mutableStateOf("") }
     // Inicjalizacja konwersacji oraz zmienna zawierająca jej wiadomości
     val messages by conversationViewModel.messages.collectAsState()
+    // Zmienna do przechowywania stanu wyjścia
+    var isDisposed by remember { mutableStateOf(false) }
 
     // Zmienne dla VertexAI
     val config = generationConfig {
@@ -137,7 +130,14 @@ fun ExplicitConversationScreen(
     }
 
     BackHandler {
-        onClick("${Navigation.Destinations.MAIN_MENU}/${2}")
+        if (!isDisposed) {
+            isDisposed = true
+            conversationViewModel.resetMessages()
+            conversationViewModel.removeExplicitListener()
+            conversationViewModel.removeGameWinListener(conversationID)
+            conversationViewModel.removeNewGameListener(conversationID)
+        }
+        navigateTo("${Navigation.Destinations.MAIN_MENU}/${2}")
     }
 
     DisposableEffect(Unit) {
@@ -148,10 +148,13 @@ fun ExplicitConversationScreen(
         conversationViewModel.listenForNewGameRequests(conversationID)
 
         onDispose {
-            conversationViewModel.resetMessages()
-            conversationViewModel.removeExplicitListener()
-            conversationViewModel.removeGameWinListener(conversationID)
-            conversationViewModel.removeNewGameListener(conversationID)
+            if (!isDisposed) {
+                isDisposed = true
+                conversationViewModel.resetMessages()
+                conversationViewModel.removeExplicitListener()
+                conversationViewModel.removeGameWinListener(conversationID)
+                conversationViewModel.removeNewGameListener(conversationID)
+            }
         }
     }
 

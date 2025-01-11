@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.BrightnessMedium
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -45,7 +44,7 @@ import com.example.vresciecompose.view_models.SettingsViewModel
 @Composable
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
-    onNavigate: (String) -> Unit
+    navigateTo: (String) -> Unit
 ){
     //Wygląd
     // Odczyt aktualnego motywu
@@ -59,7 +58,7 @@ fun SettingsScreen(
         settingsViewModel.saveMessageSize(size)
     }
     fun logoutVM(){
-        settingsViewModel.logout { onNavigate(Navigation.Destinations.START)}
+        settingsViewModel.logout { navigateTo(Navigation.Destinations.START)}
     }
 
     Settings(

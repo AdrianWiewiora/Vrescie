@@ -65,24 +65,24 @@ class MainActivity : ComponentActivity() {
     companion object {
         lateinit var database: AppDatabase
     }
+
     private lateinit var userChatPrefsViewModel: UserChatPrefsViewModel
-
-    private lateinit var backDispatcher: OnBackPressedDispatcher
-
     private lateinit var registrationViewModel: RegistrationViewModel
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var configurationProfileViewModel: ConfigurationProfileViewModel
     private lateinit var profileViewModel: ProfileViewModel
     private lateinit var locationViewModel: LocationViewModel
-    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
-
     private lateinit var conversationViewModel: ConversationViewModel
     private lateinit var settingsViewModel: SettingsViewModel
     private lateinit var loadingToAnonymousChatViewModel: LoadingToAnonymousChatViewModel
-
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(getSharedPreferences("MyPrefs", Context.MODE_PRIVATE))
     }
+
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var backDispatcher: OnBackPressedDispatcher
+
+
 
     val googleAuthClient by lazy {
         GoogleAuthentication(
@@ -110,66 +110,6 @@ class MainActivity : ComponentActivity() {
             DebugAppCheckProviderFactory.getInstance(),
         )
 
-//        val MIGRATION_1_2 = object : Migration(1, 2) {
-//            override fun migrate(database: SupportSQLiteDatabase) {
-//                database.execSQL("ALTER TABLE UserChatPrefs ADD COLUMN isProfileVerified INTEGER NOT NULL DEFAULT 0")
-//                database.execSQL("ALTER TABLE UserChatPrefs ADD COLUMN relationshipPreference INTEGER NOT NULL DEFAULT 0")
-//                database.execSQL("ALTER TABLE UserChatPrefs ADD COLUMN maxDistance REAL NOT NULL DEFAULT 0")
-//            }
-//        }
-
-//        val MIGRATION_1_2 = object : Migration(3, 4) {
-//            override fun migrate(database: SupportSQLiteDatabase) {
-//                // Tworzenie nowej tabeli z poprawnym schematem
-//                database.execSQL("CREATE TABLE conversations_new (localConversationId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, firebaseConversationId TEXT NOT NULL, memberId TEXT NOT NULL)")
-//
-//                // Kopiowanie danych ze starej tabeli
-//                database.execSQL("INSERT INTO conversations_new (firebaseConversationId, memberId) SELECT firebaseConversationId, memberId FROM conversations")
-//
-//                // Usuwanie starej tabeli
-//                database.execSQL("DROP TABLE conversations")
-//
-//                // Zmiana nazwy nowej tabeli na starą
-//                database.execSQL("ALTER TABLE conversations_new RENAME TO conversations")
-//            }
-//        }
-
-//        val MIGRATION_1_2 = object : Migration(4, 5) {
-//            override fun migrate(database: SupportSQLiteDatabase) {
-//                // Tworzenie nowej tabeli z automatycznie generowanym ID
-//                database.execSQL(
-//                    "CREATE TABLE messages_new (" +
-//                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-//                            "messageId TEXT NOT NULL," +
-//                            "senderId TEXT NOT NULL," +
-//                            "text TEXT NOT NULL," +
-//                            "timestamp INTEGER NOT NULL," +
-//                            "messageSeen INTEGER NOT NULL," +
-//                            "localConversationId TEXT NOT NULL," +
-//                            "FOREIGN KEY(localConversationId) REFERENCES conversations(localConversationId) ON DELETE CASCADE)"
-//                )
-//
-//                // Skopiowanie danych ze starej tabeli
-//                database.execSQL(
-//                    "INSERT INTO messages_new (messageId, senderId, text, timestamp, messageSeen, localConversationId) " +
-//                            "SELECT messageId, senderId, text, timestamp, messageSeen, localConversationId FROM messages"
-//                )
-//
-//                // Usunięcie starej tabeli
-//                database.execSQL("DROP TABLE messages")
-//
-//                // Zmiana nazwy nowej tabeli na oryginalną nazwę
-//                database.execSQL("ALTER TABLE messages_new RENAME TO messages")
-//            }
-//        }
-
-        val MIGRATION_1_2 = object : Migration(5, 6) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE conversations ADD COLUMN participantName TEXT NOT NULL DEFAULT ''")
-            }
-        }
-
-
         // Inicjalizacja DataStore
         val dataStore = applicationContext.dataStore
         // Inicjalizacja SettingsRepository
@@ -181,7 +121,7 @@ class MainActivity : ComponentActivity() {
         )[SettingsViewModel::class.java]
 
         // Inicjalizacja bazy danych
-        database = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "my-database").addMigrations(MIGRATION_1_2).build()
+        database = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "my-database").build()
 
         // Inicjalizacja ViewModelu z fabryką
         val userChatPrefsDao = database.userChatPrefsDao()

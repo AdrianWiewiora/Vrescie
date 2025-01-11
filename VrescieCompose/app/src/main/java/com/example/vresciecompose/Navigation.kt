@@ -80,7 +80,7 @@ fun AppNavigation(
         composable(Navigation.Destinations.SETTINGS) {
             SettingsScreen(
                 settingsViewModel = settingsViewModel,
-                onNavigate = { route -> navController.navigate(route) },
+                navigateTo = { route -> navController.navigate(route) },
             )
         }
         composable(Navigation.Destinations.MAIN_MENU + "/{defaultFragment}",
@@ -88,7 +88,7 @@ fun AppNavigation(
         ) { backStackEntry ->
             val defaultFragment = backStackEntry.arguments?.getString("defaultFragment") ?: "1"
             MainMenuScreen(
-                onClick = { route -> navController.navigate(route) },
+                navigateTo = { route -> navController.navigate(route) },
                 profileViewModel = profileViewModel,
                 locationViewModel = locationViewModel,
                 requestPermissionLauncher = requestPermissionLauncher,
@@ -143,7 +143,7 @@ fun AppNavigation(
             }
 
             StartScreen(
-                onClick = {
+                navigateTo = {
                     navController.navigate(route = it)
                 },
                 state = state,
@@ -164,7 +164,7 @@ fun AppNavigation(
         ) { backStackEntry ->
             val isChangePhoto = backStackEntry.arguments?.getString("isChangePhoto") ?: "0"
             FirstConfigurationProfileScreen(
-                onClick = { navController.navigate(route = it) },
+                navigateTo = { navController.navigate(route = it) },
                 configurationProfileViewModel = configurationProfileViewModel,
                 profileViewModel = profileViewModel,
                 isChangePhoto = isChangePhoto.toInt(),
@@ -172,19 +172,19 @@ fun AppNavigation(
         }
         composable(Navigation.Destinations.REGISTRATION) {
             RegistrationScreen(
-                onClick = { route -> navController.navigate(route) },
+                navigateTo = { route -> navController.navigate(route) },
                 registrationViewModel = registrationViewModel
             )
         }
         composable(Navigation.Destinations.LOGIN) {
             LoginScreen(
                 loginViewModel = loginViewModel,
-                onClick = { navController.navigate(route = it) }
+                navigateTo = { navController.navigate(route = it) }
             )
         }
         composable(Navigation.Destinations.LOADING_SCREEN_TO_V_CHAT) {
             LoadingToAnonymousChatScreen(
-                onClick = { route -> navController.navigate(route) },
+                navigateTo = { route -> navController.navigate(route) },
                 loadingToAnonymousChatViewModel
             )
         }
@@ -195,8 +195,8 @@ fun AppNavigation(
             val conversationID = backStackEntry.arguments?.getString("conversationID") ?: ""
             AnonymousConversationScreen(
                 conversationID = conversationID,
-                onNavigate = { route -> navController.navigate(route);},
-                conversationViewModel,
+                navigateTo = { route -> navController.navigate(route);},
+                conversationViewModel = conversationViewModel,
                 settingsViewModel = settingsViewModel
             )
         }
@@ -206,8 +206,8 @@ fun AppNavigation(
             val conversationID = backStackEntry.arguments?.getString("conversationID") ?: ""
             ExplicitConversationScreen(
                 conversationID = conversationID,
-                onClick = { route -> navController.navigate(route) },
-                conversationViewModel,
+                navigateTo = { route -> navController.navigate(route) },
+                conversationViewModel = conversationViewModel,
                 settingsViewModel = settingsViewModel
             )
         }

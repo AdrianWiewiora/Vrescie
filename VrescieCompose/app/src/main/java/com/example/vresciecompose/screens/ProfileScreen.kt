@@ -1,6 +1,5 @@
 package com.example.vresciecompose.screens
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
@@ -54,7 +53,7 @@ import java.util.Locale
 fun ProfileScreen(
     isConnected: Boolean,
     profileViewModel: ProfileViewModel,
-    onClick: (String) -> Unit
+    navigateTo: (String) -> Unit
 ) {
     val localUserProfile = profileViewModel.getStoredProfile()
     val userProfile = profileViewModel.userProfile.observeAsState()
@@ -135,7 +134,7 @@ fun ProfileScreen(
 
         Button(
             onClick = {
-                onClick(Navigation.Destinations.FIRST_CONFIGURATION + "/1")
+                navigateTo(Navigation.Destinations.FIRST_CONFIGURATION + "/1")
             },
             modifier = Modifier
                 .fillMaxWidth()

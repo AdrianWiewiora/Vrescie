@@ -27,7 +27,7 @@ import com.example.vresciecompose.ui.components.ExitConfirmationDialog
 
 @Composable
 fun StartScreen(
-    onClick:(String) -> Unit,
+    navigateTo:(String) -> Unit,
     state: SignInState,
     onSignInClick: () -> Unit
 ) {
@@ -58,25 +58,10 @@ fun StartScreen(
         )
     }
 
-    StartScreenColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        onClick = onClick,
-        onSignInClick = onSignInClick
-    )
-
-}
-
-@Composable
-fun StartScreenColumn(
-    modifier: Modifier,
-    onClick:(String) -> Unit = {},
-    onSignInClick: () -> Unit = {}
-){
-
-    Column(
-        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -91,7 +76,7 @@ fun StartScreenColumn(
 
         OutlinedButton(
             onClick = {
-                onClick(Navigation.Destinations.LOGIN)
+                navigateTo(Navigation.Destinations.LOGIN)
             },
             text = stringResource(R.string.log_in),
             modifier = Modifier
@@ -101,7 +86,7 @@ fun StartScreenColumn(
 
         FilledButton(
             onClick = {
-                onClick(Navigation.Destinations.REGISTRATION)
+                navigateTo(Navigation.Destinations.REGISTRATION)
             },
             text = stringResource(R.string.register),
             modifier = Modifier
@@ -146,19 +131,16 @@ fun StartScreenColumn(
 
         )
     }
+
 }
 
 @Preview(showBackground = true)
 @Composable
 fun StartScreenPreview() {
-    StartScreenColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        onClick = {},
+    StartScreen(
+        navigateTo = {},
+        state = SignInState(),
         onSignInClick = {}
     )
 }
-
-
 

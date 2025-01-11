@@ -1,6 +1,5 @@
 package com.example.vresciecompose.screens
 
-import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -45,7 +44,7 @@ import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 
 @Composable
 fun MainMenuScreen(
-    onClick: (String) -> Unit,
+    navigateTo: (String) -> Unit,
     profileViewModel: ProfileViewModel,
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
@@ -76,40 +75,12 @@ fun MainMenuScreen(
     val isProfileConfigured by profileViewModel.isProfileConfigured.observeAsState(initial = true)
     LaunchedEffect(isProfileConfigured) {
         if (!isProfileConfigured) {
-            onClick(Navigation.Destinations.FIRST_CONFIGURATION+ "/0")
+            navigateTo(Navigation.Destinations.FIRST_CONFIGURATION+ "/0")
         }
     }
 
-    WholeMenu(
-        modifier = Modifier.fillMaxSize(),
-        currentFragment,
-        onClick,
-        locationViewModel,
-        requestPermissionLauncher,
-        setCurrentFragment,
-        userChatPrefsViewModel,
-        conversationViewModel,
-        isConnected,
-        profileViewModel
-    )
-
-}
-
-@Composable
-fun WholeMenu(
-    modifier: Modifier,
-    currentFragment: Int,
-    onClick: (String) -> Unit,
-    locationViewModel: LocationViewModel,
-    requestPermissionLauncher: ActivityResultLauncher<String>,
-    setCurrentFragment: (Int) -> Unit,
-    userChatPrefsViewModel: UserChatPrefsViewModel,
-    conversationViewModel: ConversationViewModel,
-    isConnected: Boolean = true,
-    profileViewModel: ProfileViewModel
-){
-    Column(modifier = modifier) {
-        TopRowMenu(modifier = Modifier.fillMaxWidth(), onClick)
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopRowMenu(modifier = Modifier.fillMaxWidth(), navigateTo)
 
         MiddleCard(
             modifier = Modifier
@@ -117,7 +88,7 @@ fun WholeMenu(
                 .padding(vertical = 0.dp)
                 .weight(1f),
             currentFragment,
-            onClick,
+            navigateTo,
             locationViewModel,
             requestPermissionLauncher,
             userChatPrefsViewModel,
@@ -132,10 +103,11 @@ fun WholeMenu(
             setCurrentFragment
         )
     }
+
 }
 
 @Composable
-fun TopRowMenu(modifier: Modifier, onClick: (String) -> Unit){
+fun TopRowMenu(modifier: Modifier, navigateTo: (String) -> Unit){
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -149,7 +121,7 @@ fun TopRowMenu(modifier: Modifier, onClick: (String) -> Unit){
                 .padding(2.dp)
         )
         IconButton(
-            onClick = {onClick(Navigation.Destinations.SETTINGS)},
+            onClick = {navigateTo(Navigation.Destinations.SETTINGS)},
             modifier = Modifier
                 .size(dimensionResource(R.dimen.image_medium_size))
         ) {
@@ -168,7 +140,7 @@ fun TopRowMenu(modifier: Modifier, onClick: (String) -> Unit){
 fun MiddleCard(
     modifier: Modifier,
     currentFragment: Int,
-    onClick: (String) -> Unit,
+    navigateTo: (String) -> Unit,
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
     userChatPrefsViewModel: UserChatPrefsViewModel,
@@ -191,9 +163,9 @@ fun MiddleCard(
                     .fillMaxWidth()
             ) { target ->
                 when (target) {
-                    1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, onClick, userChatPrefsViewModel, isConnected)
-                    2 -> ImplicitChatsScreen(onClick, conversationViewModel, isConnected)
-                    3 -> ProfileScreen(isConnected, profileViewModel, onClick)
+                    1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, navigateTo, userChatPrefsViewModel, isConnected)
+                    2 -> ImplicitChatsScreen(navigateTo, conversationViewModel, isConnected)
+                    3 -> ProfileScreen(isConnected, profileViewModel, navigateTo)
                     else ->  Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -276,6 +248,6 @@ fun BottomMenuPreview() {
 @Preview
 @Composable
 fun TopMenuPreview() {
-    TopRowMenu(modifier = Modifier.fillMaxWidth(), onClick = {})
+    TopRowMenu(modifier = Modifier.fillMaxWidth(), navigateTo = {})
 }
 
