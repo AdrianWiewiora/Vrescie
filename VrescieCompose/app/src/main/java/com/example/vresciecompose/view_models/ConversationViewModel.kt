@@ -132,13 +132,13 @@ class ConversationViewModel(
         wantNewGameListener = object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 // Zliczamy nowe rekordy
-                _wantNewGameCount.value += 1
+                updateWantNewGameCount(conversationId, basePath)
             }
             override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) { }
             override fun onChildRemoved(snapshot: DataSnapshot) {
                 // Zmniejszamy licznik, gdy rekord zostaje usunięty
-                setNewGame()
-                _wantNewGameCount.value -= 1
+                board.value = Array(10) { Array(10) { "" } }
+                _wantNewGameCount.value = 0
             }
             override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) { }
             override fun onCancelled(error: DatabaseError) {
@@ -154,6 +154,22 @@ class ConversationViewModel(
             .child("tic-tac-toe")
             .child("wantNewGame")
             .addChildEventListener(wantNewGameListener!!)
+    }
+
+    private fun updateWantNewGameCount(conversationId: String, basePath: String) {
+        Firebase.database.reference
+            .child(basePath)
+            .child(conversationId)
+            .child("games")
+            .child("tic-tac-toe")
+            .child("wantNewGame")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                _wantNewGameCount.value = snapshot.childrenCount.toInt()
+            }
+            .addOnFailureListener { error ->
+                Log.e("TicTacToeGame", "Błąd podczas pobierania danych: ${error.message}")
+            }
     }
 
     // Funkcja usuwająca nasłuchiwacz
@@ -177,7 +193,6 @@ class ConversationViewModel(
 
     fun setWantNewGame(userId: String, isAnonymous: Boolean = false) {
         val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
-
         val database = Firebase.database.reference
         val wantNewGameRef = database
             .child(basePath)
@@ -223,15 +238,13 @@ class ConversationViewModel(
         // Usuwanie rekordów w wantNewGame
         databaseRef.child("wantNewGame").removeValue()
 
-        // Resetowanie statusu gry na 'false'
-        databaseRef.child("isActualGameDone").setValue(false)
-
         // Resetowanie planszy (tutaj zakładamy, że board to stan MutableState)
         board.value = Array(10) { Array(10) { "" } }  // Ustawiamy początkowy stan planszy (10x10, puste pola)
     }
 
 
     fun listenForGameWin(conversationId: String, isAnonymous: Boolean = false) {
+        removeGameWinListener()
         val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
 
         val databaseRef = Firebase.database.reference
@@ -377,6 +390,7 @@ class ConversationViewModel(
         // Jeżeli żaden warunek nie został spełniony
         return false
     }
+
     private fun updateUnlockedStages(conversationId: String, playerId: String) {
         val unlockedStagesRef = FirebaseDatabase.getInstance().reference
             .child("conversations/$conversationId/unlockedStagesOfPhoto")
@@ -420,23 +434,28 @@ class ConversationViewModel(
 
                 // Inicjalizacja zmiennych do aktualizacji
                 var gamesCount = 0L
-                var playerWins = 0L
+                var playerWins = mutableMapOf<String, Long>()
 
                 // Sprawdzamy, czy dane istnieją i są odpowiedniej struktury
                 if (dataSnapshot is Map<*, *>) {
                     gamesCount = (dataSnapshot["games"] as? Long) ?: 0L
-                    playerWins = (dataSnapshot[winningPlayerId] as? Long) ?: 0L
+                    // Inicjalizacja mapy zwycięzców
+                    for ((key, value) in dataSnapshot) {
+                        if (key != "games") {
+                            playerWins[key as String] = value as? Long ?: 0L
+                        }
+                    }
                 }
 
-                // Aktualizacja wartości
+                // Aktualizacja liczby gier i zwycięstw
                 gamesCount += 1
-                playerWins += 1
+                playerWins[winningPlayerId] = (playerWins[winningPlayerId] ?: 0L) + 1
 
                 // Zapis nowych danych w Firebase
                 currentData.value = mapOf(
-                    "games" to gamesCount,
-                    winningPlayerId to playerWins
-                )
+                    "games" to gamesCount
+                ) + playerWins
+
                 return Transaction.success(currentData)
             }
 
@@ -951,6 +970,16 @@ class ConversationViewModel(
                                     Pair(it.text, pair.second.copy(isSeen = it.messageSeen))
                                 } else {
                                     pair
+                                }
+                            }
+
+                            // Zaktualizuj stan wiadomości w Room (jeśli potrzebne)
+                            viewModelScope.launch {
+                                val existingMessage = messageDao.getMessageById(snapshot.key ?: return@launch)
+                                if (existingMessage != null) {
+                                    // Jeśli wiadomość istnieje, zaktualizuj tylko stan messageSeen
+                                    val updatedMessage = existingMessage.copy(messageSeen = it.messageSeen)
+                                    messageDao.updateMessage(updatedMessage)
                                 }
                             }
                         }

@@ -108,11 +108,16 @@ fun ExplicitConversationScreen(
     val conversationId = conversationViewModel.currentConversationId
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
     val gameWinner by conversationViewModel._gameWinner.collectAsState()
-    val gameStatusMessage = when {
-        gameWinner.isNullOrEmpty() -> null
-        gameWinner == currentUserID -> stringResource(R.string.you_won)
-        else -> stringResource(R.string.you_lost)
+    val youWonString = stringResource(R.string.you_won)
+    val youLostString = stringResource(R.string.you_lost)
+    val gameStatusMessage = remember(gameWinner) {
+        when {
+            gameWinner.isNullOrEmpty() -> null
+            gameWinner == currentUserID -> youWonString
+            else -> youLostString
+        }
     }
+
     val wantNewGameCount by conversationViewModel.wantNewGameCount.collectAsState()
 
     fun makeMove(positionX: Int, positionY: Int): Boolean {
@@ -270,8 +275,6 @@ fun ExplicitConversationColumn(
     val isShowPrompt = remember { mutableStateOf(false) }
     val isShowGamesMenu = remember { mutableStateOf(false) }
     val isShowTicTacToe = remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
 
     val isShowStats = remember { mutableStateOf(false) }
     val gameName = remember { mutableStateOf("") }
@@ -591,13 +594,6 @@ fun ExplicitConversationColumn(
                         board = board,
                         onCellClick = { row, col ->
                             val isWinningMove = makeMove(row, col)
-                            if (isWinningMove) {
-                                Toast.makeText(
-                                    context,
-                                    "Wygrałeś!",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
                         },
                         listenForMoves = {
                             listenForMoves()
