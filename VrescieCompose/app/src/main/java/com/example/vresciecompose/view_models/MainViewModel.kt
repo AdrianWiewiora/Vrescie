@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.vresciecompose.Navigation
 import com.google.firebase.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,17 +23,36 @@ class MainViewModel(private val sharedPreferences: SharedPreferences) : ViewMode
     private val _isReady = MutableStateFlow(false)
     val isReady = _isReady.asStateFlow()
 
+    private val _startDestination = MutableStateFlow<String?>(null)
+    val startDestination = _startDestination.asStateFlow()
+
     init {
         viewModelScope.launch {
-            _isReady.value = true
+            determineStartDestination()
         }
     }
 
-    fun isLoggedIn(): Boolean {
+    private fun determineStartDestination() {
+        val destination = when {
+            isFirstRun() -> Navigation.Destinations.FIRST_LAUNCH
+            isLoggedIn() -> Navigation.Destinations.MAIN_MENU + "/1"
+            else -> Navigation.Destinations.START
+        }
+        _startDestination.value = destination
+        _isReady.value = true
+    }
+
+    private fun isLoggedIn(): Boolean {
         return FirebaseAuth.getInstance().currentUser != null
     }
 
-    fun isFirstRun(): Boolean {
+    private fun isFirstRun(): Boolean {
         return sharedPreferences.getBoolean("isFirstRun", true)
+    }
+
+    fun markFirstRunCompleted() {
+        sharedPreferences.edit()
+            .putBoolean("isFirstRun", false)
+            .apply()
     }
 }

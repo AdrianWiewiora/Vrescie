@@ -18,14 +18,17 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Database
 import androidx.room.Room
@@ -59,6 +62,7 @@ import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.google.firebase.initialize
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     // Room database
@@ -78,11 +82,7 @@ class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(getSharedPreferences("MyPrefs", Context.MODE_PRIVATE))
     }
-
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
-    private lateinit var backDispatcher: OnBackPressedDispatcher
-
-
 
     val googleAuthClient by lazy {
         GoogleAuthentication(
@@ -95,143 +95,59 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                return@OnCompleteListener
-            }
-
-            // Uzyskaj nowy token rejestracji FCM
-            val token = task.result
-            // Wywołaj saveTokenToFirebase
-            MyFirebaseMessagingService().saveTokenToFirebase(token)
-        })
-        Firebase.initialize(context = this)
-        Firebase.appCheck.installAppCheckProviderFactory(
-            DebugAppCheckProviderFactory.getInstance(),
-        )
-
-        // Inicjalizacja DataStore
-        val dataStore = applicationContext.dataStore
-        // Inicjalizacja SettingsRepository
-        val settingsRepository = SettingsRepository(dataStore)
-        // Utworzenie ViewModel przy użyciu ViewModelFactory
-        settingsViewModel = ViewModelProvider(
-            this,
-            SettingsViewModelFactory(settingsRepository)
-        )[SettingsViewModel::class.java]
-
-        // Inicjalizacja bazy danych
-        database = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "my-database").build()
-
-        // Inicjalizacja ViewModelu z fabryką
-        val userChatPrefsDao = database.userChatPrefsDao()
-        val viewModelFactory = UserChatPrefsViewModelFactory(userChatPrefsDao)
-        userChatPrefsViewModel = ViewModelProvider(this, viewModelFactory).get(UserChatPrefsViewModel::class.java)
-        // Inicjalizacja DAO message i conversaion
-        val messageDao = database.messageDao()
-        val conversationDao = database.conversationDao()
-        // Utwórz fabrykę dla ConversationViewModel
-        val conversationViewModelFactory = ConversationViewModelFactory(messageDao, conversationDao)
-        conversationViewModel = ViewModelProvider(this, conversationViewModelFactory).get(ConversationViewModel::class.java)
-        conversationViewModel.monitorNetworkConnection(this)
-
-        backDispatcher = onBackPressedDispatcher
-
         installSplashScreen().apply {
             setKeepOnScreenCondition {
                 !viewModel.isReady.value
             }
         }
 
-        val requestPermissionLauncher1 = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean ->
-            if (isGranted) {
-                Log.d("NotificationPermission", "Permission granted!")
-            } else {
-                Log.d("NotificationPermission", "Permission denied.")
-            }
-        }
+        initializeFirebase()
+        initializeDatabase()
+        initializeRepositories()
+        initializeViewModels()
+        initializePermissionLaunchers()
+        askNotificationPermission()
 
-        fun askNotificationPermission() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                when {
-                    ContextCompat.checkSelfPermission(
-                        this,
-                        android.Manifest.permission.POST_NOTIFICATIONS
-                    ) == PackageManager.PERMISSION_GRANTED -> {
-                        // Mamy uprawnienie, można wysyłać powiadomienia
-                        Log.d("NotificationPermission", "Permission already granted.")
-                    }
-                    else -> {
-                        // Poproś użytkownika o zgodę
-                        requestPermissionLauncher1.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                }
-            }
-        }
-        askNotificationPermission()  // Prośba o zgodę na powiadomienia
-
-
-        // Inicjalizacja ViewModel
-        registrationViewModel = ViewModelProvider(this).get(RegistrationViewModel::class.java)
-        loginViewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
-        configurationProfileViewModel =
-            ViewModelProvider(this).get(ConfigurationProfileViewModel::class.java)
-        profileViewModel = ProfileViewModelFactory(applicationContext).create(ProfileViewModel::class.java)
-        locationViewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
-
-        // Inicjalizacja ActivityResultLauncher dla żądania uprawnień
-        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (!isGranted) {
-                // Obsługa braku udzielonych uprawnień
-                Log.e("Location", "Location permission denied")
-            }
-        }
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
-        loadingToAnonymousChatViewModel = ViewModelProvider(this).get(LoadingToAnonymousChatViewModel::class.java)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.startDestination.collect { startDestination ->
+                    if (startDestination != null) {
+                        setContent {
+                            VrescieComposeTheme(settingsViewModel = settingsViewModel) {
+                                Surface(
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    val navController = rememberNavController()
+                                    ProvideContext(context = applicationContext) {
+                                        AppNavigation(
+                                            navController,
+                                            startDestination,
+                                            googleAuthClient,
+                                            lifecycleScope,
+                                            applicationContext = applicationContext,
+                                            registrationViewModel = registrationViewModel,
+                                            loginViewModel = loginViewModel,
+                                            configurationProfileViewModel = configurationProfileViewModel,
+                                            profileViewModel = profileViewModel,
+                                            locationViewModel = locationViewModel,
+                                            requestPermissionLauncher = requestPermissionLauncher,
+                                            conversationViewModel = conversationViewModel,
+                                            userChatPrefsViewModel = userChatPrefsViewModel,
+                                            settingsViewModel = settingsViewModel,
+                                            loadingToAnonymousChatViewModel = loadingToAnonymousChatViewModel
+                                        )
+                                    }
+                                }
+                            }
+                        }
 
-        if (viewModel.isReady.value) {
-            val startDestination = when {
-                viewModel.isFirstRun() -> Navigation.Destinations.FIRST_LAUNCH
-                viewModel.isLoggedIn() -> Navigation.Destinations.MAIN_MENU+"/1"
-                else -> Navigation.Destinations.START
-            }
-            setContent {
-                VrescieComposeTheme(settingsViewModel = settingsViewModel) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        val navController = rememberNavController()
-                        ProvideContext(context = applicationContext) {
-                            AppNavigation(
-                                navController,
-                                startDestination,
-                                googleAuthClient,
-                                lifecycleScope,
-                                applicationContext = applicationContext,
-                                registrationViewModel= registrationViewModel,
-                                loginViewModel = loginViewModel,
-                                configurationProfileViewModel = configurationProfileViewModel,
-                                profileViewModel = profileViewModel,
-                                locationViewModel = locationViewModel,
-                                requestPermissionLauncher = requestPermissionLauncher,
-                                conversationViewModel = conversationViewModel,
-                                userChatPrefsViewModel = userChatPrefsViewModel,
-                                settingsViewModel = settingsViewModel,
-                                loadingToAnonymousChatViewModel = loadingToAnonymousChatViewModel
-                            )
+                        if (startDestination == Navigation.Destinations.FIRST_LAUNCH) {
+                            viewModel.markFirstRunCompleted()
                         }
                     }
                 }
-            }
-            // Ustawienie isFirstRun na false dopiero po ustawieniu setContent na FirstLaunch
-            if (startDestination == Navigation.Destinations.FIRST_LAUNCH) {
-                applicationContext.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-                    .edit()
-                    .putBoolean("isFirstRun", false)
-                    .apply()
             }
         }
     }
@@ -240,6 +156,70 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         conversationViewModel.stopMonitoringNetworkConnection(this)
     }
+
+    private fun initializeFirebase() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                task.result?.let { MyFirebaseMessagingService().saveTokenToFirebase(it) }
+            }
+        }
+        Firebase.initialize(context = this)
+        Firebase.appCheck.installAppCheckProviderFactory(DebugAppCheckProviderFactory.getInstance())
+    }
+
+    private fun initializeDatabase() {
+        database = Room.databaseBuilder(
+            applicationContext, AppDatabase::class.java, "my-database"
+        ).build()
+    }
+
+    private fun initializeRepositories() {
+        val dataStore = applicationContext.dataStore
+        val settingsRepository = SettingsRepository(dataStore)
+        settingsViewModel = ViewModelProvider(
+            this, SettingsViewModelFactory(settingsRepository)
+        )[SettingsViewModel::class.java]
+    }
+
+    private fun initializeViewModels() {
+        val userChatPrefsDao = database.userChatPrefsDao()
+        userChatPrefsViewModel = ViewModelProvider(
+            this, UserChatPrefsViewModelFactory(userChatPrefsDao)
+        ).get(UserChatPrefsViewModel::class.java)
+
+        val messageDao = database.messageDao()
+        val conversationDao = database.conversationDao()
+        conversationViewModel = ViewModelProvider(
+            this, ConversationViewModelFactory(messageDao, conversationDao)
+        ).get(ConversationViewModel::class.java)
+        conversationViewModel.monitorNetworkConnection(this)
+
+        registrationViewModel = ViewModelProvider(this).get(RegistrationViewModel::class.java)
+        loginViewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
+        configurationProfileViewModel = ViewModelProvider(this).get(ConfigurationProfileViewModel::class.java)
+        profileViewModel = ProfileViewModelFactory(applicationContext).create(ProfileViewModel::class.java)
+        locationViewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
+        loadingToAnonymousChatViewModel = ViewModelProvider(this).get(LoadingToAnonymousChatViewModel::class.java)
+    }
+
+    private fun initializePermissionLaunchers() {
+        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                Log.d("Permissions", "Notification permission granted!")
+            } else {
+                Log.e("Permissions", "Notification permission denied.")
+            }
+        }
+    }
+
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
 }
 
 class MainViewModelFactory(private val sharedPreferences: SharedPreferences) :
