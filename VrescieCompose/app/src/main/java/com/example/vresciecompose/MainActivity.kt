@@ -57,11 +57,8 @@ import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    // Room database
-    companion object {
-        lateinit var database: AppDatabase
-    }
 
+    lateinit var database: AppDatabase
     private lateinit var userChatPrefsViewModel: UserChatPrefsViewModel
     private lateinit var registrationViewModel: RegistrationViewModel
     private lateinit var loginViewModel: LoginViewModel
