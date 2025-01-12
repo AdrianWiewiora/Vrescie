@@ -83,7 +83,6 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         installSplashScreen().apply {
             setKeepOnScreenCondition {
                 !viewModel.isReady.value
@@ -96,9 +95,7 @@ class MainActivity : ComponentActivity() {
         initializeViewModels()
         initializePermissionLaunchers()
         askNotificationPermission()
-
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.startDestination.collect { startDestination ->
@@ -131,7 +128,6 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-
                         if (startDestination == Navigation.Destinations.FIRST_LAUNCH) {
                             viewModel.markFirstRunCompleted()
                         }
