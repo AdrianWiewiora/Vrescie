@@ -1,4 +1,4 @@
-package com.example.vresciecompose.screens
+package com.example.vresciecompose.ui.screens
 
 import android.Manifest
 import android.content.ContentValues

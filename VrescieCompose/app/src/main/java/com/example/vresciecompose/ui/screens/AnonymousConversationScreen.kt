@@ -1,4 +1,4 @@
-package com.example.vresciecompose.screens
+package com.example.vresciecompose.ui.screens
 
 import android.graphics.Bitmap
 import androidx.activity.compose.BackHandler

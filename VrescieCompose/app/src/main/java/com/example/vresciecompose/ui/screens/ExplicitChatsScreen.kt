@@ -1,4 +1,4 @@
-package com.example.vresciecompose.screens
+package com.example.vresciecompose.ui.screens
 
 import LocalContext
 import androidx.compose.foundation.Image
@@ -53,7 +53,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
-fun ImplicitChatsScreen(
+fun ExplicitChatsScreen(
     navigateTo: (String) -> Unit,
     conversationViewModel: ConversationViewModel,
     isConnected: Boolean

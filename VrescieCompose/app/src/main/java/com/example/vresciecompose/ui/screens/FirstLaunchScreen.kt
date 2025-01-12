@@ -1,4 +1,4 @@
-package com.example.vresciecompose.screens
+package com.example.vresciecompose.ui.screens
 
 import android.util.Log
 import androidx.compose.animation.core.tween

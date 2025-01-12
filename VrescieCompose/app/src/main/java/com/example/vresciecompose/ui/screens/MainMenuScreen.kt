@@ -1,4 +1,4 @@
-package com.example.vresciecompose.screens
+package com.example.vresciecompose.ui.screens
 
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.clickable
@@ -164,7 +164,7 @@ fun MiddleCard(
             ) { target ->
                 when (target) {
                     1 -> AnonymousChatConfigurationScreen(locationViewModel,requestPermissionLauncher, navigateTo, userChatPrefsViewModel, isConnected)
-                    2 -> ImplicitChatsScreen(navigateTo, conversationViewModel, isConnected)
+                    2 -> ExplicitChatsScreen(navigateTo, conversationViewModel, isConnected)
                     3 -> ProfileScreen(isConnected, profileViewModel, navigateTo)
                     else ->  Column(
                         modifier = Modifier
