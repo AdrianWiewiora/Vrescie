@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.example.vresciecompose.SettingsRepository
+import com.example.vresciecompose.data.SettingsRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
