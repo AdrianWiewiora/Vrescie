@@ -117,6 +117,7 @@
     <string name="prompt4">Suggest only two original farewells and nothing more, one arbitrary and the other based on these last 20 messages in my conversation:\n%1$s. I signed my messages as me and my interlocutor as Friend.</string>
     <string name="prompt5">Suggest just two questions that I could ask a stranger about the latest messages in my conversation:\n%1$s. I signed my messages as me and my interlocutor as Friend. The answer should be short, two sentences at most</string>
     <string name="notifications">Notifications</string>
+    <string name="passwords_do_not_match">Passwords do not match</string>
 
 
 </resources>

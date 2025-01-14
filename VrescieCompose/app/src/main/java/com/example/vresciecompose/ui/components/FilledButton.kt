@@ -19,15 +19,10 @@ import com.example.vresciecompose.R
 
 @Composable
 fun FilledButton(
-    onClick: () -> Unit,
-    text: String,
-    icon: Int? = null,
-    iconSize: Int? = null,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    onClick: () -> Unit,            text: String,
+    icon: Int? = null,              iconSize: Int? = null,
+    modifier: Modifier = Modifier,  enabled: Boolean = true
 ) {
-
-
     Button(
         onClick = onClick,
         modifier = modifier,
@@ -45,7 +40,6 @@ fun FilledButton(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
-
                 Text(
                     text = text,
                     style = MaterialTheme.typography.headlineSmall,

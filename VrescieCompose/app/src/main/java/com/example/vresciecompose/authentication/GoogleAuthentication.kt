@@ -16,6 +16,7 @@ import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
+@Suppress("DEPRECATION")
 class GoogleAuthentication(
     private val context: Context,
     private val oneTapClient: SignInClient
@@ -46,11 +47,9 @@ class GoogleAuthentication(
             val isNewAccount = authResult.additionalUserInfo?.isNewUser ?: false
             val user = authResult.user
 
-            // Wyodrębnianie tylko imienia użytkownika z pola displayName
             val nameParts = user?.displayName?.split(" ")
             val firstName = nameParts?.firstOrNull() ?: ""
 
-            // Dodawanie danych użytkownika do bazy danych Firebase
             val userId = user?.uid ?: ""
             val userEmail = user?.email ?: ""
             val userRef = database.getReference("user").child(userId)
@@ -82,31 +81,6 @@ class GoogleAuthentication(
             )
         }
     }
-
-
-
-    suspend fun signOut() {
-        try {
-            oneTapClient.signOut().await()
-            auth.signOut()
-        } catch(e: Exception) {
-            e.printStackTrace()
-            if(e is CancellationException) throw e
-        }
-    }
-
-    fun getSignedInUser(): UserData? {
-        val user = auth.currentUser
-        val username = user?.displayName?.split(" ")?.firstOrNull() ?: ""
-        return user?.run {
-            UserData(
-                userId = uid,
-                username = username,
-                profilePictureUrl = photoUrl?.toString()
-            )
-        }
-    }
-
 
     private fun buildSignInRequest(): BeginSignInRequest {
         return BeginSignInRequest.Builder()
