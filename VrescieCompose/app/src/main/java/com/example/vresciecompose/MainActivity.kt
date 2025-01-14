@@ -38,7 +38,6 @@ import com.example.vresciecompose.data.UserChatPrefs
 import com.example.vresciecompose.data.UserChatPrefsDao
 import com.example.vresciecompose.data.dataStore
 import com.example.vresciecompose.ui.theme.VrescieComposeTheme
-import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.example.vresciecompose.view_models.LoadingToAnonymousChatViewModel
 import com.example.vresciecompose.view_models.LocationViewModel
@@ -62,7 +61,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var userChatPrefsViewModel: UserChatPrefsViewModel
     private lateinit var registrationViewModel: RegistrationViewModel
     private lateinit var loginViewModel: LoginViewModel
-    private lateinit var configurationProfileViewModel: ConfigurationProfileViewModel
     private lateinit var profileViewModel: ProfileViewModel
     private lateinit var locationViewModel: LocationViewModel
     private lateinit var conversationViewModel: ConversationViewModel
@@ -83,6 +81,7 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initializeDatabase()
         installSplashScreen().apply {
             setKeepOnScreenCondition {
                 !viewModel.isReady.value
@@ -90,7 +89,6 @@ class MainActivity : ComponentActivity() {
         }
 
         initializeFirebase()
-        initializeDatabase()
         initializeRepositories()
         initializeViewModels()
         initializePermissionLaunchers()
@@ -115,7 +113,6 @@ class MainActivity : ComponentActivity() {
                                             applicationContext = applicationContext,
                                             registrationViewModel = registrationViewModel,
                                             loginViewModel = loginViewModel,
-                                            configurationProfileViewModel = configurationProfileViewModel,
                                             profileViewModel = profileViewModel,
                                             locationViewModel = locationViewModel,
                                             requestPermissionLauncher = requestPermissionLauncher,
@@ -181,7 +178,6 @@ class MainActivity : ComponentActivity() {
 
         registrationViewModel = ViewModelProvider(this).get(RegistrationViewModel::class.java)
         loginViewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
-        configurationProfileViewModel = ViewModelProvider(this).get(ConfigurationProfileViewModel::class.java)
         profileViewModel = ProfileViewModelFactory(applicationContext).create(ProfileViewModel::class.java)
         locationViewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
         loadingToAnonymousChatViewModel = ViewModelProvider(this).get(LoadingToAnonymousChatViewModel::class.java)

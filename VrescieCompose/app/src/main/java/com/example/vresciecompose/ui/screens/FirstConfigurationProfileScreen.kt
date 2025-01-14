@@ -67,7 +67,6 @@ import com.example.vresciecompose.Navigation
 import com.example.vresciecompose.R
 import com.example.vresciecompose.ui.components.ExitConfirmationDialog
 import com.example.vresciecompose.ui.components.FilledButton
-import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.ProfileViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -81,7 +80,6 @@ import java.io.File
 @Composable
 fun FirstConfigurationProfileScreen(
     navigateTo: (String) -> Unit,
-    configurationProfileViewModel: ConfigurationProfileViewModel,
     profileViewModel: ProfileViewModel,
     isChangePhoto: Int = 0,
 ) {
@@ -106,53 +104,41 @@ fun FirstConfigurationProfileScreen(
         showDialog.value = true
     }
 
-    fun sendData(context: Context, selectedImageUri: Uri?) {
+    fun sendData(context: Context, selectedImageUri: Uri) {
         val name = nameState.value
         val age = ageState.value
         val gender = genderState.value
 
-        // Sprawdzenie, czy jest wybrane zdjęcie z URI
-        selectedImageUri?.let { uri ->
-            Log.d("ImageUri", "Selected image URI: $uri")
-            val storage = FirebaseStorage.getInstance()
-            val storageRef: StorageReference = storage.reference
+        val storage = FirebaseStorage.getInstance()
+        val storageRef: StorageReference = storage.reference
 
-            // Unikalna nazwa pliku
-            val fileName = "images/$currentUserID.jpg"
-            val imageRef = storageRef.child(fileName)
+        // Unikalna nazwa pliku
+        val fileName = "images/$currentUserID.jpg"
+        val imageRef = storageRef.child(fileName)
 
-            // Wczytaj obraz jako bajty
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val bitmap = BitmapFactory.decodeStream(inputStream)
-            val baos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-            val data = baos.toByteArray()
+        // Wczytuje obraz jako bajty
+        val inputStream = context.contentResolver.openInputStream(selectedImageUri)
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        val baos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        val data = baos.toByteArray()
 
-            // Przesyłanie do Firebase
-            val uploadTask = imageRef.putBytes(data)
-            uploadTask.addOnSuccessListener {
-                // Po pomyślnym przesłaniu uzyskaj URL
-                imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                    Log.d("Firebase", "Uploaded Image URL: $downloadUri")
+        // Przesyłanie do Firebase
+        val uploadTask = imageRef.putBytes(data)
+        uploadTask.addOnSuccessListener {
+            // Po pomyślnym przesłaniu uzyskaj URL
+            imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                Log.d("Firebase", "Uploaded Image URL: $downloadUri")
 
-                    // Zapisz dane użytkownika, w tym URL zdjęcia
-                    configurationProfileViewModel.saveUserData(name, age, gender, downloadUri.toString()) {
-                        configurationProfileViewModel.setProfileConfigured()
-                    }
-                    profileViewModel.setProfileConfigured(true)
-                    navigateTo("${Navigation.Destinations.MAIN_MENU}/${1}")
+                // Zapisuje dane
+                profileViewModel.saveUserData(name, age, gender, downloadUri.toString()) {
+                    profileViewModel.setProfileConfigured()
                 }
-            }.addOnFailureListener { exception ->
-                Log.e("Firebase", "Upload failed", exception)
-                // Obsługa błędu przesyłania
+                profileViewModel.setProfileConfigured(true)
+                navigateTo("${Navigation.Destinations.MAIN_MENU}/${1}")
             }
-        } ?: run {
-            // Jeśli nie ma zdjęcia, przejdź dalej bez uploadu
-            configurationProfileViewModel.saveUserData(name, age, gender, null) {
-                configurationProfileViewModel.setProfileConfigured()
-            }
-            profileViewModel.setProfileConfigured(true)
-            navigateTo("${Navigation.Destinations.MAIN_MENU}/${1}")
+        }.addOnFailureListener { exception ->
+            Log.e("Firebase", "Upload failed", exception)
         }
     }
 
@@ -162,12 +148,12 @@ fun FirstConfigurationProfileScreen(
         val storage = FirebaseStorage.getInstance()
         val storageRef: StorageReference = storage.reference
 
-        // Odczytaj URL starego zdjęcia z Firebase
+        // Odczytje URL starego zdjęcia z Firebase
         val userRef = database.getReference("user").child(userId)
         userRef.child("photoUrl").get().addOnSuccessListener { snapshot ->
             val oldPhotoUrl = snapshot.value as? String
 
-            // Usuń stare zdjęcie w Firebase
+            // Usuwa stare zdjęcie w Firebase
             oldPhotoUrl?.let {
                 val oldPhotoRef = storage.getReferenceFromUrl(it)
                 oldPhotoRef.delete()
@@ -177,7 +163,7 @@ fun FirstConfigurationProfileScreen(
                     }
             }
 
-            // Usuń stare zdjęcie lokalnie
+            // Usuwa stare zdjęcie lokalnie
             val localFile = File(context.filesDir, "$userId.jpg")
             if (localFile.exists()) {
                 if (localFile.delete()) {
@@ -328,20 +314,6 @@ fun FirstConfigurationStage(
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(
-                    selected = genderState.value == "other",
-                    onClick = { genderState.value = "other" },
-                    enabled = false
-                )
-                Text(
-                    text = stringResource(R.string.other_gender),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-
-
         }
         FilledButton(
             onClick = {
@@ -358,7 +330,7 @@ fun FirstConfigurationStage(
 @Composable
 fun SecondConfigurationStage(
     modifier: Modifier = Modifier,
-    sendData: (Context, Uri?) -> Unit,
+    sendData: (Context, Uri) -> Unit,
     currentUserID: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 ) {
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
@@ -404,14 +376,9 @@ fun SecondConfigurationStage(
             val inputStream = context.contentResolver.openInputStream(uri)
             val originalBitmap = BitmapFactory.decodeStream(inputStream)
 
-            Log.d("SavePhoto", "Current scale: ${scale.value}")
-            Log.d("SavePhoto", "Current offset: ${offset.value}")
-
             if (originalBitmap != null) {
                 val orientation = getOrientation(context, uri)
                 val bitmap = rotateBitmap(originalBitmap, orientation)
-
-                Log.d("SavePhoto", "Original Bitmap Size: ${bitmap.width}x${bitmap.height}")
 
                 val maxDimension = maxOf(bitmap.width, bitmap.height)
                 val squareBitmap = Bitmap.createBitmap(maxDimension, maxDimension, Bitmap.Config.ARGB_8888)
@@ -424,10 +391,7 @@ fun SecondConfigurationStage(
 
                 canvas.drawBitmap(bitmap, left.toFloat(), top.toFloat(), null)
 
-                Log.d("SavePhoto", "Square Bitmap Size: ${squareBitmap.width}x${squareBitmap.height}")
-
                 val targetSize = (maxDimension / scale.value).toInt()
-                Log.d("SavePhoto", "Calculated Target Size: $targetSize")
 
                 val centerX = (squareBitmap.width / 2).toInt()
                 val centerY = (squareBitmap.height / 2).toInt()
@@ -435,12 +399,8 @@ fun SecondConfigurationStage(
                 val x = (centerX - (targetSize / 2) - (offset.value.x * scale.value)).toInt()
                 val y = (centerY - (targetSize / 2) - (offset.value.y * scale.value)).toInt()
 
-                Log.d("SavePhoto", "Calculated Crop Position: x=$x, y=$y")
-
                 val validX = x.coerceIn(0, squareBitmap.width - targetSize)
                 val validY = y.coerceIn(0, squareBitmap.height - targetSize)
-
-                Log.d("SavePhoto", "Valid Crop Position: validX=$validX, validY=$validY")
 
                 val croppedBitmap = Bitmap.createBitmap(squareBitmap, validX, validY, targetSize, targetSize)
 
@@ -463,8 +423,6 @@ fun SecondConfigurationStage(
             null
         }
     }
-
-
 
     Column(
         modifier = modifier,
@@ -533,7 +491,6 @@ fun SecondConfigurationStage(
             )
         }
 
-
         Spacer(modifier = Modifier.height(16.dp))
 
         val isLoading = remember { mutableStateOf(false) }
@@ -547,7 +504,6 @@ fun SecondConfigurationStage(
                 if (savedUri != null) {
                     sendData(context, savedUri) // Przekazanie URI zapisanego zdjęcia
                 } else {
-                    Log.e("SavePhoto", "Failed to save photo")
                     isLoading.value = false // Zakończenie operacji
                 }
             },

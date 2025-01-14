@@ -29,7 +29,6 @@ import com.example.vresciecompose.ui.screens.MainMenuScreen
 import com.example.vresciecompose.ui.screens.RegistrationScreen
 import com.example.vresciecompose.ui.screens.SettingsScreen
 import com.example.vresciecompose.ui.screens.StartScreen
-import com.example.vresciecompose.view_models.ConfigurationProfileViewModel
 import com.example.vresciecompose.view_models.ConversationViewModel
 import com.example.vresciecompose.view_models.LoadingToAnonymousChatViewModel
 import com.example.vresciecompose.view_models.LocationViewModel
@@ -64,7 +63,6 @@ fun AppNavigation(
     applicationContext: Context,
     registrationViewModel: RegistrationViewModel,
     loginViewModel: LoginViewModel,
-    configurationProfileViewModel: ConfigurationProfileViewModel,
     profileViewModel: ProfileViewModel,
     locationViewModel: LocationViewModel,
     requestPermissionLauncher: ActivityResultLauncher<String>,
@@ -162,7 +160,6 @@ fun AppNavigation(
             val isChangePhoto = backStackEntry.arguments?.getString("isChangePhoto") ?: "0"
             FirstConfigurationProfileScreen(
                 navigateTo = { navController.navigate(route = it) },
-                configurationProfileViewModel = configurationProfileViewModel,
                 profileViewModel = profileViewModel,
                 isChangePhoto = isChangePhoto.toInt(),
             )

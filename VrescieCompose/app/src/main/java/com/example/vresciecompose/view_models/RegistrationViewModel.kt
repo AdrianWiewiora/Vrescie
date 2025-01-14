@@ -8,20 +8,20 @@ class RegistrationViewModel : ViewModel() {
     private val emailAuthentication = EMailAuthentication()
     private val _registrationSuccess = MutableStateFlow(false)
     val registrationSuccess: StateFlow<Boolean> = _registrationSuccess
-    private val _errorMessage = MutableStateFlow(false)
-    val errorMessage: StateFlow<Boolean> = _errorMessage
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
 
     fun registerWithEmail(email: String, password: String, repeatPassword: String) {
         if (password != repeatPassword) {
-            _errorMessage.value = true
+            _errorMessage.value = "Passwords do not match"
             return
         }
         emailAuthentication.registerWithEmail(email, password,
             onSuccess = {
                 _registrationSuccess.value = true
             },
-            onFailure = {
-                _errorMessage.value = true
+            onFailure = { errorMessage ->
+                _errorMessage.value = errorMessage
             }
         )
     }

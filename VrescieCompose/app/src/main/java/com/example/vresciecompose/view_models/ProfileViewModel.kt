@@ -159,5 +159,35 @@ class ProfileViewModel(private val appContext: Context) : ViewModel() {
     fun setProfileConfigured(isConfigured: Boolean) {
         _isProfileConfigured.value = isConfigured
     }
+
+    fun saveUserData(name: String, age: String, gender: String, photoUrl: String?, onComplete: () -> Unit) {
+        val userId = auth.currentUser?.uid ?: return
+        val userRef = database.getReference("user").child(userId)
+
+        userRef.child("name").setValue(name)
+        userRef.child("age").setValue(age)
+        userRef.child("gender").setValue(gender)
+        userRef.child("join_time").setValue(ServerValue.TIMESTAMP)
+
+        // Zapisz URL zdjęcia, jeśli jest dostępny
+        photoUrl?.let {
+            userRef.child("photoUrl").setValue(it)
+        }
+
+        onComplete()
+    }
+
+
+    fun setProfileConfigured() {
+        val userId = auth.currentUser?.uid ?: return
+        val userRef = database.getReference("user").child(userId)
+        userRef.child("profileConfigured").setValue(true)
+            .addOnSuccessListener {
+                Log.d("ConfigurationProfileViewModel", "Profile configured successfully.")
+            }
+            .addOnFailureListener { exception ->
+                Log.e("ConfigurationProfileViewModel", "Failed to set profileConfigured: ${exception.message}")
+            }
+    }
 }
 

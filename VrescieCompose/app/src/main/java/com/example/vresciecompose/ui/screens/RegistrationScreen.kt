@@ -58,7 +58,7 @@ fun RegistrationScreen(
     var isErrorShown by remember { mutableStateOf(false) }
 
     LaunchedEffect(errorMessage) {
-        if (errorMessage) {
+        if (!errorMessage.isNullOrEmpty()) {
             isErrorShown = true
         }
     }
@@ -85,7 +85,7 @@ fun RegistrationScreen(
         ErrorAlertDialog(
             onDismiss = { isErrorShown = false }, // Zamykanie dialogu
             text1 = stringResource(R.string.registration_error),
-            text2 = stringResource(R.string.passwords_do_not_match) ?: stringResource(R.string.an_unknown_error_occurred)
+            text2 = errorMessage ?: stringResource(R.string.an_unknown_error_occurred)
         )
     }
 

@@ -78,11 +78,6 @@ class EMailAuthentication {
                 }
             }
     }
-
-    fun isEmailVerified(): Boolean {
-        val user = auth.currentUser
-        return user?.isEmailVerified == true
-    }
 }
 
 
