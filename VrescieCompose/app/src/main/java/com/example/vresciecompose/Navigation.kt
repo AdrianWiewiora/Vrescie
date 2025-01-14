@@ -161,6 +161,7 @@ fun AppNavigation(
             FirstConfigurationProfileScreen(
                 navigateTo = { navController.navigate(route = it) },
                 profileViewModel = profileViewModel,
+                requestPermissionLauncher = requestPermissionLauncher,
                 isChangePhoto = isChangePhoto.toInt(),
             )
         }

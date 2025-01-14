@@ -14,6 +14,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,6 +38,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -81,6 +83,7 @@ import java.io.File
 fun FirstConfigurationProfileScreen(
     navigateTo: (String) -> Unit,
     profileViewModel: ProfileViewModel,
+    requestPermissionLauncher: ActivityResultLauncher<String>,
     isChangePhoto: Int = 0,
 ) {
     val numberOfConfigurationStage = remember { mutableStateOf(if (isChangePhoto == 1) 2 else 1) }
@@ -221,6 +224,7 @@ fun FirstConfigurationProfileScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
             sendData = if (isChangePhoto == 1) ::sendNewPhoto else ::sendData,
+            requestPermissionLauncher = requestPermissionLauncher
         )
     }
 
@@ -326,7 +330,8 @@ fun FirstConfigurationStage(
 fun SecondConfigurationStage(
     modifier: Modifier = Modifier,
     sendData: (Context, Uri) -> Unit,
-    currentUserID: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    currentUserID: String = FirebaseAuth.getInstance().currentUser?.uid ?: "",
+    requestPermissionLauncher: ActivityResultLauncher<String>
 ) {
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val cameraPermissionGranted = remember { mutableStateOf(false) }
@@ -356,16 +361,12 @@ fun SecondConfigurationStage(
         }
     }
 
-    // Launcher do żądania uprawnień do aparatu
-    val requestCameraPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        cameraPermissionGranted.value = isGranted
-        if (isGranted && photoUri.value != null) {
+    // Launcher do obsługi uprawnień
+    LaunchedEffect(cameraPermissionGranted.value) {
+        if (cameraPermissionGranted.value && photoUri.value != null) {
             cameraLauncher.launch(photoUri.value!!)
         }
     }
-
     fun savePhotoToGallery(): Uri? {
         return selectedImageUri.value?.let { uri ->
             val inputStream = context.contentResolver.openInputStream(uri)
@@ -464,7 +465,7 @@ fun SecondConfigurationStage(
                         cameraLauncher.launch(photoUri.value!!)
                     }
                     else -> {
-                        requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        requestPermissionLauncher.launch(Manifest.permission.CAMERA)
                     }
                 }
             },
@@ -676,8 +677,9 @@ fun PreviewSecondConfigurationStage() {
     fun dummySendData(context: Context, uri: Uri?) {
     }
 
-    SecondConfigurationStage(
-        modifier = Modifier.fillMaxSize(),
-        sendData = ::dummySendData
-    )
+//    SecondConfigurationStage(
+//        modifier = Modifier.fillMaxSize(),
+//        sendData = ::dummySendData,
+//        requestPermissionLauncher = ActivityResultLauncher.
+//    )
 }

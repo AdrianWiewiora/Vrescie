@@ -184,11 +184,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun initializePermissionLaunchers() {
-        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {isGranted ->
             if (isGranted) {
-                Log.d("Permissions", "Notification permission granted!")
+                Log.d("Permissions", "Permission granted!")
             } else {
-                Log.e("Permissions", "Notification permission denied.")
+                Log.e("Permissions", "Permission denied.")
             }
         }
     }
