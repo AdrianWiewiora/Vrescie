@@ -16,33 +16,34 @@ import java.util.Calendar
 
 class UserChatPrefsViewModel( private val userChatPrefsDao: UserChatPrefsDao) : ViewModel() {
     private val viewModelScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private val _allChatPrefs = MutableLiveData<List<UserChatPrefs>>()
-    val allChatPrefs: LiveData<List<UserChatPrefs>> = _allChatPrefs
+    private val _userChatPrefs = MutableLiveData<UserChatPrefs?>()
+    val userChatPrefs: LiveData<UserChatPrefs?> = _userChatPrefs
 
     init {
-        getAllUserChatPrefsFromDatabase()
+        fetchUserChatPrefs()
     }
 
-    private fun getAllUserChatPrefsFromDatabase() {
+    fun fetchUserChatPrefs() {
         viewModelScope.launch {
             val chatPrefs = withContext(Dispatchers.IO) {
-                userChatPrefsDao.getAllUserChatPrefs()
+                userChatPrefsDao.getUserChatPrefs()
             }
             withContext(Dispatchers.Main) {
-                _allChatPrefs.value = chatPrefs
+                _userChatPrefs.value = chatPrefs
             }
         }
     }
 
-    fun fetchChatPrefs() {
-        getAllUserChatPrefsFromDatabase()
-    }
-
-    // Funkcja do zapisywania i aktualizowania preferencji uzytkownika w sheredPreferences
-    fun savePreferences(selectedGenders: String, ageRange: ClosedRange<Float>, isProfileVerified: Boolean, relationshipPreference: Boolean, maxDistance: Float) {
+    fun savePreferences(
+        selectedGenders: String,
+        ageRange: ClosedRange<Float>,
+        isProfileVerified: Boolean,
+        relationshipPreference: Boolean,
+        maxDistance: Float
+    ) {
         viewModelScope.launch {
             val existingPrefs = withContext(Dispatchers.IO) {
-                userChatPrefsDao.getUserChatPrefsById(1)
+                userChatPrefsDao.getUserChatPrefs()
             }
 
             val userChatPrefs = UserChatPrefs(

@@ -1,5 +1,4 @@
 package com.example.vresciecompose
-
 import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.widget.Toast
@@ -41,9 +40,7 @@ import com.example.vresciecompose.view_models.SettingsViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import kotlinx.coroutines.launch
 
-
 object Navigation {
-
     object Destinations {
         const val MAIN_MENU = "main_menu"
         const val FIRST_LAUNCH = "first_launch"

@@ -26,12 +26,8 @@ interface UserChatPrefsDao {
     @Query("SELECT * FROM UserChatPrefs LIMIT 1")
     suspend fun getUserChatPrefs(): UserChatPrefs?
 
-    @Query("SELECT * FROM UserChatPrefs ORDER BY id DESC")
-    suspend fun getAllUserChatPrefs(): List<UserChatPrefs>
-
-    @Query("SELECT * FROM UserChatPrefs WHERE id = :id")
-    suspend fun getUserChatPrefsById(id: Long): UserChatPrefs?
-
     @Update
     suspend fun update(userChatPrefs: UserChatPrefs)
 }
+
+

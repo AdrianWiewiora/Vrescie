@@ -31,7 +31,6 @@ import java.util.Locale
 
 @Composable
 fun FirstLaunchScreen(onClose:()-> Unit ) {
-
     val text1 = stringResource(R.string.finally_str)
     val text2 = stringResource(R.string.new_connections)
     val text3 = stringResource(R.string.new_friends)
@@ -41,9 +40,9 @@ fun FirstLaunchScreen(onClose:()-> Unit ) {
     val isPolishLocale = Locale.getDefault().language == "pl"
     val textArray = remember {
         if (isPolishLocale) {
-            arrayOf(text1, text2, text3, text4, text5) // bez pustego elementu
+            arrayOf(text1, text2, text3, text4, text5)
         } else {
-            arrayOf("", text1, text2, text3, text4, text5) // z pustym elementem
+            arrayOf("", text1, text2, text3, text4, text5)
         }
     }
     val timerDuration = 3000L
@@ -59,10 +58,10 @@ fun FirstLaunchScreen(onClose:()-> Unit ) {
         onClose()
     }
 
-    val alphaText = remember { Animatable(0f) } // Animacja dla tekstu
-    val alphaImage = remember { Animatable(0f) } // Animacja dla obrazka
+    val alphaText = remember { Animatable(0f) }
+    val alphaImage = remember { Animatable(0f) }
 
-    FirstLaunchColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
@@ -70,12 +69,67 @@ fun FirstLaunchScreen(onClose:()-> Unit ) {
                     onClose()
                 })
             },
-        alphaText = alphaText,
-        alphaImage = alphaImage,
-        totalDuration = totalDuration,
-        textArray = textArray,
-        currentStep = currentStep
-    )
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Animacja pojawiania się obrazka
+        LaunchedEffect(Unit) {
+            alphaImage.animateTo(1f, animationSpec = tween(durationMillis = 1000))
+            delay(totalDuration - 1000)
+            alphaImage.animateTo(0f, animationSpec = tween(durationMillis = 1000))
+        }
+        // Obrazek
+        Image(
+            painter = painterResource(id = R.drawable.logotype_vreescie_svg),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .padding(horizontal = 20.dp)
+                .alpha(alphaImage.value)
+        )
+        // Tekst
+        Crossfade(
+            targetState = textArray[currentStep],
+            modifier = Modifier.alpha(alphaText.value),
+            label = ""
+        ) { currentText ->
+            LaunchedEffect(currentText) {
+                alphaText.animateTo(
+                    1f,
+                    animationSpec = tween(durationMillis = 1500)
+                ) // Animacja z 0 do 1 (pojawienie się nowego tekstu)
+                alphaText.animateTo(
+                    0f,
+                    animationSpec = tween(durationMillis = 1500)
+                ) // Animacja z obecnej alfy do 0 (wygaszanie)
+            }
+
+            Text(
+                textAlign = TextAlign.Center,
+                text = currentText,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .fillMaxWidth()
+            )
+        }
+    }
+
+//    FirstLaunchColumn(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .pointerInput(Unit) {
+//                detectTapGestures(onDoubleTap = {
+//                    onClose()
+//                })
+//            },
+//        alphaText = alphaText,
+//        alphaImage = alphaImage,
+//        totalDuration = totalDuration,
+//        textArray = textArray,
+//        currentStep = currentStep
+//    )
 }
 
 @Composable
@@ -98,7 +152,6 @@ fun FirstLaunchColumn(
             delay(totalDuration - 1000)
             alphaImage.animateTo(0f, animationSpec = tween(durationMillis = 1000))
         }
-
         // Obrazek
         Image(
             painter = painterResource(id = R.drawable.logotype_vreescie_svg),
@@ -108,7 +161,6 @@ fun FirstLaunchColumn(
                 .padding(horizontal = 20.dp)
                 .alpha(alphaImage.value)
         )
-
         // Tekst
         Crossfade(
             targetState = textArray[currentStep],
@@ -143,11 +195,7 @@ fun FirstLaunchColumn(
 @Preview(showBackground = true)
 @Composable
 fun FirstLaunchPreview() {
-    FirstLaunchColumn(
-        modifier = Modifier.fillMaxSize(),
-        alphaText = remember { Animatable(1f) },
-        alphaImage = remember { Animatable(1f) },
-        textArray = arrayOf(" ","Nowi znajomi", "Nowi przyjaciele", "Nowa miłość", "Szczęśliwi"),
-        currentStep = 0
+    FirstLaunchScreen(
+        onClose = {}
     )
 }

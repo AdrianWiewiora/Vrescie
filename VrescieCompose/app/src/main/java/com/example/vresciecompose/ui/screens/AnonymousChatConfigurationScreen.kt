@@ -52,7 +52,7 @@ fun AnonymousChatConfigurationScreen(
     userChatPrefsViewModel: UserChatPrefsViewModel,
     isConnected: Boolean
 ) {
-    val allChatPrefs by userChatPrefsViewModel.allChatPrefs.observeAsState(emptyList())
+    val userChatPrefs by userChatPrefsViewModel.userChatPrefs.observeAsState()
     var latitude by remember { mutableStateOf<Double?>(null) }
     var longitude by remember { mutableStateOf<Double?>(null) }
     val context = LocalContext.current
@@ -72,22 +72,22 @@ fun AnonymousChatConfigurationScreen(
         )
     }
 
-    val (selectedGenders, setSelectedGenders) = remember { mutableStateOf(allChatPrefs.firstOrNull()?.selectedGenders ?: "FM") }
-    val (ageRange, setAgeRange) = remember {mutableStateOf(allChatPrefs.firstOrNull()?.ageStart?.rangeTo(allChatPrefs.firstOrNull()?.ageEnd ?: 50f) ?: 18f..50f)}
+    val (selectedGenders, setSelectedGenders) = remember { mutableStateOf(userChatPrefs?.selectedGenders ?: "FM") }
+    val (ageRange, setAgeRange) = remember { mutableStateOf(userChatPrefs?.ageStart?.rangeTo(userChatPrefs?.ageEnd ?: 50f) ?: 18f..50f) }
     val minAge by remember { mutableStateOf(18f) }
     val maxAge by remember { mutableStateOf(50f) }
-    val (isProfileVerified, setProfileVerified) = remember { mutableStateOf(allChatPrefs.firstOrNull()?.isProfileVerified ?: false) }
-    val (relationshipPreference, setRelationshipPreference) = remember { mutableStateOf(allChatPrefs.firstOrNull()?.relationshipPreference ?: false) }
-    val (maxDistance, setMaxDistance) = remember { mutableStateOf(allChatPrefs.firstOrNull()?.maxDistance ?: 10f) }
+    val (isProfileVerified, setProfileVerified) = remember { mutableStateOf(userChatPrefs?.isProfileVerified ?: false)  }
+    val (relationshipPreference, setRelationshipPreference) = remember { mutableStateOf(userChatPrefs?.relationshipPreference ?: false)  }
+    val (maxDistance, setMaxDistance) = remember { mutableStateOf(userChatPrefs?.maxDistance ?: 10f)  }
 
 
     // Odczyt danych z lokalnych danych
     LaunchedEffect(Unit) {
-        userChatPrefsViewModel.fetchChatPrefs()
+        userChatPrefsViewModel.fetchUserChatPrefs()
     }
     // Jeżeli dane są dostępne, ustawia wartości
-    LaunchedEffect(allChatPrefs) {
-        allChatPrefs.firstOrNull()?.let {
+    LaunchedEffect(userChatPrefs) {
+        userChatPrefs?.let {
             setSelectedGenders(it.selectedGenders)
             setAgeRange(it.ageStart..it.ageEnd)
             setProfileVerified(it.isProfileVerified)

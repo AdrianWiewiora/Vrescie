@@ -1,5 +1,4 @@
 package com.example.vresciecompose.view_models
-
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -19,13 +18,10 @@ import com.google.firebase.database.database
 import kotlinx.coroutines.tasks.await
 
 class MainViewModel(private val sharedPreferences: SharedPreferences) : ViewModel() {
-
     private val _isReady = MutableStateFlow(false)
     val isReady = _isReady.asStateFlow()
-
     private val _startDestination = MutableStateFlow<String?>(null)
     val startDestination = _startDestination.asStateFlow()
-
     init {
         viewModelScope.launch {
             determineStartDestination()
@@ -56,3 +52,5 @@ class MainViewModel(private val sharedPreferences: SharedPreferences) : ViewMode
             .apply()
     }
 }
+
+

@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.BrightnessMedium
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -142,6 +143,14 @@ fun SettingsContent(
                 ){
                     item {
                         AppearanceSettingsItem(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                                .clickable { setCurrentContent("appearanceSettings") }
+                        )
+                    }
+                    item {
+                        NotificationSettingsItem(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(40.dp)
@@ -376,6 +385,31 @@ fun SettingsAppearancePreview(){
         currentMessageSize = 1,
         saveMessageSizeVM = {}
     )
+}
+
+@Composable
+fun NotificationSettingsItem(
+    modifier: Modifier = Modifier,
+){
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ){
+        Icon(
+            imageVector = Icons.Filled.Notifications,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .size(dimensionResource(R.dimen.icon_settings_size))
+                .padding(end = dimensionResource(R.dimen.padding_small))
+        )
+        Text(
+            text = stringResource(R.string.notifications),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier
+                .padding(start = dimensionResource(R.dimen.padding_small))
+        )
+    }
 }
 
 @Preview(showBackground = true)

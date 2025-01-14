@@ -118,6 +118,7 @@
     <string name="prompt3">Zaproponuj tylko dwa oryginalne powitania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n%1$s. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy.</string>
     <string name="prompt4">Zaproponuj tylko dwa oryginalne pożegnania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n%1$s. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy.</string>
     <string name="prompt5">Zaproponuj tylko dwa pytania jakie ja mógłbym zadać obcemu dotyczące ostatnich wiadomości w mojej rozmowie:\n%1$s. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy. Odpowiedź ma być krótka, maksymalnie dwa zdania</string>
+    <string name="notifications">Powiadomienia</string>
 
 
 </resources>
