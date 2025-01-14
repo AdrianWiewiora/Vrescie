@@ -112,7 +112,6 @@ fun FirstConfigurationProfileScreen(
         val storage = FirebaseStorage.getInstance()
         val storageRef: StorageReference = storage.reference
 
-        // Unikalna nazwa pliku
         val fileName = "images/$currentUserID.jpg"
         val imageRef = storageRef.child(fileName)
 
@@ -129,12 +128,8 @@ fun FirstConfigurationProfileScreen(
             // Po pomyślnym przesłaniu uzyskaj URL
             imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
                 Log.d("Firebase", "Uploaded Image URL: $downloadUri")
-
-                // Zapisuje dane
-                profileViewModel.saveUserData(name, age, gender, downloadUri.toString()) {
-                    profileViewModel.setProfileConfigured()
-                }
-                profileViewModel.setProfileConfigured(true)
+                // Zapisuje dane po czym nawiguje
+                profileViewModel.saveUserData(name, age, gender, downloadUri.toString())
                 navigateTo("${Navigation.Destinations.MAIN_MENU}/${1}")
             }
         }.addOnFailureListener { exception ->
@@ -580,7 +575,7 @@ fun ZoomableImage(
                 val bitmap = rotateBitmap(originalBitmap, orientation)
 
                 // Jeśli bitmapa istnieje, utwórz kwadratową wersję z białymi paskami
-                if (bitmap != null) {
+                run {
                     val maxDimension = maxOf(bitmap.width, bitmap.height)
                     val squareBitmap = Bitmap.createBitmap(maxDimension, maxDimension, Bitmap.Config.ARGB_8888)
 
@@ -594,8 +589,6 @@ fun ZoomableImage(
                     canvas.drawBitmap(bitmap, left.toFloat(), top.toFloat(), null)
 
                     squareBitmap // Zwróć kwadratową bitmapę
-                } else {
-                    null
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
