@@ -339,7 +339,6 @@ fun SecondConfigurationStage(
     val context = LocalContext.current
     // Przygotowanie zmiennej do URI
     val photoUri = remember { mutableStateOf<Uri?>(null) }
-
     // Stany do skali i przesunięcia
     val scale = remember { mutableStateOf(1f) }
     val offset = remember { mutableStateOf(Offset.Zero) }
@@ -352,21 +351,15 @@ fun SecondConfigurationStage(
     // Launcher do robienia zdjęcia
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
-    ) { isSuccess: Boolean ->
-        if (isSuccess) {
-            Log.d("Camera", "Zdjęcie zrobione: ${photoUri.value}")
-            selectedImageUri.value = photoUri.value
-        } else {
-            Log.e("Camera", "Nie udało się zrobić zdjęcia.")
-        }
-    }
+    ) { selectedImageUri.value = photoUri.value }
 
-    // Launcher do obsługi uprawnień
+    // Uruchomienie kamery po przyznaniu uprawnień
     LaunchedEffect(cameraPermissionGranted.value) {
         if (cameraPermissionGranted.value && photoUri.value != null) {
             cameraLauncher.launch(photoUri.value!!)
         }
     }
+
     fun savePhotoToGallery(): Uri? {
         return selectedImageUri.value?.let { uri ->
             val inputStream = context.contentResolver.openInputStream(uri)
@@ -479,7 +472,7 @@ fun SecondConfigurationStage(
 
         if (selectedImageUri.value != null) {
             ZoomableImage(
-                imageUri = selectedImageUri.value,
+                imageUri = selectedImageUri.value!!,
                 modifier = Modifier.size(200.dp),
                 currentScale = scale,
                 currentOffset = offset,
@@ -553,56 +546,38 @@ private fun createImageUri(context: Context, currentUserID: String): Uri {
 
 @Composable
 fun ZoomableImage(
-    imageUri: Uri? = null,
+    imageUri: Uri,
     modifier: Modifier = Modifier,
     maxZoom: Float = 3f,
-    currentScale: MutableState<Float>, // Przekazywanie mutable state dla skali
-    currentOffset: MutableState<Offset>, // Przekazywanie mutable state dla przesunięcia
+    currentScale: MutableState<Float>,
+    currentOffset: MutableState<Offset>,
     context: Context
 ) {
     var imageSize by remember { mutableStateOf(IntSize.Zero) }
-
     val squareBitmap = remember(imageUri) {
-        imageUri?.let { uri ->
-            try {
-                // Otwórz strumień URI i zdekoduj bitmapę
-                val inputStream = context.contentResolver.openInputStream(uri)
-                val originalBitmap = BitmapFactory.decodeStream(inputStream)
+        val inputStream = context.contentResolver.openInputStream(imageUri)
+        val originalBitmap = BitmapFactory.decodeStream(inputStream)
+        val orientation = getOrientation(context, imageUri)
+        val bitmap = rotateBitmap(originalBitmap, orientation)
 
-                // Pobierz orientację obrazu
-                val orientation = getOrientation(context, uri)
+        run {
+            val maxDimension = maxOf(bitmap.width, bitmap.height)
+            val squareBitmap = Bitmap.createBitmap(maxDimension, maxDimension, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(squareBitmap)
+            canvas.drawColor(Color.White.toArgb())
+            val left = (maxDimension - bitmap.width) / 2
+            val top = (maxDimension - bitmap.height) / 2
+            canvas.drawBitmap(bitmap, left.toFloat(), top.toFloat(), null)
 
-                // Obróć bitmapę zgodnie z orientacją
-                val bitmap = rotateBitmap(originalBitmap, orientation)
-
-                // Jeśli bitmapa istnieje, utwórz kwadratową wersję z białymi paskami
-                run {
-                    val maxDimension = maxOf(bitmap.width, bitmap.height)
-                    val squareBitmap = Bitmap.createBitmap(maxDimension, maxDimension, Bitmap.Config.ARGB_8888)
-
-                    // Stworzenie płótna z białym tłem
-                    val canvas = Canvas(squareBitmap)
-                    canvas.drawColor(Color.White.toArgb())
-
-                    // Wycentrowanie bitmapy na kwadratowym tle
-                    val left = (maxDimension - bitmap.width) / 2
-                    val top = (maxDimension - bitmap.height) / 2
-                    canvas.drawBitmap(bitmap, left.toFloat(), top.toFloat(), null)
-
-                    squareBitmap // Zwróć kwadratową bitmapę
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                null
-            }
+            squareBitmap
         }
     }
 
     Box(
         modifier = modifier
-            .clip(CircleShape) // Przycięcie do kształtu koła
-            .border(2.dp, Color.Transparent, CircleShape) // Dodanie ramki
-            .background(Color.LightGray) // Kolor tła (gdyby coś nie wypełniło)
+            .clip(CircleShape)
+            .border(2.dp, Color.Transparent, CircleShape)
+            .background(Color.LightGray)
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, zoom, _ ->
                     currentScale.value = (currentScale.value * zoom).coerceIn(1f, maxZoom)
@@ -617,33 +592,25 @@ fun ZoomableImage(
                         (currentOffset.value.x + pan.x * currentScale.value).coerceIn(-maxX, maxX),
                         (currentOffset.value.y + pan.y * currentScale.value).coerceIn(-maxY, maxY)
                     )
-                    Log.d(
-                        "ZoomableImage",
-                        "Scale: ${currentScale.value}, Offset: ${currentOffset.value}"
-                    )
-
                 }
             }
             .onGloballyPositioned { layoutCoordinates ->
                 imageSize = layoutCoordinates.size
             }
     ) {
-        // Renderowanie kwadratowej bitmapy
-        squareBitmap?.let { bitmap ->
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = currentScale.value,
-                        scaleY = currentScale.value,
-                        translationX = currentOffset.value.x,
-                        translationY = currentOffset.value.y
-                    ),
-                contentScale = ContentScale.Fit // Dopasuj obraz do widoku
-            )
-        }
+        Image(
+            bitmap = squareBitmap.asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = currentScale.value,
+                    scaleY = currentScale.value,
+                    translationX = currentOffset.value.x,
+                    translationY = currentOffset.value.y
+                ),
+            contentScale = ContentScale.Fit
+        )
     }
 }
 
