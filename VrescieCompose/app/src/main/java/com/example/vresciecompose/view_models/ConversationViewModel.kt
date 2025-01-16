@@ -287,28 +287,18 @@ class ConversationViewModel(
         }
     }
 
-    fun makeMove(conversationId: String, playerId: String, positionX: Int, positionY: Int, isAnonymous: Boolean = false): Boolean {
-        // Sprawdzamy, czy gra już się zakończyła
-        if (_gameWinner.value != null) {
-            Log.d("TicTacToeGame", "Gra zakończona, nie możesz wykonać ruchu.")
-            return false
-        }
-        if (lastMoveByPlayer) {
-            Log.d("TicTacToeGame", "Nie możesz teraz wykonać ruchu.")
-            return false
-        }
-
-        // Sprawdź, czy miejsce na planszy jest puste
+    fun makeMove(conversationId: String, playerId: String, positionX: Int, positionY: Int,
+                 isAnonymous: Boolean = false): Boolean {
+        if (_gameWinner.value != null) return false
+        if (lastMoveByPlayer) return false
         if (board.value[positionX][positionY].isEmpty()) {
-            // Użyj mutableStateOf do aktualizacji planszy
-            val updatedBoard = board.value.map { it.clone() }.toTypedArray() // Skopiuj tablicę
+            val updatedBoard = board.value.map { it.clone() }.toTypedArray()
             updatedBoard[positionX][positionY] = "X"
-            board.value = updatedBoard // Ustaw zaktualizowaną planszę
+            board.value = updatedBoard
 
             lastMoveByPlayer = true
             saveMoveToFirebase(conversationId, playerId, positionX, positionY, isAnonymous)
             updateCurrentPlayerMessage(!lastMoveByPlayer)
-            // Sprawdź, czy gracz wygrał
             if (checkForWin(positionX, positionY)) {
                 if (!isAnonymous) { updateGameStatistics(conversationId, playerId) } else {
                     updateUnlockedStages(conversationId, playerId)
@@ -354,40 +344,30 @@ class ConversationViewModel(
     }
 
     private fun checkForWin(x: Int, y: Int): Boolean {
-        val target = if (lastMoveByPlayer) "X" else "O" // Sprawdź, jaki symbol gracz używa
         val boardState = board.value
-
-        // Funkcja pomocnicza do liczenia elementów w linii
         fun countInDirection(deltaX: Int, deltaY: Int): Int {
             var count = 0
             var currX = x + deltaX
             var currY = y + deltaY
-
-            while (currX in 0 until 10 && currY in 0 until 10 && boardState[currX][currY] == target) {
+            while (currX in 0 until 10 && currY in 0 until 10 && boardState[currX][currY] == "X") {
                 count++
                 currX += deltaX
                 currY += deltaY
             }
             return count
         }
-
-        // Sprawdź w pionie
+        // Sprawdza w pionie
         val verticalCount = 1 + countInDirection(-1, 0) + countInDirection(1, 0)
         if (verticalCount >= 4) return true
-
-        // Sprawdź w poziomie
+        // Sprawdza w poziomie
         val horizontalCount = 1 + countInDirection(0, -1) + countInDirection(0, 1)
         if (horizontalCount >= 4) return true
-
-        // Sprawdź główny ukos
+        // Sprawdza główny ukos (lewy)
         val mainDiagonalCount = 1 + countInDirection(-1, -1) + countInDirection(1, 1)
         if (mainDiagonalCount >= 4) return true
-
-        // Sprawdź przeciwny ukos
+        // Sprawdza przeciwny ukos (prawy)
         val antiDiagonalCount = 1 + countInDirection(-1, 1) + countInDirection(1, -1)
         if (antiDiagonalCount >= 4) return true
-
-        // Jeżeli żaden warunek nie został spełniony
         return false
     }
 
@@ -395,7 +375,6 @@ class ConversationViewModel(
         val conversationRef = FirebaseDatabase.getInstance().reference
             .child("conversations/$conversationId/members")
 
-        // Pobierz ID drugiego użytkownika
         conversationRef.get().addOnSuccessListener { dataSnapshot ->
             val members = dataSnapshot.children.mapNotNull { it.key }
             val otherUserId = members.firstOrNull { it != currentPlayerId }
@@ -718,51 +697,37 @@ class ConversationViewModel(
 
     private fun fetchAndStoreConversations() {
         val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
         val conversationRef = FirebaseDatabase.getInstance().getReference("/explicit_conversations")
 
         conversationRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val conversationsToInsert = mutableListOf<ConversationEntity>()
-
                 viewModelScope.launch {
                     val existingConversations = conversationDao.getAllConversations()
                     val existingConversationIds = existingConversations.map { it.firebaseConversationId }.toSet()
-
                     for (conversationSnapshot in snapshot.children) {
                         val firebaseConversationId = conversationSnapshot.key ?: continue
-
-                        // Sprawdza, czy konwersacja już istnieje
-                        if (!existingConversationIds.contains(firebaseConversationId)) {
-                            val members = conversationSnapshot.child("members")
-                            // Sprawdza, czy bieżący użytkownik jest uczestnikiem konwersacji
-                            if (members.hasChild(currentUserId)) {
-                                val secondParticipantId = members.children.find { it.key != currentUserId }?.key ?: continue
-                                val participantName = members.child(secondParticipantId).value as? String ?: ""
-                                val conversationEntity = ConversationEntity(
-                                    firebaseConversationId = firebaseConversationId,
-                                    memberId = secondParticipantId,
-                                    participantName = participantName
-                                )
-
-                                conversationsToInsert.add(conversationEntity)
-                            } else {
-                                Log.d("FetchConversations", "Użytkownik $currentUserId nie jest uczestnikiem konwersacji: $firebaseConversationId")
-                            }
+                        val members = conversationSnapshot.child("members")
+                        // Sprawdza, czy konwersacja już istnieje i czy użytkownik do niej należy
+                        if (!existingConversationIds.contains(firebaseConversationId) && members.hasChild(currentUserId)) {
+                            val secondParticipantId = members.children.find { it.key != currentUserId }?.key ?: continue
+                            val participantName = members.child(secondParticipantId).value as? String ?: ""
+                            val conversationEntity = ConversationEntity(
+                                firebaseConversationId = firebaseConversationId,
+                                memberId = secondParticipantId,
+                                participantName = participantName
+                            )
+                            conversationsToInsert.add(conversationEntity)
                         } else {
-                            Log.d("FetchConversations", "Konwersacja już istnieje: $firebaseConversationId")
+                            Log.d("FetchConversations", "Nie dodaje konwersacji")
                         }
                     }
-
-                    // Teraz zapisz tylko te konwersacje, które są nowe
                     if (conversationsToInsert.isNotEmpty()) {
                         conversationDao.insertConversations(conversationsToInsert)
                     }
-
                     fetchMessagesForConversations()
                 }
             }
-
             override fun onCancelled(error: DatabaseError) {
                 Log.e("FirebaseError", "Błąd podczas pobierania konwersacji: ", error.toException())
             }
@@ -771,16 +736,13 @@ class ConversationViewModel(
 
     private fun fetchMessagesForConversations() {
         viewModelScope.launch {
-            // Pobierz wszystkie konwersacje z Room
             val conversations = conversationDao.getAllConversations()
-
             for (conversation in conversations) {
                 val firebaseConversationId = conversation.firebaseConversationId
                 val localConversationId = conversation.localConversationId.toString()
-
-                val messagesRef = FirebaseDatabase.getInstance().getReference("/explicit_conversations/$firebaseConversationId/messages")
-
-                messagesRef.orderByChild("timestamp").limitToLast(100) // Ogranicz do 100 wiadomości
+                val messagesRef = FirebaseDatabase.getInstance()
+                    .getReference("/explicit_conversations/$firebaseConversationId/messages")
+                messagesRef.orderByChild("timestamp").limitToLast(100)
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             // Lista do przechowywania wiadomości do dodania i identyfikatorów z Firebase
@@ -791,12 +753,11 @@ class ConversationViewModel(
                                 for (messageSnapshot in snapshot.children) {
                                     val messageId = messageSnapshot.key ?: continue
                                     firebaseMessageIds.add(messageId)
-
                                     val messageData = messageSnapshot.getValue(MessageEntity::class.java) ?: continue
                                     val existingMessage = messageDao.getMessageById(messageId)
-
                                     if (existingMessage == null) {
-                                        val messageEntity = messageData.copy(messageId = messageId, localConversationId = localConversationId)
+                                        val messageEntity = messageData
+                                            .copy(messageId = messageId, localConversationId = localConversationId)
                                         messagesToInsert.add(messageEntity)
                                     } else if (messageData.messageSeen && !existingMessage.messageSeen) {
                                         val updatedMessage = existingMessage.copy(messageSeen = true)
@@ -804,12 +765,12 @@ class ConversationViewModel(
                                     }
                                 }
 
-                                // Zapisz nowo pobrane wiadomości do Room
+                                // Zapisuje nowo pobrane wiadomości do Room
                                 if (messagesToInsert.isNotEmpty()) {
                                     messagesToInsert.forEach { messageDao.insertMessage(it) }
                                 }
 
-                                // Aktualizuj messageSeen = true dla wiadomości, które nie istnieją już w Firebase
+                                // Aktualizuje messageSeen = true dla wiadomości, które nie istnieją już w Firebase
                                 val localMessages = messageDao.getMessagesByConversationId(localConversationId)
                                 for (localMessage in localMessages) {
                                     if (localMessage.messageId !in firebaseMessageIds && !localMessage.messageSeen) {
@@ -818,10 +779,10 @@ class ConversationViewModel(
                                     }
                                 }
 
-                                // Usuń wiadomości z Firebase, jeśli messageSeen jest true
+                                // Usuwa wiadomości z Firebase, jeśli messageSeen jest true
                                 for (messageSnapshot in snapshot.children) {
                                     val messageData = messageSnapshot.getValue(MessageEntity::class.java) ?: continue
-                                    if (messageData.messageSeen) { // Sprawdzamy, czy messageSeen jest true
+                                    if (messageData.messageSeen) {
                                         val messageId = messageSnapshot.key ?: continue
                                         messagesRef.child(messageId).removeValue()
                                         Log.d("FetchMessages", "Deleted message from Firebase: $messageId")
@@ -842,18 +803,14 @@ class ConversationViewModel(
         val currentUser = FirebaseAuth.getInstance().currentUser
         currentUser?.let { user ->
             val currentTime = System.currentTimeMillis()
-            val senderId2 = senderId.ifEmpty { user.uid }
+            val senderIdUser = senderId.ifEmpty { user.uid }
             val messageData = Message(
-                senderId = senderId2,
+                senderId = senderIdUser,
                 text = message,
                 timestamp = currentTime,
                 messageSeen = false
             )
-
-            // Determine the database path based on `isAnonymous`
             val basePath = if (isAnonymous) "conversations" else "explicit_conversations"
-
-            // Define the reference path for messages
             val conversationMessagesRef = FirebaseDatabase.getInstance().reference
                 .child(basePath)
                 .child(conversationId)
@@ -861,7 +818,6 @@ class ConversationViewModel(
 
             val lastMessage = _messages.value.lastOrNull()?.second
             if (lastMessage?.type == MessageType.Type.System) {
-                Log.d("sendMessage", "Message not sent because the last message was sent by 'system'.")
                 return
             }
             conversationMessagesRef.push().setValue(messageData)
@@ -1345,7 +1301,7 @@ class ConversationViewModel(
         val width = bitmap.width
 
         return when (gameWins) {
-            0L -> null // Nie wyświetlamy obrazu
+            0L -> null
             1L -> Bitmap.createBitmap(bitmap, 0, 0, width, height / 3) // Pierwsza część
             2L -> Bitmap.createBitmap(bitmap, 0, 0, width, (height * 2) / 3) // Druga część
             3L -> bitmap // Cały obraz

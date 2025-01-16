@@ -354,23 +354,6 @@ fun ExplicitConversationColumn(
 
                     )
                 }
-                IconButton(
-                    onClick = {
-
-                    },
-                    modifier = Modifier
-                        .size(dimensionResource(R.dimen.image_medium_size))
-                        .padding(end = 5.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Menu,
-                        contentDescription = "Menu",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .size(dimensionResource(R.dimen.image_medium_size))
-
-                    )
-                }
             }
         }
         if (isShowAiMenu.value) {

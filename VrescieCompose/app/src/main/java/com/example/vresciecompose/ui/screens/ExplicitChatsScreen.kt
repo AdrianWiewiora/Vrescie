@@ -61,11 +61,9 @@ fun ExplicitChatsScreen(
     val conversationList by conversationViewModel.conversationList.collectAsState()
     val lastMessageMap by conversationViewModel.lastMessageMap.collectAsState()
     val imagePaths by conversationViewModel.imagePaths.collectAsState()
-
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid ?: ""
     val localContext = LocalContext.current
-
     var localImagePathMap by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
 
     LaunchedEffect(conversationList) {

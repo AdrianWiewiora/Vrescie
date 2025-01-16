@@ -66,14 +66,8 @@ fun ReceivedMessage(
 
 @Composable
 fun SentMessage(
-    modifier: Modifier,
-    message: String,
-    isSeen: Boolean,
-    showIcon: Boolean,
-    messageFontSize: TextUnit,
-    showTime: Boolean,
-    timestamp: Long,
-    cornerShape: RoundedCornerShape
+    modifier: Modifier, message: String, isSeen: Boolean, showIcon: Boolean,
+    messageFontSize: TextUnit, showTime: Boolean, timestamp: Long, cornerShape: RoundedCornerShape
 ) {
     val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
     Card(

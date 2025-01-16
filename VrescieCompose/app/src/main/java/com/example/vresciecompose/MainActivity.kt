@@ -49,6 +49,7 @@ import com.example.vresciecompose.view_models.SettingsViewModel
 import com.example.vresciecompose.view_models.UserChatPrefsViewModel
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.firebase.Firebase
+import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.appCheck
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 import com.google.firebase.initialize
@@ -146,7 +147,16 @@ class MainActivity : ComponentActivity() {
             }
         }
         Firebase.initialize(context = this)
-        Firebase.appCheck.installAppCheckProviderFactory(DebugAppCheckProviderFactory.getInstance())
+        FirebaseAppCheck.getInstance().installAppCheckProviderFactory(DebugAppCheckProviderFactory.getInstance())
+        FirebaseAppCheck.getInstance().getAppCheckToken(false)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val token = task.result?.token
+                    Log.d("AppCheck", "Debug token: $token")
+                } else {
+                    Log.e("AppCheck", "Failed to retrieve AppCheck token", task.exception)
+                }
+            }
     }
 
     private fun initializeDatabase() {

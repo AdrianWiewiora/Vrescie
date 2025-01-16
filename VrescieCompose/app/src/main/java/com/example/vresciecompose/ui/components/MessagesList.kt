@@ -57,7 +57,6 @@ fun MessageList(
             verticalArrangement = Arrangement.Top
         ) {
             itemsIndexed(messages.asReversed()) { index, (message, type) ->
-
                 val timestamp = type.timestamp
                 val date = Date(timestamp)
                 val formattedDate = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(date)
@@ -65,28 +64,26 @@ fun MessageList(
                 val currentHour = currentCalendar.get(Calendar.HOUR_OF_DAY)
                 val currentMinute = currentCalendar.get(Calendar.MINUTE)
 
-                if (index > 0) { // Sprawdzamy,
+                if (index > 0) {
                     val previousTimestamp = messages[messages.size - 1 - index + 1].second.timestamp
                     val previousDate = Date(previousTimestamp)
 
                     val calendar1 = Calendar.getInstance().apply { time = date }
                     val calendar2 = Calendar.getInstance().apply { time = previousDate }
-                    val formattedPreviousDate = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(previousDate)
+                    val formattedPreviousDate = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                        .format(previousDate)
 
                     if (calendar1.get(Calendar.YEAR) != calendar2.get(Calendar.YEAR) ||
                         calendar1.get(Calendar.DAY_OF_YEAR) != calendar2.get(Calendar.DAY_OF_YEAR)) {
                         DateHeader(formattedPreviousDate)
                     }
                 }
-
                 val paddingValues = getMessagePadding(index, messages)
-
                 var showTime = when{
                     index == 0 -> true
                     type.type != messages[messages.size - 1 - index + 1].second.type -> true
                     else -> false
                 }
-
                 if(index > 0) {
                     val previousTimestamp = messages[messages.size - 1 - index + 1].second.timestamp
                     val previousCalendar = Calendar.getInstance().apply { timeInMillis = previousTimestamp }
@@ -253,47 +250,32 @@ fun getMessageCornerRadius(
 
 fun isLastInGroup(index: Int, messages: List<Pair<String, MessageType>>): Boolean {
     val reversedIndex = messages.size - 1 - index
-    // Sprawdza tylko wiadomości typu Sent
     if (reversedIndex < 0 || reversedIndex >= messages.size) return false
-
-    // Odczytaj obecny typ wiadomości i stan 'isSeen'
     val currentMessageType = messages[reversedIndex].second
-    if (currentMessageType.type != MessageType.Type.Sent) return false // tylko dla wiadomości wysłanych
-
-    // Sprawdź następne wiadomości
+    if (currentMessageType.type != MessageType.Type.Sent) return false
     val nextMessageType = messages.getOrNull(reversedIndex + 1)?.second
     return if (nextMessageType != null) {
-        nextMessageType.type == MessageType.Type.Sent && !nextMessageType.isSeen && currentMessageType.isSeen || (nextMessageType.type != MessageType.Type.Sent)
+        nextMessageType.type == MessageType.Type.Sent && !nextMessageType.isSeen
+                && currentMessageType.isSeen || (nextMessageType.type != MessageType.Type.Sent)
     } else true
 }
 
 
 fun getMessagePadding(index: Int, messages: List<Pair<String, MessageType>>): PaddingValues {
-    // Indeks wiadomości jest liczony od końca w przypadku odwróconej listy
     val reversedIndex = messages.size - 1 - index
-
     val currentType = messages[reversedIndex].second.type
     val isFirstMessage = reversedIndex == messages.size - 1
     val isLastMessage = reversedIndex == 0
-
-    // Logika dla paddingu uwzględnia odwróconą kolejność
     var bottomPadding = if (!isFirstMessage && messages[reversedIndex + 1].second.type == currentType) 1.dp else 8.dp
     val topPadding = if (!isLastMessage && messages[reversedIndex - 1].second.type == currentType) 1.dp else 8.dp
-
-    // Sprawdzamy różnicę czasu
     if (reversedIndex < messages.size - 1) {
         val currentTimestamp = messages[reversedIndex].second.timestamp
         val previousTimestamp = messages[reversedIndex + 1].second.timestamp
-
-        // Obliczamy różnicę czasu w minutach
         val diffInMinutes = (previousTimestamp - currentTimestamp) / (1000 * 60)
-
-
         if (diffInMinutes >= 2 && reversedIndex > 0 && messages[reversedIndex - 1].second.type == currentType) {
             bottomPadding = 6.dp
         }
     }
-
     return PaddingValues(top = topPadding, bottom = bottomPadding)
 }
 
