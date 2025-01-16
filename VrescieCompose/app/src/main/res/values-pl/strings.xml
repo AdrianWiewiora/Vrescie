@@ -56,7 +56,7 @@
     <string name="or">lub</string>
     <!--  ImplicitChatsScreen and LoadingScreenImageAndCard-->
     <string name="nothing_here_yet">Jeszcze nic tu nie ma :(\nPostaraj się o polubienia\ninnych użytkowników\nw anonimowym czacie aby\npojawiły się tu konwersacje</string>
-    <string name="wait_we_are_looking">Czekaj!!!\n\nSzukamy osoby odpowiedniej dla twoich preferncji</string>
+    <string name="wait_we_are_looking">Czekaj!!!\n\nSzukamy osoby odpowiedniej dla twoich preferencji</string>
     <string name="you">Ty: </string>
     <!--  LoginScreen-->
     <string name="password">Hasło</string>

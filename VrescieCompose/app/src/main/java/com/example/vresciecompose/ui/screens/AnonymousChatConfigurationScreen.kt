@@ -382,12 +382,6 @@ fun AgeSelectionRow(
             modifier = Modifier.fillMaxWidth()
         )
     }
-    // To jest wersja onValueChange żeby nie miał min i max tej samej wartośći
-//    if (newRange.start < newRange.endInclusive) {
-//        val start = newRange.start.coerceAtLeast(minAge).coerceAtMost(maxAge)
-//        val end = newRange.endInclusive.coerceAtLeast(minAge).coerceAtMost(maxAge)
-//        setAgeRange(start..end)
-//    }
 
 }
 

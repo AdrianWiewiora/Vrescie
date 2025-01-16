@@ -3,27 +3,20 @@ package com.example.vresciecompose.view_models
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.vresciecompose.Navigation
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.database
 import com.google.firebase.database.ktx.database
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import java.util.Timer
 import java.util.TimerTask
 
 class LoadingToAnonymousChatViewModel : ViewModel() {
-
     private val _navigateToConversation = MutableLiveData<String?>()
     val navigateToConversation: LiveData<String?> = _navigateToConversation
-
     private var timer: Timer? = null
 
-    // Funkcja uruchamiająca timer w celu aktualizacji "lastSeen"
     fun startTimer(userId: String) {
         timer = Timer().apply {
             schedule(object : TimerTask() {
@@ -34,7 +27,6 @@ class LoadingToAnonymousChatViewModel : ViewModel() {
         }
     }
 
-    // Funkcja zatrzymująca timer
     fun stopTimer() {
         timer?.cancel()
         timer = null
@@ -60,7 +52,8 @@ class LoadingToAnonymousChatViewModel : ViewModel() {
         conversationRef.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 val conversationData = snapshot.value as? Map<*, *>
-                if (conversationData != null && userId in (conversationData["members"] as? Map<*, *> ?: emptyMap<String, Any>())) {
+                if (conversationData != null && userId in (conversationData["members"] as?
+                            Map<*, *> ?: emptyMap<String, Any>())) {
                     val canConnected = conversationData["canConnected"] as? Boolean
                     val conversationID = snapshot.key
                     if (canConnected == true) {
@@ -68,7 +61,6 @@ class LoadingToAnonymousChatViewModel : ViewModel() {
                     }
                 }
             }
-
             override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
             override fun onChildRemoved(snapshot: DataSnapshot) {}
             override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}

@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -102,10 +103,14 @@ fun AnonymousConversationScreen(
     val conversationId = conversationViewModel.currentConversationId
     val currentUserID = FirebaseAuth.getInstance().currentUser?.uid
     val gameWinner by conversationViewModel._gameWinner.collectAsState()
-    val gameStatusMessage = when {
-        gameWinner.isNullOrEmpty() -> null
-        gameWinner == currentUserID -> stringResource(R.string.you_won)
-        else -> stringResource(R.string.you_lost)
+    val youWonString = stringResource(R.string.you_won)
+    val youLostString = stringResource(R.string.you_lost)
+    val gameStatusMessage = remember(gameWinner) {
+        when {
+            gameWinner.isNullOrEmpty() -> null
+            gameWinner == currentUserID -> youWonString
+            else -> youLostString
+        }
     }
     val wantNewGameCount by conversationViewModel.wantNewGameCount.collectAsState()
     val gameWinsState by conversationViewModel.gameWins.collectAsState()
@@ -190,8 +195,18 @@ fun AnonymousConversationScreen(
     }
 
     if (showDialogLikeNotification) {
+        val userDisconnectedMessage = stringResource(R.string.user_disconnected)
         SimpleAlertDialog(
             onConfirm = {
+                conversationViewModel.sendMessage(userDisconnectedMessage, senderId = "system", isAnonymous = true)
+                val database = FirebaseDatabase.getInstance()
+                val conversationRef2 = database.reference
+                    .child("conversations")
+                    .child(conversationID)
+                conversationRef2.child("canConnected").setValue(false)
+                if (currentUserID != null) {
+                    conversationRef2.child("members").child(currentUserID).setValue(false)
+                }
                 navigateTo("${Navigation.Destinations.MAIN_MENU}/${2}")
             },
             onDismiss = {
@@ -238,6 +253,11 @@ fun AnonymousConversationScreen(
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
                                 .padding(top = 16.dp)
+                                .background(
+                                    color = Color.Gray.copy(alpha = 0.8f), // Kolor tła z przezroczystością
+                                    shape = RoundedCornerShape(8.dp)      // Zaokrąglone rogi
+                                )
+                                .padding(horizontal = 12.dp, vertical = 8.dp) // Odstępy wewnętrzne dla tekstu
                         )
                     }
                 }

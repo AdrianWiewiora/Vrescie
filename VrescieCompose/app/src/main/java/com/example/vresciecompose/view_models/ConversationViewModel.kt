@@ -391,36 +391,50 @@ class ConversationViewModel(
         return false
     }
 
-    private fun updateUnlockedStages(conversationId: String, playerId: String) {
-        val unlockedStagesRef = FirebaseDatabase.getInstance().reference
-            .child("conversations/$conversationId/unlockedStagesOfPhoto")
+    private fun updateUnlockedStages(conversationId: String, currentPlayerId: String) {
+        val conversationRef = FirebaseDatabase.getInstance().reference
+            .child("conversations/$conversationId/members")
 
-        unlockedStagesRef.runTransaction(object : Transaction.Handler {
-            override fun doTransaction(currentData: MutableData): Transaction.Result {
-                val dataSnapshot = currentData.value as? Map<*, *>
+        // Pobierz ID drugiego użytkownika
+        conversationRef.get().addOnSuccessListener { dataSnapshot ->
+            val members = dataSnapshot.children.mapNotNull { it.key }
+            val otherUserId = members.firstOrNull { it != currentPlayerId }
 
-                // Pobieramy liczbę wygranych tego gracza (jeśli istnieje)
-                val currentWins = (dataSnapshot?.get(playerId) as? Long) ?: 0L
+            if (otherUserId != null) {
+                val unlockedStagesRef = FirebaseDatabase.getInstance().reference
+                    .child("conversations/$conversationId/unlockedStagesOfPhoto")
 
-                // Jeśli liczba wygranych przekroczy 3, nie zmieniamy wartości
-                val newWins = if (currentWins < 3) currentWins + 1 else currentWins
+                unlockedStagesRef.runTransaction(object : Transaction.Handler {
+                    override fun doTransaction(currentData: MutableData): Transaction.Result {
+                        val dataSnapshot = currentData.value as? Map<*, *>
 
-                // Zapisujemy nową liczbę wygranych w Firebase
-                currentData.value = dataSnapshot?.toMutableMap()?.apply {
-                    this[playerId] = newWins
-                } ?: mapOf(playerId to newWins)
+                        // Liczba odsłoniętych części dla drugiego użytkownika
+                        val currentWins = (dataSnapshot?.get(otherUserId) as? Long) ?: 0L
 
-                return Transaction.success(currentData)
+                        // Zwiększ liczbę wygranych, jeśli jest mniejsza niż 3
+                        val newWins = if (currentWins < 3) currentWins + 1 else currentWins
+
+                        currentData.value = dataSnapshot?.toMutableMap()?.apply {
+                            this[otherUserId] = newWins
+                        } ?: mapOf(otherUserId to newWins)
+
+                        return Transaction.success(currentData)
+                    }
+
+                    override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
+                        if (error != null) {
+                            Log.e("UpdateUnlockedStages", "Transaction failed: ${error.message}")
+                        } else if (committed) {
+                            Log.d("UpdateUnlockedStages", "Transaction successful for $otherUserId!")
+                        }
+                    }
+                })
+            } else {
+                Log.e("UpdateUnlockedStages", "No other user ID found in conversation.")
             }
-
-            override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
-                if (error != null) {
-                    Log.e("UpdateUnlockedStages", "Transaction failed: ${error.message}")
-                } else if (committed) {
-                    Log.d("UpdateUnlockedStages", "Transaction successful!")
-                }
-            }
-        })
+        }.addOnFailureListener { exception ->
+            Log.e("UpdateUnlockedStages", "Failed to fetch members: ${exception.message}")
+        }
     }
 
 

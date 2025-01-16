@@ -11,6 +11,7 @@ import android.graphics.Matrix
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.MediaStore.Images.Media.insertImage
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -382,8 +383,8 @@ fun SecondConfigurationStage(
 
                 val targetSize = (maxDimension / scale.value).toInt()
 
-                val centerX = (squareBitmap.width / 2).toInt()
-                val centerY = (squareBitmap.height / 2).toInt()
+                val centerX = (squareBitmap.width / 2)
+                val centerY = (squareBitmap.height / 2)
 
                 val x = (centerX - (targetSize / 2) - (offset.value.x * scale.value)).toInt()
                 val y = (centerY - (targetSize / 2) - (offset.value.y * scale.value)).toInt()
@@ -393,7 +394,7 @@ fun SecondConfigurationStage(
 
                 val croppedBitmap = Bitmap.createBitmap(squareBitmap, validX, validY, targetSize, targetSize)
 
-                val savedUri = MediaStore.Images.Media.insertImage(
+                val savedUri = insertImage(
                     context.contentResolver,
                     croppedBitmap,
                     "Cropped Image $currentUserID",
@@ -506,13 +507,11 @@ fun SecondConfigurationStage(
     }
 }
 
-// Funkcja do uzyskania orientacji obrazu
+
 fun getOrientation(context: Context, uri: Uri): Int {
     val exif = ExifInterface(context.contentResolver.openInputStream(uri)!!)
     return exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
 }
-
-// Funkcja do obrotu bitmapy
 fun rotateBitmap(bitmap: Bitmap, orientation: Int): Bitmap {
     return when (orientation) {
         ExifInterface.ORIENTATION_ROTATE_90 -> {
@@ -530,7 +529,7 @@ fun rotateBitmap(bitmap: Bitmap, orientation: Int): Bitmap {
                 postRotate(270f)
             }, true)
         }
-        else -> bitmap // Bez obrotu
+        else -> bitmap
     }
 }
 
@@ -546,12 +545,8 @@ private fun createImageUri(context: Context, currentUserID: String): Uri {
 
 @Composable
 fun ZoomableImage(
-    imageUri: Uri,
-    modifier: Modifier = Modifier,
-    maxZoom: Float = 3f,
-    currentScale: MutableState<Float>,
-    currentOffset: MutableState<Offset>,
-    context: Context
+    imageUri: Uri,                          modifier: Modifier = Modifier,          maxZoom: Float = 3f,
+    currentScale: MutableState<Float>,      currentOffset: MutableState<Offset>,    context: Context
 ) {
     var imageSize by remember { mutableStateOf(IntSize.Zero) }
     val squareBitmap = remember(imageUri) {
@@ -559,7 +554,6 @@ fun ZoomableImage(
         val originalBitmap = BitmapFactory.decodeStream(inputStream)
         val orientation = getOrientation(context, imageUri)
         val bitmap = rotateBitmap(originalBitmap, orientation)
-
         run {
             val maxDimension = maxOf(bitmap.width, bitmap.height)
             val squareBitmap = Bitmap.createBitmap(maxDimension, maxDimension, Bitmap.Config.ARGB_8888)
@@ -568,7 +562,6 @@ fun ZoomableImage(
             val left = (maxDimension - bitmap.width) / 2
             val top = (maxDimension - bitmap.height) / 2
             canvas.drawBitmap(bitmap, left.toFloat(), top.toFloat(), null)
-
             squareBitmap
         }
     }
@@ -581,13 +574,10 @@ fun ZoomableImage(
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, zoom, _ ->
                     currentScale.value = (currentScale.value * zoom).coerceIn(1f, maxZoom)
-
-                    // Ograniczenia przesunięć
                     val scaledWidth = imageSize.width * currentScale.value
                     val scaledHeight = imageSize.height * currentScale.value
                     val maxX = (scaledWidth - size.width).coerceAtLeast(0f) / 2
                     val maxY = (scaledHeight - size.height).coerceAtLeast(0f) / 2
-
                     currentOffset.value = Offset(
                         (currentOffset.value.x + pan.x * currentScale.value).coerceIn(-maxX, maxX),
                         (currentOffset.value.y + pan.y * currentScale.value).coerceIn(-maxY, maxY)

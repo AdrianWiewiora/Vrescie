@@ -81,7 +81,6 @@ fun MainMenuScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopRowMenu(modifier = Modifier.fillMaxWidth(), navigateTo)
-
         MiddleCard(
             modifier = Modifier
                 .padding(horizontal = 15.dp)
@@ -96,14 +95,12 @@ fun MainMenuScreen(
             isConnected,
             profileViewModel
         )
-
         BottomMenu(
             modifier = Modifier,
             currentFragment,
             setCurrentFragment
         )
     }
-
 }
 
 @Composable
@@ -195,14 +192,16 @@ fun BottomMenu(
             icon = Icons.Filled.AddComment,
             modifier = Modifier.weight(1f)
                 .clickable(onClick = { setCurrentFragment(1) }),
-            color = if(currentFragment == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+            color = if(currentFragment == 1) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.tertiary
         )
         MenuItem(
             text = stringResource(id = R.string.chats),
             icon = Icons.Filled.MarkChatRead,
             modifier = Modifier.weight(1f)
                 .clickable(onClick = { setCurrentFragment(2) }),
-            color = if(currentFragment == 2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+            color = if(currentFragment == 2) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.tertiary
         )
         MenuItem(
             text = stringResource(id = R.string.profile),
@@ -210,7 +209,8 @@ fun BottomMenu(
             modifier = Modifier
                 .weight(1f)
                 .clickable(onClick = { setCurrentFragment(3) }),
-            color = if(currentFragment == 3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+            color = if(currentFragment == 3) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.tertiary
         )
     }
 }
@@ -239,15 +239,17 @@ fun MenuItem(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
+@Composable
+fun TopMenuPreview() {
+    TopRowMenu(modifier = Modifier.fillMaxWidth(), navigateTo = {})
+}
+
+
+@Preview(showBackground = true)
 @Composable
 fun BottomMenuPreview() {
     BottomMenu(currentFragment = 1)
 }
 
-@Preview
-@Composable
-fun TopMenuPreview() {
-    TopRowMenu(modifier = Modifier.fillMaxWidth(), navigateTo = {})
-}
 

@@ -25,7 +25,6 @@ import com.example.vresciecompose.R
 import com.example.vresciecompose.view_models.LoadingToAnonymousChatViewModel
 import com.google.firebase.auth.FirebaseAuth
 
-
 @Composable
 fun LoadingToAnonymousChatScreen(
     navigateTo: (String) -> Unit,
