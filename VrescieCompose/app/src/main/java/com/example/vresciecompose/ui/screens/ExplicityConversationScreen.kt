@@ -196,7 +196,6 @@ fun ExplicitConversationScreen(
                 else -> 0
             }
         )
-
         // Formatuje wiadomości
         val formattedMessages = messagesList.joinToString("\n") { (text, messageType) ->
             when (messageType.type) {
@@ -205,7 +204,6 @@ fun ExplicitConversationScreen(
                 MessageType.Type.System -> "$textSystem: $text"
             }
         }
-
         val prompt: String = when (numberOfButton) {
             1 -> getPromptReply(formattedMessages)
             2 -> promptTopics
@@ -214,7 +212,6 @@ fun ExplicitConversationScreen(
             5 -> getPromptQuestions(formattedMessages)
             else -> ""
         }
-
         try {
             val response = generativeModel.generateContent(prompt)
             response.text?.let { setAiResponse(it) }

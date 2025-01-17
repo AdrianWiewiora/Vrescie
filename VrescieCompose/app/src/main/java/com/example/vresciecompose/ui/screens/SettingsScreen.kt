@@ -48,13 +48,13 @@ fun SettingsScreen(
     navigateTo: (String) -> Unit
 ){
     //Wygląd
-    // Odczyt aktualnego motywu
+    // Odczyt aktualnego motywu i aktualnej wielkości czcionki wiadomości
     val currentTheme by settingsViewModel.getCurrentTheme().observeAsState(0) // 0 = domyślny
+    val currentMessageSize by settingsViewModel.getCurrentMessageSize().observeAsState(1)
+
     fun saveThemeVM(theme: Int){
         settingsViewModel.saveTheme(theme)
     }
-    //Odczyt aktualnej wielkości czcionki wiadomości
-    val currentMessageSize by settingsViewModel.getCurrentMessageSize().observeAsState(1)
     fun saveMessageSizeVM(size: Int){
         settingsViewModel.saveMessageSize(size)
     }
@@ -124,8 +124,6 @@ fun SettingsContent(
     logoutVM: () -> Unit,
 ){
     val (currentContent, setCurrentContent) = remember { mutableStateOf("settingsList") }
-
-
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.Top
