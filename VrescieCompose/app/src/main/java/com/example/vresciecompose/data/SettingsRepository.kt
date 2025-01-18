@@ -12,11 +12,13 @@ import kotlinx.coroutines.flow.map
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 object ThemePreferenceKeys {
-    val THEME_KEY = intPreferencesKey("theme") // 0 = System, 1 = Jasny, 2 = Ciemny, 3 = Ciemny Wysoki kontrast, 4 - Jasny Wysoki kontrast
+    val THEME_KEY = intPreferencesKey("theme")
+// 0 = System, 1 = Jasny, 2 = Ciemny, 3 = Ciemny Wysoki kontrast, 4 - Jasny Wysoki kontrast
 }
 
 object SizeMessagesPreferenceKeys {
-    val MESSAGE_SIZE_KEY = intPreferencesKey("mess_size") // 0 = Mały, 1 = Normalny 2 = Duży 3 = Bardzo duży
+    val MESSAGE_SIZE_KEY = intPreferencesKey("mess_size")
+// 0 = Mały, 1 = Normalny 2 = Duży 3 = Bardzo duży
 }
 
 class SettingsRepository(private val dataStore: DataStore<Preferences>) {

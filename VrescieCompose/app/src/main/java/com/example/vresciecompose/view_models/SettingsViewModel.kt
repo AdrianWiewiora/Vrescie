@@ -14,29 +14,18 @@ class SettingsViewModel(
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
     val themeFlow = repository.themeFlow.asLiveData()
     val messageSizeFlow = repository.messageSizeFlow.asLiveData()
-
     fun saveTheme(theme: Int) {
         viewModelScope.launch {
             repository.saveTheme(theme)
         }
     }
-
-    fun getCurrentTheme(): LiveData<Int> {
-        return themeFlow
-    }
-
+    fun getCurrentTheme(): LiveData<Int> { return themeFlow }
+    fun getCurrentMessageSize(): LiveData<Int> { return messageSizeFlow }
     fun saveMessageSize(size: Int) {
         viewModelScope.launch {
             repository.saveMessageSize(size)
         }
     }
-
-    fun getCurrentMessageSize(): LiveData<Int> {
-        return messageSizeFlow
-    }
-
-
-
     fun logout(onSuccess: () -> Unit) {
         auth.signOut()
         onSuccess()

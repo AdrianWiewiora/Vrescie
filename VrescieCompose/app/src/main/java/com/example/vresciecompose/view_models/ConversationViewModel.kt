@@ -528,8 +528,6 @@ class ConversationViewModel(
         val network = connectivityManager.activeNetwork
         val isConnectedInitially = network != null && connectivityManager.getNetworkCapabilities(network)?.hasCapability(
             NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
-
-        // Ustawia początkowy stan połączenia
         _isConnected.value = isConnectedInitially
 
         // Nasłuchiwanie, aby monitorować zmiany w stanie połączenia
@@ -537,7 +535,6 @@ class ConversationViewModel(
             override fun onAvailable(network: Network) {
                 _isConnected.value = true
             }
-
             override fun onLost(network: Network) {
                 _isConnected.value = false
             }

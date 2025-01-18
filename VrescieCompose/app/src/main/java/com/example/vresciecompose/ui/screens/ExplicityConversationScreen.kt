@@ -92,8 +92,6 @@ fun ExplicitConversationScreen(
         topK = 20
         topP = 0.85f
     }
-    val generativeModel = Firebase.vertexAI.generativeModel(modelName ="gemini-1.0-pro", generationConfig  = config)
-    val (aiResponse, setAiResponse) = remember { mutableStateOf("") }
 
     // Zmienne dla Tic Tac Toe
     val currentPlayerMessage by conversationViewModel.currentPlayerMessage.collectAsState()
@@ -158,6 +156,7 @@ fun ExplicitConversationScreen(
         }
     }
 
+
     val textFriend = stringResource(R.string.friend)
     val textMe = stringResource(R.string.me)
     val textSystem = stringResource(R.string.system)
@@ -171,6 +170,9 @@ fun ExplicitConversationScreen(
 
     val errorResponseStopped = stringResource(R.string.problem_generating_the_response)
     val errorGeneral = stringResource(R.string.an_error_occurred_please_try_again)
+
+    val generativeModel = Firebase.vertexAI.generativeModel(modelName ="gemini-1.0-pro", generationConfig  = config)
+    val (aiResponse, setAiResponse) = remember { mutableStateOf("") }
 
     fun getPromptReply(formattedMessages: String): String { return String.format(promptReplyTemplate, formattedMessages) }
     fun getPromptGreetings(formattedMessages: String): String {  return String.format(promptGreetings, formattedMessages) }
