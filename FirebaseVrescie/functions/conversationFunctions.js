@@ -14,11 +14,8 @@ exports.assignUsersToConversation = functions.database
         // Użytkownik dopiero został przydzielony do konwersacji
         return null;
       }
-
       recentUsers[userId] = true;
 
-      // Sprawdź, czy użytkownik jest już w jakiejkolwiek konwersacji
-      // eslint-disable-next-line max-len
       const conversationsSnapshot = await admin.database()
           .ref(`/conversations`)
           .orderByChild(`members/${userId}`)
@@ -31,8 +28,6 @@ exports.assignUsersToConversation = functions.database
       let otherUserId = null;
 
 
-      // eslint-disable-next-line max-len
-      // Iteruj przez konwersacje, aby sprawdzić, czy użytkownik jest już w jakiejkolwiek konwersacji
       // eslint-disable-next-line guard-for-in
       for (const conversationId in conversationsData) {
         const conversation = conversationsData[conversationId];
