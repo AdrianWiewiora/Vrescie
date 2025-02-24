@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Vrescie</string>
+    <string name="v_czat">V-czat</string>
+
+    <!--  Main Menu -->
+    <string name="chats">Konwersacje</string>
+    <string name="profile">Profil</string>
+    <string name="settings">Ustawienia</string>
+    <!--  Start Screen -->
+    <string name="log_in">Zaloguj się</string>
+    <string name="register">Zarejestruj się</string>
+    <string name="continue_with_google">Kontynuuj z Google</string>
+    <string name="we_never_share_wyc">Nigdy nie udostępniamy nic bez twojej zgody</string>
+    <string name="info_privacy_policy">Rejestrując się potwierdzasz, że akceptujesz nasz Regulamin. Dowiedz się, jak przetwarzamy Twoje dane z Polityki prywatności</string>
+    <!--  AnonymousChatConfigurationScreen -->
+    <string name="profile_ac">Profil:</string>
+    <string name="problem_with_determining_the_location">Problem z ustaleniem lokalizacji</string>
+    <string name="problem_with_sending_your_data">Problem z wysłaniem twoich danych</string>
+    <string name="draw">LOSUJ</string>
+    <string name="gender">Płeć</string>
+    <string name="woman">Kobieta</string>
+    <string name="man">Mężczyzna</string>
+    <string name="age_range_years">Przedział wiekowy: %1$s - %2$s%3$s lat</string>
+    <string name="verified">Zweryfikowany</string>
+    <string name="unverified">Niezweryfikowany</string>
+    <string name="relation">Relacja:</string>
+    <string name="long_term">Stała</string>
+    <string name="short_rel">Krótka</string>
+    <string name="maximum_distance_km">Maksymalna odległość: %1$s km</string>
+    <!--  AnonymousConversationScreen -->
+    <string name="user_disconnected">Użytkownik się rozłączył</string>
+    <string name="confirm_exit">Potwierdź wyjście</string>
+    <string name="are_you_sure_you_want_to_leave_the_conversation">Czy na pewno chcesz wyjść z konwersacji?</string>
+    <string name="confirm_like">Potwierdź polubienie</string>
+    <string name="are_you_sure_want_to_like_the_person">Czy na pewno chcesz polubić osobę z którą rozmawiasz?</string>
+    <string name="bravo_user_liked_you">Brawo!!! Użytkownik cię polubił.</string>
+    <string name="would_you_like_to_go_public_conversation">Czy chcesz opuścić konwersację aby przejść do jawnej konwersacji?</string>
+    <string name="enter_message">Wpisz wiadomość</string>
+    <!--  FirstConfigurationProfileScreen -->
+    <string name="configuring_your_profile">Konfiguracja twojego profilu</string>
+    <string name="enter_your_name">Podaj swoje imię</string>
+    <string name="enter_your_age">Podaj swoj wiek</string>
+    <string name="select_your_gender">Wybierz swoją płeć</string>
+    <string name="other_gender">Inna</string>
+    <string name="continue_string">Kontynuuj</string>
+    <string name="add_your_photo">Dodaj swoje zdjęcie</string>
+    <string name="take_a_photo">Zrób zdjęcie</string>
+    <string name="choose_from_gallery">Wybierz zdjęcie z galerii</string>
+    <!--  FirstLaunchScreen -->
+    <string name="finally_str"> </string>
+    <string name="new_friends">Nowi przyjaciele</string>
+    <string name="new_connections">Nowi znajomi</string>
+    <string name="new_love">Nowa miłość</string>
+    <string name="happy">Szczęśliwi</string>
+    <string name="or">lub</string>
+    <!--  ImplicitChatsScreen and LoadingScreenImageAndCard-->
+    <string name="nothing_here_yet">Jeszcze nic tu nie ma :(\nPostaraj się o polubienia\ninnych użytkowników\nw anonimowym czacie aby\npojawiły się tu konwersacje</string>
+    <string name="wait_we_are_looking">Czekaj!!!\n\nSzukamy osoby odpowiedniej dla twoich preferencji</string>
+    <string name="you">Ty: </string>
+    <!--  LoginScreen-->
+    <string name="password">Hasło</string>
+    <string name="please_enter_your_email_and_password">Proszę wprowadzić e-mail i hasło.</string>
+    <string name="unable_to_obtain_user_id">Nie można uzyskać identyfikatora użytkownika.</string>
+    <string name="loading">Ładowanie…</string>
+    <string name="forgot_my_password">Nie pamiętam hasła</string>
+    <string name="login_error">Błąd logowania</string>
+    <string name="enter_email_to_reset_password">Wprowadź adres e-mail, aby zresetować hasło</string>
+    <string name="check_your_email">Sprawdź email</string>
+    <string name="password_reset_link">Na podany e mail został wysłany link resetujący hasło</string>
+    <!--  RegistrationScreen and ProfileScreen-->
+    <string name="loading_data">Ładowanie danych</string>
+    <string name="name">Imię</string>
+    <string name="age">Wiek</string>
+    <string name="join_date">Data dołączenia</string>
+    <string name="you_have_registered">Zarejestrowałeś się </string>
+    <string name="remember_to_confirm_your_account">Pamiętaj aby potwierdzić konto poprzez kliknięcie w link w wiadomości wysłanej na podany adres e-mail</string>
+    <string name="registration_error">Błąd rejestracji</string>
+    <string name="an_unknown_error_occurred">Wystąpił nieznany błąd</string>
+    <string name="enter_your_email_and_password">Podaj swój e-mail i hasło</string>
+    <string name="repeat_password">Powtórz hasło</string>
+    <string name="sign_up">Zarejestruj się</string>
+    <string name="no_internet_connection">Brak połączenia z internetem</string>
+    <string name="hide_password">Ukryj hasło</string>
+    <string name="show_password">Pokaż hasło</string>
+    <string name="change_photo">Zmień zdjęcie</string>
+
+    <!--  SettingsScreen-->
+    <string name="logout">Wyloguj się</string>
+    <string name="appearance">Wygląd</string>
+    <string name="theme">Motyw</string>
+    <string name="font_size_for_messages">Rozmiar czcionki dla wiadomości</string>
+    <string name="system_default">Domyślny systemowy</string>
+    <string name="light">Jasny</string>
+    <string name="dark">Ciemny</string>
+    <string name="high_contrast_dark">Wysoki kontrast - Ciemny</string>
+    <string name="high_contrast_light">Wysoki kontrast - Jasny</string>
+    <string name="font_size">Rozmiar czcionki</string>
+    <string name="small">Mały</string>
+    <string name="normal">Normalny</string>
+    <string name="large">Duży</string>
+    <string name="very_large">Bardzo duży</string>
+    <string name="yes">Tak</string>
+    <string name="no">Nie</string>
+    <string name="confirm_closing">Potwierdź zamknięcie</string>
+    <string name="do_you_really_want_to_apply_the_application">Czy na pewno chcesz zamknąć aplikację?</string>
+    <string name="ok">Ok</string>
+    <string name="you_won">Wygrałeś !!!</string>
+    <string name="you_lost">Przegrałeś! :(</string>
+    <string name="friend">Znajomy</string>
+    <string name="me">Ja</string>
+    <string name="system">System</string>
+    <string name="no_user">Brak użytkownika</string>
+    <string name="problem_generating_the_response">Wystąpił problem z generowaniem odpowiedzi. Spróbuj ponownie.</string>
+    <string name="an_error_occurred_please_try_again">Wystąpił błąd. Spróbuj ponownie.</string>
+    <string name="prompt1">Odpowiedz maksymalnie jednym zdaniem. Po prostu napisz odpowiedź jaką proponujesz jak mogę odpisać znajomemu w tej rozmowie? Ostatnie 10 wiadomości tej konwersacji prezentują się następująco:%1$s. Moje wiadomości podpisałem jako Ja a mojego rozmówcy jako Znajomy. Podpowiedz co mam odpisać na ostatnią wiadomość znajomego a nie na moje własne, zwróć jedną najlepszą według Ciebie propozycję.</string>
+    <string name="prompt2">Podaj tylko dwie propozycje ciekawych tematów do rozmowy i nic więcej. Odpowiedź ma być krótka, nie rozwijaj jej.</string>
+    <string name="prompt3">Zaproponuj tylko dwa oryginalne powitania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n%1$s. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy.</string>
+    <string name="prompt4">Zaproponuj tylko dwa oryginalne pożegnania i nic więcej, jedno dowolne a drugie na podstawie tych ostatnich 20 wiadomości w mojej rozmowie:\n%1$s. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy.</string>
+    <string name="prompt5">Zaproponuj tylko dwa pytania jakie ja mógłbym zadać obcemu dotyczące ostatnich wiadomości w mojej rozmowie:\n%1$s. Moje wiadomości podpisałem jako ja a mojego rozmówcy jako Znajomy. Odpowiedź ma być krótka, maksymalnie dwa zdania</string>
+    <string name="notifications">Powiadomienia</string>
+    <string name="passwords_do_not_match">Hasła nie są takie same</string>
+
+
+</resources>

@@ -1,0 +1,123 @@
+<resources>
+    <string name="app_name">Vrescie</string>
+    <string name="v_czat">V-chat</string>
+
+    <!--  Main Menu -->
+    <string name="chats">Conversations</string>
+    <string name="profile">Profile</string>
+    <string name="settings">Settings</string>
+    <!--  Start Screen -->
+    <string name="log_in">Log in</string>
+    <string name="register">Register</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="we_never_share_wyc">We never share anything without your consent</string>
+    <string name="info_privacy_policy">By registering, you confirm that you accept our Terms and Conditions. Find out how we process your data from the Privacy Policy\"</string>
+    <!--  AnonymousChatConfigurationScreen -->
+    <string name="profile_ac">Profile:</string>
+    <string name="problem_with_determining_the_location">Problem with determining the location</string>
+    <string name="problem_with_sending_your_data">Problem with sending your data</string>
+    <string name="draw">DRAW</string>
+    <string name="gender">Gender</string>
+    <string name="woman">Woman</string>
+    <string name="man">Man</string>
+    <string name="age_range_years">Age range: %1$s - %2$s%3$s years</string>
+    <string name="verified">Verified</string>
+    <string name="unverified">Unverified</string>
+    <string name="relation">Relation:</string>
+    <string name="long_term">Long-term</string>
+    <string name="short_rel">Short</string>
+    <string name="maximum_distance_km">Maximum distance: %1$s km</string>
+    <string name="user_disconnected">User disconnected</string>
+    <string name="confirm_exit">Confirm exit</string>
+    <string name="are_you_sure_you_want_to_leave_the_conversation">Are you sure you want to leave the conversation?</string>
+    <string name="confirm_like">Confirm like</string>
+    <string name="are_you_sure_want_to_like_the_person">Are you sure you want to like the person you\'re talking to?</string>
+    <string name="bravo_user_liked_you">Bravo!!! User liked you.</string>
+    <string name="would_you_like_to_go_public_conversation">Would you like to leave the conversation to go to the public conversation?</string>
+    <string name="enter_message">Enter message</string>
+    <!--  FirstConfigurationProfileScreen -->
+    <string name="configuring_your_profile">Configuring your profile</string>
+    <string name="enter_your_name">Enter your name</string>
+    <string name="enter_your_age">Enter your age</string>
+    <string name="select_your_gender">Select your gender</string>
+    <string name="other_gender">Other gender</string>
+    <string name="continue_string">Continue</string>
+    <string name="add_your_photo">Add your photo</string>
+    <string name="take_a_photo">Take a Photo</string>
+    <string name="choose_from_gallery">Choose from Gallery</string>
+    <!--  FirstLaunchScreen -->
+    <string name="finally_str">Finally</string>
+    <string name="new_friends">New friends</string>
+    <string name="new_connections">New connections</string>
+    <string name="new_love">New love</string>
+    <string name="happy">Happy</string>
+    <string name="or">or</string>
+    <!--  ImplicitChatsScreen and LoadingScreenImageAndCard-->
+    <string name="nothing_here_yet">Nothing here yet :(\nTry to get likes\nfrom other users\nin the  v-chat so that\n conversations appear here</string>
+    <string name="wait_we_are_looking">Wait!!!\n\nWe are searching for a person suitable for your preferences</string>
+    <string name="you">You: </string>
+    <!--  LoginScreen-->
+    <string name="password">Password</string>
+    <string name="please_enter_your_email_and_password">Please enter your email and password.</string>
+    <string name="unable_to_obtain_user_id">Unable to obtain user ID.</string>
+    <string name="loading">Loading…</string>
+    <string name="forgot_my_password">I forgot my password</string>
+    <string name="login_error">Login error</string>
+    <string name="enter_email_to_reset_password">Enter email to reset password</string>
+    <string name="check_your_email">Check your email</string>
+    <string name="password_reset_link">A password reset link has been sent to your email address.</string>
+    <!--  RegistrationScreen and ProfileScreen-->
+    <string name="loading_data">Loading data</string>
+    <string name="name">Name</string>
+    <string name="age">Age</string>
+    <string name="join_date">Join Date</string>
+    <string name="you_have_registered">You have registered</string>
+    <string name="remember_to_confirm_your_account">Remember to confirm your account by clicking on the link in the message sent to the provided email address</string>
+    <string name="registration_error">Registration error</string>
+    <string name="an_unknown_error_occurred">An unknown error occurred</string>
+    <string name="enter_your_email_and_password">Enter your email and password</string>
+    <string name="repeat_password">Repeat password</string>
+    <string name="sign_up">Sign in</string>
+    <string name="no_internet_connection">No internet connection</string>
+    <string name="hide_password">Hide password</string>
+    <string name="show_password">Show password</string>
+    <string name="change_photo">Change photo</string>
+
+    <!--  SettingsScreen-->
+    <string name="logout">Logout</string>
+    <string name="appearance">Appearance</string>
+    <string name="theme">Theme</string>
+    <string name="font_size_for_messages">Font size for messages</string>
+    <string name="system_default">System default</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="high_contrast_dark">High Contrast - Dark</string>
+    <string name="high_contrast_light">High Contrast - Light</string>
+    <string name="font_size">Font Size</string>
+    <string name="small">Small</string>
+    <string name="normal">Normal</string>
+    <string name="large">Large</string>
+    <string name="very_large">Very Large</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="confirm_closing">Confirm Closing</string>
+    <string name="do_you_really_want_to_apply_the_application">Do you really want to apply the application?</string>
+    <string name="ok">OK</string>
+    <string name="you_won">You won !!!</string>
+    <string name="you_lost">You lost! :(</string>
+    <string name="friend">Friend</string>
+    <string name="me">Me</string>
+    <string name="system">System</string>
+    <string name="no_user">No user</string>
+    <string name="problem_generating_the_response">There was a problem generating the response. Please try again.</string>
+    <string name="an_error_occurred_please_try_again">An error occurred. Please try again.</string>
+    <string name="prompt1">Answer in one sentence at most. Simply write the answer you propose. How can I reply to my friend in this conversation? The last 10 messages of this conversation are as follows:\n%1$s. I signed my messages as \'Me\' and my interlocutor\'s as \'Friend\'. Suggest what I should reply to my friend\'s last message and not to my own, return one suggestion that you think is best.</string>
+    <string name="prompt2">Provide only two suggestions for interesting topics to talk about and nothing more. The answer should be short, do not elaborate.</string>
+    <string name="prompt3">Suggest only two original greetings and nothing more, one arbitrary and the other based on these last 20 messages in my conversation:\n%1$s. I signed my messages as me and my interlocutor as Friend.</string>
+    <string name="prompt4">Suggest only two original farewells and nothing more, one arbitrary and the other based on these last 20 messages in my conversation:\n%1$s. I signed my messages as me and my interlocutor as Friend.</string>
+    <string name="prompt5">Suggest just two questions that I could ask a stranger about the latest messages in my conversation:\n%1$s. I signed my messages as me and my interlocutor as Friend. The answer should be short, two sentences at most</string>
+    <string name="notifications">Notifications</string>
+    <string name="passwords_do_not_match">Passwords do not match</string>
+
+
+</resources>
